@@ -959,12 +959,252 @@ small {
     gap: 24px;
   }
   
+  /* Mobile: Stack mit größerem Gap */
+  @media (max-width: 767px) {
+    .shuffle-sleep-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+  }
+  
   #stationsList { max-height: 600px; }
   #history, #listeningStats { max-height: 300px; }
   
   .station:hover { background: #1f2937; }
   button:hover:not(:disabled) { background: #dc2626; }
   button.secondary:hover:not(:disabled) { background: #374151; }
+}
+
+/* SETTINGS PANEL */
+#settingsBtn {
+  background: transparent;
+  border: 1px solid #374151;
+  color: #f5f5f5;
+  padding: 8px 12px;
+  font-size: 18px;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+#settingsBtn:hover {
+  background: #1f2937;
+  border-color: #ef4444;
+}
+
+#settingsPanel {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 100%;
+  height: 100vh;
+  background: #0b0b0f;
+  z-index: 2000;
+  transition: right 0.3s ease-in-out;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#settingsPanel.open {
+  right: 0;
+}
+
+@media (min-width: 768px) {
+  #settingsPanel {
+    width: 400px;
+    border-left: 2px solid #ef4444;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.settings-header {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(90deg, #111827, #1f2937);
+  padding: 16px 20px;
+  border-bottom: 2px solid #ef4444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #f5f5f5;
+  letter-spacing: 1px;
+}
+
+#closeSettings {
+  background: transparent;
+  border: 1px solid #374151;
+  color: #f5f5f5;
+  padding: 8px 16px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+#closeSettings:hover {
+  background: #1f2937;
+  border-color: #ef4444;
+}
+
+.settings-content {
+  padding: 20px;
+}
+
+.settings-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #1f2937;
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-section h3 {
+  color: #f87171;
+  font-size: 16px;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.settings-section p {
+  color: #d1d5db;
+  font-size: 13px;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.settings-option {
+  margin-bottom: 16px;
+}
+
+.settings-option label {
+  display: block;
+  color: #f5f5f5;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.settings-option select {
+  width: 100%;
+  background: #111827;
+  border: 1px solid #374151;
+  color: #f5f5f5;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.theme-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.theme-option {
+  background: #111827;
+  border: 2px solid #374151;
+  padding: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.theme-option:hover {
+  border-color: #ef4444;
+}
+
+.theme-option.active {
+  border-color: #ef4444;
+  background: #1f2937;
+}
+
+.theme-option-name {
+  color: #f5f5f5;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.theme-preview {
+  width: 100%;
+  height: 60px;
+  border-radius: 6px;
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+}
+
+.theme-preview-color {
+  flex: 1;
+  border-radius: 4px;
+}
+
+#donateBtn {
+  width: 100%;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+#donateBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+#donateBtn:active {
+  transform: translateY(0);
+}
+
+/* Overlay for mobile */
+#settingsOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1999;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#settingsOverlay.show {
+  display: block;
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  #settingsOverlay.show {
+    display: block;
+  }
 }
 
   </style>
@@ -981,10 +1221,112 @@ small {
       <div class="subtitle">SHOUTcast Directory · MP3 Streams</div>
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
+      <button id="settingsBtn" title="Einstellungen">☰</button>
       <button id="installBtn" class="secondary" style="display: none; margin: 0; padding: 6px 12px; font-size: 11px;">📲 App</button>
       <span id="pwaStatus" style="font-size: 10px; opacity: 0.7;"></span>
     </div>
   </header>
+
+  <!-- SETTINGS PANEL -->
+  <div id="settingsOverlay"></div>
+  <div id="settingsPanel">
+    <div class="settings-header">
+      <h2>⚙️ Einstellungen</h2>
+      <button id="closeSettings">✕</button>
+    </div>
+    
+    <div class="settings-content">
+      <!-- SPRACHE -->
+      <div class="settings-section">
+        <h3>🌍 Sprache / Language</h3>
+        <div class="settings-option">
+          <label for="languageSelect">Sprache wählen:</label>
+          <select id="languageSelect">
+            <option value="de" selected>Deutsch</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
+        <p><small>Die Sprachauswahl wird in einer zukünftigen Version implementiert.</small></p>
+      </div>
+
+      <!-- THEME -->
+      <div class="settings-section">
+        <h3>🎨 Theme</h3>
+        <div class="theme-options">
+          <div class="theme-option active" data-theme="dark">
+            <div class="theme-preview" style="background: #0b0b0f;">
+              <div class="theme-preview-color" style="background: #111827;"></div>
+              <div class="theme-preview-color" style="background: #ef4444;"></div>
+              <div class="theme-preview-color" style="background: #1f2937;"></div>
+            </div>
+            <div class="theme-option-name">Dark (Standard)</div>
+          </div>
+          <div class="theme-option" data-theme="darker">
+            <div class="theme-preview" style="background: #000000;">
+              <div class="theme-preview-color" style="background: #0a0a0a;"></div>
+              <div class="theme-preview-color" style="background: #dc2626;"></div>
+              <div class="theme-preview-color" style="background: #1a1a1a;"></div>
+            </div>
+            <div class="theme-option-name">Darker</div>
+          </div>
+        </div>
+        <p><small>Weitere Themes kommen in zukünftigen Versionen.</small></p>
+      </div>
+
+      <!-- DATENVERBRAUCH -->
+      <div class="settings-section">
+        <h3>📊 Datenverbrauch</h3>
+        
+        <div class="data-usage-display">
+          <div class="data-usage-current">
+            <div class="data-usage-value" id="currentDataUsage">0 MB</div>
+            <div class="data-usage-label">Aktuelle Session</div>
+          </div>
+          
+          <div class="data-usage-tabs">
+            <button class="secondary active" data-period="1h">1h</button>
+            <button class="secondary" data-period="24h">24h</button>
+            <button class="secondary" data-period="week">Woche</button>
+            <button class="secondary" data-period="month">Monat</button>
+          </div>
+          
+          <div class="data-usage-breakdown" id="dataUsageBreakdown">
+            <div class="data-usage-item">
+              <span class="data-usage-item-name">Gesamt</span>
+              <span class="data-usage-item-value" id="periodTotalUsage">0 MB</span>
+            </div>
+            <div class="data-usage-item">
+              <span class="data-usage-item-name">Durchschnitt/Tag</span>
+              <span class="data-usage-item-value" id="periodAvgUsage">0 MB</span>
+            </div>
+          </div>
+          
+          <div style="margin-top: 12px;">
+            <button id="resetDataUsage" class="secondary" style="width: 100%; font-size: 13px;">🗑️ Daten zurücksetzen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DONATION -->
+      <div class="settings-section">
+        <h3>❤️ Unterstützung</h3>
+        <p>Diese App ist kostenlos und Open Source. Wenn sie dir gefällt, freue ich mich über eine kleine Unterstützung!</p>
+        <button id="donateBtn">☕ Buy me a Coffee</button>
+        <p style="margin-top: 12px;"><small>Donations helfen bei der Weiterentwicklung und dem Hosting.</small></p>
+      </div>
+
+      <!-- ABOUT -->
+      <div class="settings-section">
+        <h3>ℹ️ Über diese App</h3>
+        <p><strong>Brummies Rock Radio</strong></p>
+        <p>Version: 1.0.0</p>
+        <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
+        <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
+      </div>
+    </div>
+  </div>
 
   <main>
     <!-- FILTER / SENDERLISTE -->
@@ -1213,40 +1555,6 @@ small {
         <label id="sleepClockLabel" style="display:none;">Ende um</label>
         <input type="time" id="sleepClock" value="23:00" style="display:none;" />
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- DATENVERBRAUCH -->
-<section style="grid-column: 1 / -1;">
-  <h2>📊 Datenverbrauch</h2>
-  
-  <div class="data-usage-display">
-    <div class="data-usage-current">
-      <div class="data-usage-value" id="currentDataUsage">0 MB</div>
-      <div class="data-usage-label">Aktuelle Session</div>
-    </div>
-    
-    <div class="data-usage-tabs">
-      <button class="secondary active" data-period="1h">1 Stunde</button>
-      <button class="secondary" data-period="24h">24 Stunden</button>
-      <button class="secondary" data-period="week">Woche</button>
-      <button class="secondary" data-period="month">Monat</button>
-    </div>
-    
-    <div class="data-usage-breakdown" id="dataUsageBreakdown">
-      <div class="data-usage-item">
-        <span class="data-usage-item-name">Gesamt</span>
-        <span class="data-usage-item-value" id="periodTotalUsage">0 MB</span>
-      </div>
-      <div class="data-usage-item">
-        <span class="data-usage-item-name">Durchschnitt/Tag</span>
-        <span class="data-usage-item-value" id="periodAvgUsage">0 MB</span>
-      </div>
-    </div>
-    
-    <div style="margin-top: 12px; display: flex; gap: 8px;">
-      <button id="resetDataUsage" class="secondary" style="flex: 1; font-size: 11px;">🗑️ Zurücksetzen</button>
     </div>
   </div>
 </section>
@@ -2599,6 +2907,92 @@ small {
     window.addEventListener('beforeunload', () => {
       endListeningSession();
       stopDataTracking();
+    });
+
+    // --- SETTINGS PANEL ---
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const closeSettings = document.getElementById('closeSettings');
+    const donateBtn = document.getElementById('donateBtn');
+    const themeOptions = document.querySelectorAll('.theme-option');
+    const languageSelect = document.getElementById('languageSelect');
+
+    // Open Settings
+    function openSettings() {
+      settingsPanel.classList.add('open');
+      settingsOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+
+    // Close Settings
+    function closeSettingsPanel() {
+      settingsPanel.classList.remove('open');
+      settingsOverlay.classList.remove('show');
+      document.body.style.overflow = ''; // Restore scroll
+    }
+
+    settingsBtn.addEventListener('click', openSettings);
+    closeSettings.addEventListener('click', closeSettingsPanel);
+    settingsOverlay.addEventListener('click', closeSettingsPanel);
+
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && settingsPanel.classList.contains('open')) {
+        closeSettingsPanel();
+      }
+    });
+
+    // Theme Switching (prepared for future)
+    themeOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        themeOptions.forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+        const theme = option.dataset.theme;
+        
+        // Save to localStorage
+        localStorage.setItem('brummiesTheme', theme);
+        
+        // Future: Apply theme
+        console.log('Theme selected:', theme);
+        
+        // Show feedback
+        const themeName = option.querySelector('.theme-option-name').textContent;
+        alert(`Theme "${themeName}" ausgewählt!\n\nWeitere Themes kommen in zukünftigen Versionen.`);
+      });
+    });
+
+    // Language Selection (prepared for future)
+    languageSelect.addEventListener('change', (e) => {
+      const lang = e.target.value;
+      localStorage.setItem('brummiesLanguage', lang);
+      console.log('Language selected:', lang);
+      alert(`Sprache gewechselt zu: ${lang}\n\nMehrsprachigkeit wird in einer zukünftigen Version implementiert.`);
+    });
+
+    // Load saved preferences
+    const savedTheme = localStorage.getItem('brummiesTheme') || 'dark';
+    const savedLang = localStorage.getItem('brummiesLanguage') || 'de';
+    
+    themeOptions.forEach(opt => {
+      if (opt.dataset.theme === savedTheme) {
+        opt.classList.add('active');
+      } else {
+        opt.classList.remove('active');
+      }
+    });
+    
+    languageSelect.value = savedLang;
+
+    // Donate Button
+    donateBtn.addEventListener('click', () => {
+      // Open donation link (you can replace with your actual link)
+      const donationUrl = 'https://www.buymeacoffee.com/yourlink'; // Replace with actual link
+      
+      if (confirm('Vielen Dank für deine Unterstützung! 🙏\n\nMöchtest du zur Donation-Seite weitergeleitet werden?')) {
+        // window.open(donationUrl, '_blank');
+        alert('Donation-Link wird in einer zukünftigen Version aktiviert.\n\nVielen Dank für dein Interesse! ❤️');
+      }
     });
   </script>
 
