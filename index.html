@@ -1321,7 +1321,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.0.1</p>
+        <p>Version: 1.0.2</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -1658,6 +1658,8 @@ small {
     let reconnectTimeout = null;
     let wakeLock = null;
     let isBuffering = false;
+    let heartbeatInterval = null;
+    let lastPlaybackTime = 0;
 
     // --- SUBGENRE UPDATE ---
     genreSelect.addEventListener("change", () => {
@@ -2101,6 +2103,9 @@ small {
         setTimeout(() => {
           nowPlayingTextEl.style.animation = '';
         }, 10);
+        
+        // Media Session aktualisieren mit neuem Song
+        updateMediaSession();
       }
     }
 
@@ -2765,6 +2770,9 @@ small {
         if (audioContext && audioContext.state === 'suspended') {
           audioContext.resume();
         }
+        
+        // Media Session API für Lock Screen Controls
+        updateMediaSession();
       }).catch(err => {
         console.error("Stream error:", err);
         stationInfoEl.textContent = "❌ Fehler";
@@ -2773,6 +2781,57 @@ small {
       
       addHistoryEntry(fromShuffle ? "🔀 Shuffle zu" : "🎵 Wechsel zu", station);
       renderStations();
+    }
+
+    // --- MEDIA SESSION API (Lock Screen / Notification Controls) ---
+    function updateMediaSession() {
+      if ('mediaSession' in navigator && currentStation) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: currentStation.name,
+          artist: currentMetadata || `${currentStation.genre} Radio`,
+          album: `${currentStation.country} · ${currentStation.bitrate}kbps`,
+          artwork: currentStation.favicon ? [
+            { src: currentStation.favicon, sizes: '96x96', type: 'image/png' },
+            { src: currentStation.favicon, sizes: '128x128', type: 'image/png' },
+            { src: currentStation.favicon, sizes: '192x192', type: 'image/png' },
+            { src: currentStation.favicon, sizes: '256x256', type: 'image/png' }
+          ] : [
+            { src: './icon-192.png', sizes: '192x192', type: 'image/png' },
+            { src: './icon-512.png', sizes: '512x512', type: 'image/png' }
+          ]
+        });
+
+        // Action Handlers für Lock Screen
+        navigator.mediaSession.setActionHandler('play', () => {
+          audioEl.play();
+          playBtn.textContent = "⏸ Pause";
+        });
+
+        navigator.mediaSession.setActionHandler('pause', () => {
+          audioEl.pause();
+          playBtn.textContent = "▶ Play";
+        });
+
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          if (currentStationIndex > 0) {
+            const prevStation = displayedStations[currentStationIndex - 1];
+            selectStation(prevStation, currentStationIndex - 1);
+          }
+        });
+
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          if (currentStationIndex < displayedStations.length - 1) {
+            const nextStation = displayedStations[currentStationIndex + 1];
+            selectStation(nextStation, currentStationIndex + 1);
+          }
+        });
+
+        // Seek nicht unterstützt (Radio ist live)
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+        
+        console.log('Media Session updated:', currentStation.name);
+      }
     }
 
     // --- AUDIO EVENTS ---
@@ -2916,17 +2975,63 @@ small {
       }
     }
     
+    // Heartbeat Monitor - prüft ob Stream noch läuft
+    function startStreamHeartbeat() {
+      stopStreamHeartbeat();
+      
+      heartbeatInterval = setInterval(() => {
+        if (!currentStation || audioEl.paused) return;
+        
+        const currentTime = audioEl.currentTime;
+        
+        // Check ob Playback fortschreitet
+        if (currentTime === lastPlaybackTime && !isBuffering) {
+          console.warn('Stream appears stalled (no playback progress)');
+          
+          // Check ob wir wirklich nicht spielen
+          if (!audioEl.paused && audioEl.readyState < 3) {
+            console.log('Stream stalled - attempting reconnect');
+            attemptReconnect();
+          }
+        }
+        
+        lastPlaybackTime = currentTime;
+        
+        // Log Buffer Health
+        if (audioEl.buffered.length > 0) {
+          const bufferedEnd = audioEl.buffered.end(audioEl.buffered.length - 1);
+          const bufferedAhead = bufferedEnd - currentTime;
+          
+          if (bufferedAhead < 2) {
+            console.warn(`Low buffer: ${bufferedAhead.toFixed(1)}s - stream may stutter soon`);
+          }
+        }
+      }, 5000); // Check alle 5 Sekunden
+      
+      console.log('Stream heartbeat monitor started');
+    }
+    
+    function stopStreamHeartbeat() {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+        console.log('Stream heartbeat monitor stopped');
+      }
+    }
+    
     // Aktiviere Wake Lock beim Abspielen
     audioEl.addEventListener("playing", () => {
       if (currentStation) {
         stationInfoEl.textContent = `🎶 ${currentStation.genre} · ${currentStation.bitrate}kbps`;
       }
       requestWakeLock();
+      startStreamHeartbeat(); // Monitor stream health
     });
     
     // Release Wake Lock bei Pause
     audioEl.addEventListener("pause", () => {
       releaseWakeLock();
+      stopStreamHeartbeat(); // Stop monitoring
     });
     
     // Visibility Change - behält Streaming bei Tab-Wechsel
@@ -2934,14 +3039,26 @@ small {
       if (document.hidden) {
         console.log("Page hidden - maintaining stream");
         // Stream läuft weiter
+        
+        // AudioContext State sichern für Resume
+        if (audioContext && audioContext.state === 'running') {
+          console.log("Audio Context running in background");
+        }
       } else {
         console.log("Page visible - checking stream");
+        
+        // AudioContext reaktivieren
+        if (audioContext && audioContext.state === 'suspended') {
+          console.log("Resuming Audio Context");
+          audioContext.resume();
+        }
         
         // Check ob Stream noch läuft
         if (currentStation && audioEl.paused && playBtn.textContent === "⏸ Pause") {
           console.log("Stream was paused while hidden - attempting resume");
           audioEl.play().catch(err => {
             console.error("Resume failed:", err);
+            attemptReconnect();
           });
         }
         
@@ -2949,8 +3066,47 @@ small {
         if (currentStation && !audioEl.paused) {
           requestWakeLock();
         }
+        
+        // Media Session aktualisieren
+        if (currentStation) {
+          updateMediaSession();
+        }
       }
     });
+    
+    // Page Lifecycle API - für Mobile Browser
+    // Freeze: Browser friert Page ein (z.B. bei Tab-Wechsel auf Mobile)
+    document.addEventListener('freeze', () => {
+      console.log('Page frozen - persisting state');
+      // Audio soll weiterlaufen trotz Freeze
+      if (currentStation && !audioEl.paused) {
+        console.log('Maintaining audio during freeze');
+      }
+    }, { capture: true });
+    
+    // Resume: Page wird wieder aktiv
+    document.addEventListener('resume', () => {
+      console.log('Page resumed - restoring state');
+      
+      // AudioContext reaktivieren
+      if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
+      // Stream prüfen
+      if (currentStation && audioEl.paused) {
+        console.log('Attempting to resume stream after freeze');
+        audioEl.play().catch(err => {
+          console.error('Resume after freeze failed:', err);
+          attemptReconnect();
+        });
+      }
+      
+      // Wake Lock neu anfordern
+      if (currentStation && !audioEl.paused) {
+        requestWakeLock();
+      }
+    }, { capture: true });
     
     // Online/Offline Detection
     window.addEventListener('online', () => {
@@ -3153,7 +3309,7 @@ small {
     // Donate Button
     donateBtn.addEventListener('click', () => {
       // Open donation link (you can replace with your actual link)
-      const donationUrl = 'https://www.buymeacoffee.com/yourlink'; // Replace with actual link
+      const donationUrl = 'https://www.paypal.com/paypalme/ZaboChris'; // Replace with actual link
       
       if (confirm('Vielen Dank für deine Unterstützung! 🙏\n\nMöchtest du zur Donation-Seite weitergeleitet werden?')) {
         // window.open(donationUrl, '_blank');
