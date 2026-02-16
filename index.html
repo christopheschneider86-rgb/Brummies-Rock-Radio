@@ -13,10 +13,67 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>Brummies Rock Radio</title>
   <style>
-    /* Force dark mode */
+    /* Theme System with CSS Variables */
     :root {
       color-scheme: dark;
-      background-color: #0b0b0f;
+    }
+    
+    /* Theme: Brummie (Default - Rock) */
+    :root,
+    [data-theme="brummie"] {
+      --color-bg-primary: #0b0b0f;
+      --color-bg-secondary: #1f2937;
+      --color-bg-tertiary: #1f2937;
+      --color-bg-input: #020617;
+      --color-accent: #ef4444;
+      --color-accent-hover: #dc2626;
+      --color-text-primary: #f5f5f5;
+      --color-text-secondary: #d1d5db;
+      --color-text-muted: #6b7280;
+      --color-border: #334105;
+      --color-gradient-start: #1f2937;
+      --color-gradient-end: #1f2937;
+    }
+    
+    /* Theme: Sumsum (Classical - Flieder, Camel, Efeu) */
+    [data-theme="sumsum"] {
+      --color-bg-primary: #2d2538;
+      --color-bg-secondary: #3d3048;
+      --color-bg-tertiary: #4a3d56;
+      --color-bg-input: #1f1829;
+      --color-accent: #b19cd9;
+      --color-accent-hover: #9a7fc9;
+      --color-text-primary: #f5f3f7;
+      --color-text-secondary: #d9d1e0;
+      --color-text-muted: #8b7a9c;
+      --color-border: #6b5a7c;
+      --color-gradient-start: #3d3048;
+      --color-gradient-end: #c9a876;
+      
+      /* Classical accents */
+      --color-camel: #c9a876;
+      --color-ivy: #5a7a5c;
+    }
+    
+    /* Theme: Glaubnix (Reggae - Rot, Gelb, Grün) */
+    [data-theme="glaubnix"] {
+      --color-bg-primary: #1a1a1a;
+      --color-bg-secondary: #2d2d1f;
+      --color-bg-tertiary: #3a3a2a;
+      --color-bg-input: #0f0f0a;
+      --color-accent: #ffd700;
+      --color-accent-hover: #f4c430;
+      --color-text-primary: #f5f5e8;
+      --color-text-secondary: #d9d9c9;
+      --color-text-muted: #8b8b7a;
+      --color-border: #f4c430;
+      --color-gradient-start: #2d2d1f;
+      --color-gradient-end: #3a3a2a;
+      
+      /* Reggae colors */
+      --color-rasta-red: #e74c3c;
+      --color-rasta-yellow: #ffd700;
+      --color-rasta-green: #27ae60;
     }
 
 * { 
@@ -25,15 +82,15 @@
 }
 
 html {
-  background: #0b0b0f;
-  color: #f5f5f5;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: #0b0b0f !important;
-  color: #f5f5f5 !important;
+  background: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -44,8 +101,8 @@ header {
   top: 0;
   z-index: 1000;
   padding: 16px 24px;
-  background: linear-gradient(90deg, #111827, #1f2937);
-  border-bottom: 2px solid #ef4444;
+  background: linear-gradient(90deg, var(--color-gradient-start), var(--color-gradient-end));
+  border-bottom: 2px solid var(--color-accent);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -71,8 +128,8 @@ main {
 }
 
 section {
-  background: #111827;
-  border: 1px solid #1f2937;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-bg-tertiary);
   border-radius: 8px;
   padding: 12px 16px;
   min-width: 0; /* WICHTIG: Verhindert overflow */
@@ -82,7 +139,7 @@ section {
 @media (min-width: 768px) {
   main {
     grid-template-columns: 1fr 1fr;
-    max-width: 1800px;
+    max-width: 1400px;
     margin: 0 auto;
     gap: 20px;
   }
@@ -93,8 +150,8 @@ section {
 }
 
 section {
-  background: #111827;
-  border: 1px solid #1f2937;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-bg-tertiary);
   border-radius: 8px;
   padding: 12px 16px;
 }
@@ -104,7 +161,7 @@ h2 {
   font-size: 15px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #f87171;
+  color: var(--color-accent);
 }
 
 label {
@@ -113,13 +170,13 @@ label {
   margin-bottom: 4px;
   opacity: 0.85;
   font-weight: 500;
-  color: #f5f5f5 !important;
+  color: var(--color-text-primary) !important;
 }
 
 select, input[type="number"], input[type="text"], input[type="time"], input[type="radio"] {
-  background: #020617 !important;
-  border: 1px solid #374151;
-  color: #e5e7eb !important;
+  background: var(--color-bg-input) !important;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary) !important;
   border-radius: 6px;
   padding: 10px;
   font-size: 14px;
@@ -144,12 +201,12 @@ input[type="radio"] {
 
 /* Focus states */
 select:focus, input:focus {
-  outline: 2px solid #ef4444;
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
 button {
-  background: #ef4444;
+  background: var(--color-accent);
   border: none;
   color: #f9fafb !important;
   border-radius: 6px;
@@ -167,11 +224,11 @@ button {
 
 button:active { transform: scale(0.95); }
 button.secondary { 
-  background: #1f2937; 
-  border: 1px solid #374151;
-  color: #f5f5f5 !important;
+  background: var(--color-bg-tertiary); 
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary) !important;
 }
-button.secondary.active { background: #ef4444; border-color: #ef4444; }
+button.secondary.active { background: var(--color-accent); border-color: var(--color-accent); }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .filter-row { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -216,10 +273,10 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   min-height: 60px;
 }
 
-.station:active { background: #1f2937; }
+.station:active { background: var(--color-bg-tertiary); }
 .station.active {
-  background: #1f2937;
-  border-left: 4px solid #ef4444;
+  background: var(--color-bg-tertiary);
+  border-left: 4px solid var(--color-accent);
   padding-left: 10px;
 }
 .station.favorite { background: rgba(239, 68, 68, 0.05); }
@@ -227,7 +284,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .station-logo {
   width: 40px;
   height: 40px;
-  background: #020617;
+  background: var(--color-bg-input);
   border-radius: 6px;
   margin-right: 12px;
   display: flex;
@@ -261,15 +318,15 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  background: #1f2937;
-  color: #f5f5f5;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 13px;
   white-space: nowrap;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  border: 1px solid #ef4444;
+  border: 1px solid var(--color-accent);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -291,7 +348,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   bottom: calc(100% + 2px);
   left: 12px;
   border: 6px solid transparent;
-  border-top-color: #ef4444;
+  border-top-color: var(--color-accent);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -367,15 +424,15 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  background: #1f2937;
-  color: #f5f5f5;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 14px;
   white-space: nowrap;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  border: 1px solid #ef4444;
+  border: 1px solid var(--color-accent);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -397,7 +454,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   bottom: calc(100% + 2px);
   left: 12px;
   border: 6px solid transparent;
-  border-top-color: #ef4444;
+  border-top-color: var(--color-accent);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -412,7 +469,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 #stationInfo {
   font-size: 12px;
-  color: #e5e7eb;
+  color: var(--color-text-primary);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -420,8 +477,8 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
 #nowPlayingScroll {
-  background: #020617;
-  border: 1px solid #374151;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 8px 12px;
   margin-top: 12px;
@@ -484,7 +541,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   -webkit-appearance: none;
   width: 20px;
   height: 20px;
-  background: #ef4444;
+  background: var(--color-accent);
   border-radius: 50%;
   cursor: pointer;
 }
@@ -492,7 +549,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 #volumeRange::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: #ef4444;
+  background: var(--color-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -506,8 +563,8 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
 #eqContainer {
-  background: #020617;
-  border: 1px solid #374151;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 12px;
   margin-top: 8px;
@@ -534,7 +591,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   -webkit-appearance: slider-vertical;
   width: 4px;
   height: 100px;
-  background: #374151;
+  background: var(--color-border);
   border-radius: 2px;
   outline: none;
   margin-bottom: 8px;
@@ -544,7 +601,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  background: #ef4444;
+  background: var(--color-accent);
   border-radius: 50%;
   cursor: pointer;
 }
@@ -552,14 +609,14 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .eq-band input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: #ef4444;
+  background: var(--color-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
 }
 
 .eq-label { font-size: 10px; margin-bottom: 4px; opacity: 0.8; font-weight: 600; }
-.eq-value { font-size: 9px; color: #f97316; margin-bottom: 4px; }
+.eq-value { font-size: 9px; color: var(--color-accent); margin-bottom: 4px; }
 .eq-freq { font-size: 9px; opacity: 0.6; }
 
 #eqPresets {
@@ -575,7 +632,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   height: 120px;
   background: #0b0b0f;
   border-radius: 4px;
-  border: 1px solid #1f2937;
+  border: 1px solid var(--color-bg-tertiary);
 }
 
 #shuffleControls, #sleepControls {
@@ -597,12 +654,12 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #f5f5f5 !important;
+  color: var(--color-text-primary) !important;
   cursor: pointer;
 }
 
 .radio-group input[type="radio"] {
-  accent-color: #ef4444;
+  accent-color: var(--color-accent);
 }
 
 #history, #listeningStats {
@@ -630,15 +687,15 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  background: #1f2937;
-  color: #f5f5f5;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 12px;
   white-space: nowrap;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  border: 1px solid #ef4444;
+  border: 1px solid var(--color-accent);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -660,7 +717,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   bottom: calc(100% + 2px);
   left: 12px;
   border: 6px solid transparent;
-  border-top-color: #ef4444;
+  border-top-color: var(--color-accent);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -673,7 +730,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   visibility: visible;
 }
 
-#history div:active, #listeningStats div:active { background: #1f2937; }
+#history div:active, #listeningStats div:active { background: var(--color-bg-tertiary); }
 
 .history-controls {
   display: flex;
@@ -688,13 +745,13 @@ small {
   opacity: 0.6;
   display: block;
   margin-top: 4px;
-  color: #f5f5f5 !important;
+  color: var(--color-text-primary) !important;
 }
 
 /* Data Usage Styles */
 .data-usage-display {
-  background: #020617;
-  border: 1px solid #374151;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 16px;
   margin-top: 12px;
@@ -708,7 +765,7 @@ small {
 .data-usage-value {
   font-size: 32px;
   font-weight: 700;
-  color: #ef4444;
+  color: var(--color-accent);
   margin-bottom: 4px;
 }
 
@@ -765,7 +822,7 @@ small {
 }
 
 .status-bar {
-  background: #020617;
+  background: var(--color-bg-input);
   padding: 10px 12px;
   border-radius: 6px;
   font-size: 12px;
@@ -776,7 +833,7 @@ small {
 }
 
 .shuffle-status, .sleep-status {
-  background: #1f2937;
+  background: var(--color-bg-tertiary);
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 11px;
@@ -818,7 +875,7 @@ small {
   h2 {
     font-size: 16px;
     margin-bottom: 16px;
-    color: #f87171 !important;
+    color: var(--color-accent) !important;
   }
   
   /* Larger station touch areas */
@@ -830,32 +887,32 @@ small {
   .station-name {
     font-size: 15px;
     font-weight: 600;
-    color: #f5f5f5 !important;
+    color: var(--color-text-primary) !important;
   }
   
   .station-meta {
     font-size: 12px;
     line-height: 1.6;
-    color: #d1d5db !important;
+    color: var(--color-text-secondary) !important;
   }
   
   /* Better label readability */
   label {
     font-size: 13px;
     margin-bottom: 6px;
-    color: #f5f5f5 !important;
+    color: var(--color-text-primary) !important;
   }
   
   small {
     font-size: 12px;
-    color: #d1d5db !important;
+    color: var(--color-text-secondary) !important;
   }
   
   /* Better section spacing */
   section {
     padding: 16px;
     margin-bottom: 4px;
-    background: #111827 !important;
+    background: var(--color-bg-secondary) !important;
   }
   
   main {
@@ -871,12 +928,12 @@ small {
   
   header h1 {
     font-size: 16px;
-    color: #f5f5f5 !important;
+    color: var(--color-text-primary) !important;
   }
   
   header .subtitle {
     font-size: 10px;
-    color: #d1d5db !important;
+    color: var(--color-text-secondary) !important;
   }
   
   /* Player on mobile */
@@ -886,12 +943,12 @@ small {
   
   #stationName {
     font-size: 16px;
-    color: #f5f5f5 !important;
+    color: var(--color-text-primary) !important;
   }
   
   #stationInfo {
     font-size: 13px;
-    color: #d1d5db !important;
+    color: var(--color-text-secondary) !important;
   }
   
   /* Transport buttons larger */
@@ -904,11 +961,11 @@ small {
   /* Data usage mobile */
   .data-usage-value {
     font-size: 36px;
-    color: #ef4444 !important;
+    color: var(--color-accent) !important;
   }
   
   .data-usage-label {
-    color: #d1d5db !important;
+    color: var(--color-text-secondary) !important;
   }
   
   .data-usage-tabs button {
@@ -918,7 +975,7 @@ small {
   }
   
   .data-usage-item-name {
-    color: #d1d5db !important;
+    color: var(--color-text-secondary) !important;
   }
   
   .data-usage-item-value {
@@ -929,7 +986,7 @@ small {
   #history div, #listeningStats div {
     font-size: 13px;
     padding: 10px 4px;
-    color: #f5f5f5 !important;
+    color: var(--color-text-primary) !important;
   }
   
   /* Status indicators */
@@ -970,16 +1027,16 @@ small {
   #stationsList { max-height: 600px; }
   #history, #listeningStats { max-height: 300px; }
   
-  .station:hover { background: #1f2937; }
-  button:hover:not(:disabled) { background: #dc2626; }
+  .station:hover { background: var(--color-bg-tertiary); }
+  button:hover:not(:disabled) { background: var(--color-accent-hover); }
   button.secondary:hover:not(:disabled) { background: #374151; }
 }
 
 /* SETTINGS PANEL */
 #settingsBtn {
   background: transparent;
-  border: 1px solid #374151;
-  color: #f5f5f5;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   padding: 8px 12px;
   font-size: 18px;
   margin: 0;
@@ -994,8 +1051,8 @@ small {
 }
 
 #settingsBtn:hover {
-  background: #1f2937;
-  border-color: #ef4444;
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-accent);
 }
 
 #settingsPanel {
@@ -1018,7 +1075,7 @@ small {
 @media (min-width: 768px) {
   #settingsPanel {
     width: 400px;
-    border-left: 2px solid #ef4444;
+    border-left: 2px solid var(--color-accent);
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
   }
 }
@@ -1028,7 +1085,7 @@ small {
   top: 0;
   background: linear-gradient(90deg, #111827, #1f2937);
   padding: 16px 20px;
-  border-bottom: 2px solid #ef4444;
+  border-bottom: 2px solid var(--color-accent);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1038,14 +1095,14 @@ small {
 .settings-header h2 {
   margin: 0;
   font-size: 20px;
-  color: #f5f5f5;
+  color: var(--color-text-primary);
   letter-spacing: 1px;
 }
 
 #closeSettings {
   background: transparent;
-  border: 1px solid #374151;
-  color: #f5f5f5;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   padding: 8px 16px;
   font-size: 20px;
   cursor: pointer;
@@ -1056,8 +1113,8 @@ small {
 }
 
 #closeSettings:hover {
-  background: #1f2937;
-  border-color: #ef4444;
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-accent);
 }
 
 .settings-content {
@@ -1075,7 +1132,7 @@ small {
 }
 
 .settings-section h3 {
-  color: #f87171;
+  color: var(--color-accent);
   font-size: 16px;
   margin: 0 0 16px 0;
   text-transform: uppercase;
@@ -1083,7 +1140,7 @@ small {
 }
 
 .settings-section p {
-  color: #d1d5db;
+  color: var(--color-text-secondary);
   font-size: 13px;
   margin: 0 0 12px 0;
   line-height: 1.5;
@@ -1095,7 +1152,7 @@ small {
 
 .settings-option label {
   display: block;
-  color: #f5f5f5;
+  color: var(--color-text-primary);
   font-size: 14px;
   margin-bottom: 8px;
   font-weight: 500;
@@ -1103,9 +1160,9 @@ small {
 
 .settings-option select {
   width: 100%;
-  background: #111827;
-  border: 1px solid #374151;
-  color: #f5f5f5;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   padding: 12px;
   border-radius: 6px;
   font-size: 14px;
@@ -1118,8 +1175,8 @@ small {
 }
 
 .theme-option {
-  background: #111827;
-  border: 2px solid #374151;
+  background: var(--color-bg-secondary);
+  border: 2px solid var(--color-border);
   padding: 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -1128,16 +1185,16 @@ small {
 }
 
 .theme-option:hover {
-  border-color: #ef4444;
+  border-color: var(--color-accent);
 }
 
 .theme-option.active {
-  border-color: #ef4444;
-  background: #1f2937;
+  border-color: var(--color-accent);
+  background: var(--color-bg-tertiary);
 }
 
 .theme-option-name {
-  color: #f5f5f5;
+  color: var(--color-text-primary);
   font-size: 14px;
   font-weight: 600;
   margin-top: 8px;
@@ -1159,7 +1216,7 @@ small {
 
 #donateBtn {
   width: 100%;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, var(--color-accent), #dc2626);
   border: none;
   color: #ffffff;
   padding: 16px;
@@ -1238,41 +1295,52 @@ small {
     <div class="settings-content">
       <!-- SPRACHE -->
       <div class="settings-section">
-        <h3>🌍 Sprache / Language</h3>
+        <h3 id="lang-settings-language">🌍 Sprache / Language</h3>
         <div class="settings-option">
-          <label for="languageSelect">Sprache wählen:</label>
+          <label for="languageSelect" id="lang-select-language">Sprache wählen / Select language:</label>
           <select id="languageSelect">
-            <option value="de" selected>Deutsch</option>
+            <option value="de">Deutsch</option>
             <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
           </select>
         </div>
-        <p><small>Die Sprachauswahl wird in einer zukünftigen Version implementiert.</small></p>
+        <p><small id="lang-language-info">Die Sprache wird automatisch erkannt basierend auf deinem Standort.</small></p>
       </div>
 
       <!-- THEME -->
       <div class="settings-section">
         <h3>🎨 Theme</h3>
         <div class="theme-options">
-          <div class="theme-option active" data-theme="dark">
+          <!-- Brummie (Rock - Default) -->
+          <div class="theme-option active" data-theme="brummie">
             <div class="theme-preview" style="background: #0b0b0f;">
-              <div class="theme-preview-color" style="background: #111827;"></div>
+              <div class="theme-preview-color" style="background: var(--color-bg-secondary);"></div>
               <div class="theme-preview-color" style="background: #ef4444;"></div>
-              <div class="theme-preview-color" style="background: #1f2937;"></div>
+              <div class="theme-preview-color" style="background: var(--color-bg-tertiary);"></div>
             </div>
-            <div class="theme-option-name">Dark (Standard)</div>
+            <div class="theme-option-name">🎸 Brummie</div>
           </div>
-          <div class="theme-option" data-theme="darker">
-            <div class="theme-preview" style="background: #000000;">
-              <div class="theme-preview-color" style="background: #0a0a0a;"></div>
-              <div class="theme-preview-color" style="background: #dc2626;"></div>
-              <div class="theme-preview-color" style="background: #1a1a1a;"></div>
+          
+          <!-- Sumsum (Classical) -->
+          <div class="theme-option" data-theme="sumsum">
+            <div class="theme-preview" style="background: #2d2538;">
+              <div class="theme-preview-color" style="background: #b19cd9;"></div>
+              <div class="theme-preview-color" style="background: #c9a876;"></div>
+              <div class="theme-preview-color" style="background: #5a7a5c;"></div>
             </div>
-            <div class="theme-option-name">Darker</div>
+            <div class="theme-option-name">🎻 Sumsum</div>
+          </div>
+          
+          <!-- Glaubnix (Reggae) -->
+          <div class="theme-option" data-theme="glaubnix">
+            <div class="theme-preview" style="background: #1a1a1a;">
+              <div class="theme-preview-color" style="background: #e74c3c;"></div>
+              <div class="theme-preview-color" style="background: #ffd700;"></div>
+              <div class="theme-preview-color" style="background: #27ae60;"></div>
+            </div>
+            <div class="theme-option-name">🎵 Glaubnix</div>
           </div>
         </div>
-        <p><small>Weitere Themes kommen in zukünftigen Versionen.</small></p>
+        <p><small id="lang-theme-info">Wähle ein Theme das zu deinem Musikgeschmack passt.</small></p>
       </div>
 
       <!-- DATENVERBRAUCH -->
@@ -1620,6 +1688,499 @@ small {
       metal: [6, 3, -2, 3, 6],
       bass: [8, 4, 0, -2, -2]
     };
+    
+    // --- INTERNATIONALIZATION ---
+    let currentLang = localStorage.getItem('brummiesLanguage') || null; // null = auto-detect
+    
+    const translations = {
+      de: {
+        // Header
+        subtitle: "SHOUTcast Directory · MP3 Streams",
+        installBtn: "📲 App",
+        
+        // Search & Filters
+        searchPlaceholder: "Sender suchen...",
+        searchBtn: "🔍 Suchen",
+        resetFilters: "↺ Reset",
+        showFavorites: "⭐ Favoriten",
+        showAll: "Alle anzeigen",
+        
+        // Genre & Location
+        genreLabel: "Genre",
+        subgenreLabel: "Untergenre",
+        countryLabel: "Land",
+        locationLabel: "Standort",
+        locationAuto: "Auto (GPS)",
+        locationManual: "Manuell",
+        locationNone: "Keine",
+        allGenres: "Alle",
+        allSubgenres: "Alle",
+        allCountries: "Alle",
+        
+        // Sorting
+        sortBy: "Sortierung:",
+        sortFavorites: "⭐ Favoriten",
+        sortDistance: "📍 Distanz",
+        sortListeners: "👥 Hörer",
+        sortBitrate: "🎵 Bitrate",
+        sortName: "🔤 Name",
+        
+        // Station List
+        noStations: "Keine Sender gefunden. Versuche andere Filter.",
+        loading: "Lade Sender...",
+        stationsFound: "Sender gefunden",
+        loadMore: "+ 20 weitere laden",
+        noGpsData: "Keine GPS-Daten",
+        
+        // Player
+        play: "▶ Play",
+        pause: "⏸ Pause",
+        prev: "⏮ Zurück",
+        next: "⏭ Weiter",
+        volume: "Lautstärke",
+        nowPlaying: "🎵 Now Playing",
+        waitingForMetadata: "Warte auf Stream-Metadaten...",
+        copyInfo: "📋 Info kopieren",
+        infoCopied: "✅ Kopiert!",
+        streamError: "❌ Stream-Fehler",
+        connectionError: "Verbindungsfehler",
+        buffering: "🔄 Buffering...",
+        reconnecting: "🔄 Neuverbindung",
+        noConnection: "📡 Keine Verbindung",
+        
+        // Equalizer
+        equalizer: "🎚️ Equalizer",
+        visualizer: "Visualizer",
+        presetFlat: "Flat",
+        presetRock: "Rock",
+        presetMetal: "Metal",
+        presetBass: "Bass",
+        
+        // History & Stats
+        history: "📜 Verlauf",
+        listeningStats: "📊 Statistik",
+        clearHistory: "🗑️ Löschen",
+        clearStats: "🗑️ Löschen",
+        noHistory: "Kein Verlauf vorhanden",
+        noStats: "Keine Statistik vorhanden",
+        sessions: "Sitzungen",
+        totalTime: "Gesamt",
+        
+        // Shuffle & Sleep
+        shuffle: "🔀 Auto-Shuffle",
+        shuffleStart: "🔀 Shuffle starten",
+        shuffleStop: "⏹ Shuffle stoppen",
+        shuffleActive: "Shuffle aktiv",
+        sleepTimer: "⏰ Sleep Timer",
+        sleepStart: "⏰ Timer starten",
+        sleepStop: "⏹ Timer stoppen",
+        sleepActive: "Sleep Timer aktiv",
+        sleepMinutes: "Minuten",
+        sleepClock: "Uhrzeit",
+        sleepEndsAt: "Ende um",
+        
+        // Data Usage
+        dataUsage: "📊 Datenverbrauch",
+        currentSession: "Aktuelle Session",
+        dataTotal: "Gesamt",
+        dataAverage: "Durchschnitt/Tag",
+        dataReset: "🗑️ Daten zurücksetzen",
+        dataResetConfirm: "Datenverbrauch-Historie wirklich löschen?",
+        
+        // Settings
+        settings: "⚙️ Einstellungen",
+        language: "🌍 Sprache / Language",
+        selectLanguage: "Sprache wählen / Select language:",
+        languageInfo: "Die Sprache wird automatisch erkannt basierend auf deinem Standort.",
+        theme: "🎨 Theme",
+        themeInfo: "Weitere Themes kommen in zukünftigen Versionen.",
+        support: "❤️ Unterstützung",
+        supportText: "Diese App ist kostenlos und Open Source. Wenn sie dir gefällt, freue ich mich über eine kleine Unterstützung!",
+        donate: "☕ Buy me a Coffee",
+        donateInfo: "Donations helfen bei der Weiterentwicklung und dem Hosting.",
+        about: "ℹ️ Über diese App",
+        aboutText: "Eine Web-App zum Streamen von Radio-Sendern weltweit.",
+        aboutSource: "Datenquelle: Radio Browser API",
+        aboutFeatures: "30,000+ Sender · Kostenlos · Keine Werbung",
+        close: "✕"
+      },
+      en: {
+        // Header
+        subtitle: "SHOUTcast Directory · MP3 Streams",
+        installBtn: "📲 App",
+        
+        // Search & Filters
+        searchPlaceholder: "Search stations...",
+        searchBtn: "🔍 Search",
+        resetFilters: "↺ Reset",
+        showFavorites: "⭐ Favorites",
+        showAll: "Show all",
+        
+        // Genre & Location
+        genreLabel: "Genre",
+        subgenreLabel: "Subgenre",
+        countryLabel: "Country",
+        locationLabel: "Location",
+        locationAuto: "Auto (GPS)",
+        locationManual: "Manual",
+        locationNone: "None",
+        allGenres: "All",
+        allSubgenres: "All",
+        allCountries: "All",
+        
+        // Sorting
+        sortBy: "Sort by:",
+        sortFavorites: "⭐ Favorites",
+        sortDistance: "📍 Distance",
+        sortListeners: "👥 Listeners",
+        sortBitrate: "🎵 Bitrate",
+        sortName: "🔤 Name",
+        
+        // Station List
+        noStations: "No stations found. Try different filters.",
+        loading: "Loading stations...",
+        stationsFound: "stations found",
+        loadMore: "+ Load 20 more",
+        noGpsData: "No GPS Data",
+        
+        // Player
+        play: "▶ Play",
+        pause: "⏸ Pause",
+        prev: "⏮ Previous",
+        next: "⏭ Next",
+        volume: "Volume",
+        nowPlaying: "🎵 Now Playing",
+        waitingForMetadata: "Waiting for stream metadata...",
+        copyInfo: "📋 Copy info",
+        infoCopied: "✅ Copied!",
+        streamError: "❌ Stream error",
+        connectionError: "Connection error",
+        buffering: "🔄 Buffering...",
+        reconnecting: "🔄 Reconnecting",
+        noConnection: "📡 No connection",
+        
+        // Equalizer
+        equalizer: "🎚️ Equalizer",
+        visualizer: "Visualizer",
+        presetFlat: "Flat",
+        presetRock: "Rock",
+        presetMetal: "Metal",
+        presetBass: "Bass",
+        
+        // History & Stats
+        history: "📜 History",
+        listeningStats: "📊 Statistics",
+        clearHistory: "🗑️ Clear",
+        clearStats: "🗑️ Clear",
+        noHistory: "No history available",
+        noStats: "No statistics available",
+        sessions: "Sessions",
+        totalTime: "Total",
+        
+        // Shuffle & Sleep
+        shuffle: "🔀 Auto-Shuffle",
+        shuffleStart: "🔀 Start Shuffle",
+        shuffleStop: "⏹ Stop Shuffle",
+        shuffleActive: "Shuffle active",
+        sleepTimer: "⏰ Sleep Timer",
+        sleepStart: "⏰ Start Timer",
+        sleepStop: "⏹ Stop Timer",
+        sleepActive: "Sleep timer active",
+        sleepMinutes: "Minutes",
+        sleepClock: "Time",
+        sleepEndsAt: "Ends at",
+        
+        // Data Usage
+        dataUsage: "📊 Data Usage",
+        currentSession: "Current Session",
+        dataTotal: "Total",
+        dataAverage: "Average/Day",
+        dataReset: "🗑️ Reset data",
+        dataResetConfirm: "Really delete data usage history?",
+        
+        // Settings
+        settings: "⚙️ Settings",
+        language: "🌍 Sprache / Language",
+        selectLanguage: "Sprache wählen / Select language:",
+        languageInfo: "Language is automatically detected based on your location.",
+        theme: "🎨 Theme",
+        themeInfo: "More themes coming in future versions.",
+        support: "❤️ Support",
+        supportText: "This app is free and open source. If you like it, I'd appreciate your support!",
+        donate: "☕ Buy me a Coffee",
+        donateInfo: "Donations help with development and hosting.",
+        about: "ℹ️ About this app",
+        aboutText: "A web app for streaming radio stations worldwide.",
+        aboutSource: "Data source: Radio Browser API",
+        aboutFeatures: "30,000+ Stations · Free · No Ads",
+        close: "✕"
+      }
+    };
+    
+    // Translation helper function
+    function t(key) {
+      const lang = currentLang || 'en';
+      return translations[lang][key] || translations['en'][key] || key;
+    }
+    
+    // Auto-detect language based on location
+    function detectLanguage() {
+      // Check if user already set a language manually
+      const savedLang = localStorage.getItem('brummiesLanguage');
+      if (savedLang) {
+        currentLang = savedLang;
+        return currentLang;
+      }
+      
+      // Auto-detect based on location mode (country selection)
+      const mode = locationMode ? locationMode.value : null;
+      const dachCountries = ['DE', 'AT', 'CH'];
+      
+      if (mode && mode !== 'auto' && mode !== 'none') {
+        // Manual location selected → use country code
+        currentLang = dachCountries.includes(mode) ? 'de' : 'en';
+      } else {
+        // Auto or no location → use browser language
+        const browserLang = navigator.language || navigator.userLanguage || 'en';
+        currentLang = browserLang.startsWith('de') ? 'de' : 'en';
+      }
+      
+      console.log('Auto-detected language:', currentLang, 'based on location:', mode);
+      return currentLang;
+    }
+    
+    // Update UI with current language
+    function updateLanguageUI() {
+      document.documentElement.lang = currentLang;
+      
+      // Update language select
+      const langSelect = document.getElementById('languageSelect');
+      if (langSelect) {
+        langSelect.value = currentLang;
+      }
+      
+      const t = translations[currentLang];
+      
+      // Update ALL UI text elements based on current language
+      
+      // Headers (h2)
+      const headers = document.querySelectorAll('h2');
+      headers.forEach(h2 => {
+        const text = h2.textContent.trim();
+        if (text === '🔍 Sendersuche' || text === '🔍 Station Search') {
+          h2.textContent = currentLang === 'de' ? '🔍 Sendersuche' : '🔍 Station Search';
+        } else if (text === '▶ Now Playing') {
+          h2.textContent = '▶ Now Playing';
+        } else if (text.includes('Verlauf') || text.includes('History')) {
+          h2.textContent = currentLang === 'de' ? '📜 Verlauf & Statistik' : '📜 History & Statistics';
+        } else if (text.includes('Shuffle')) {
+          h2.textContent = '🔀 Auto-Shuffle';
+        } else if (text.includes('Sleep') || text.includes('Timer')) {
+          h2.textContent = '⏰ Sleep Timer';
+        } else if (text.includes('Equalizer') || text.includes('EQUALIZER')) {
+          h2.textContent = currentLang === 'de' ? '🎚️ EQUALIZER & VISUALIZER' : '🎚️ EQUALIZER & VISUALIZER';
+        }
+      });
+      
+      // Search input
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.placeholder = currentLang === 'de' ? "z.B. 'Rock', 'Metal'..." : "e.g. 'Rock', 'Metal'...";
+      }
+      
+      // Labels
+      document.querySelectorAll('label').forEach(label => {
+        const text = label.textContent.trim();
+        if (text === 'Sendersuche' || text === 'Station Search') {
+          label.textContent = currentLang === 'de' ? 'Sendersuche' : 'Station Search';
+        } else if (text === 'Hauptgenre' || text === 'Main Genre') {
+          label.textContent = currentLang === 'de' ? 'Hauptgenre' : 'Main Genre';
+        } else if (text === 'Untergenre' || text === 'Subgenre') {
+          label.textContent = currentLang === 'de' ? 'Untergenre' : 'Subgenre';
+        } else if (text === 'Land' || text === 'Country') {
+          label.textContent = currentLang === 'de' ? 'Land' : 'Country';
+        } else if (text === 'Standort' || text === 'Location') {
+          label.textContent = currentLang === 'de' ? 'Standort' : 'Location';
+        } else if (text === 'Lautstärke' || text === 'Volume') {
+          label.textContent = currentLang === 'de' ? 'Lautstärke' : 'Volume';
+        }
+      });
+      
+      // Buttons
+      const searchBtn = document.getElementById('searchBtn');
+      if (searchBtn) searchBtn.textContent = currentLang === 'de' ? '🔍 Suchen' : '🔍 Search';
+      
+      const showFavoritesBtn = document.getElementById('showFavoritesBtn');
+      if (showFavoritesBtn) {
+        const isFavoritesMode = showFavoritesBtn.textContent.includes('Alle') || showFavoritesBtn.textContent.includes('Show all');
+        showFavoritesBtn.textContent = isFavoritesMode ?
+          (currentLang === 'de' ? 'Alle anzeigen' : 'Show all') :
+          (currentLang === 'de' ? '⭐ Favoriten' : '⭐ Favorites');
+      }
+      
+      const resetFilters = document.getElementById('resetFilters');
+      if (resetFilters) resetFilters.textContent = '↺ Reset';
+      
+      const playBtn = document.getElementById('playBtn');
+      if (playBtn) {
+        const isPlaying = playBtn.textContent.includes('Pause');
+        playBtn.textContent = isPlaying ?
+          (currentLang === 'de' ? '⏸ Pause' : '⏸ Pause') :
+          (currentLang === 'de' ? '▶ Play' : '▶ Play');
+      }
+      
+      const prevBtn = document.getElementById('prevBtn');
+      if (prevBtn) prevBtn.textContent = currentLang === 'de' ? '⏮ Zurück' : '⏮ Previous';
+      
+      const nextBtn = document.getElementById('nextBtn');
+      if (nextBtn) nextBtn.textContent = currentLang === 'de' ? '⏭ Weiter' : '⏭ Next';
+      
+      const copyNowPlayingBtn = document.getElementById('copyNowPlayingBtn');
+      if (copyNowPlayingBtn) {
+        if (copyNowPlayingBtn.textContent.includes('Kopiert') || copyNowPlayingBtn.textContent.includes('Copied')) {
+          copyNowPlayingBtn.textContent = currentLang === 'de' ? '✅ Kopiert!' : '✅ Copied!';
+        } else {
+          copyNowPlayingBtn.textContent = currentLang === 'de' ? '📋 Info kopieren' : '📋 Copy info';
+        }
+      }
+      
+      // Select options
+      const genreSelect = document.getElementById('genreSelect');
+      if (genreSelect) {
+        const selectedValue = genreSelect.value;
+        genreSelect.innerHTML = currentLang === 'de' ?
+          `<option value="">Alle Genres</option>
+           <option value="rock">Rock</option>
+           <option value="metal">Metal</option>
+           <option value="pop">Pop</option>
+           <option value="classic">Classic</option>
+           <option value="jazz">Jazz</option>` :
+          `<option value="">All Genres</option>
+           <option value="rock">Rock</option>
+           <option value="metal">Metal</option>
+           <option value="pop">Pop</option>
+           <option value="classic">Classic</option>
+           <option value="jazz">Jazz</option>`;
+        genreSelect.value = selectedValue;
+      }
+      
+      const subgenreSelect = document.getElementById('subgenreSelect');
+      if (subgenreSelect && subgenreSelect.options.length === 1) {
+        subgenreSelect.options[0].textContent = currentLang === 'de' ? 'Alle' : 'All';
+      }
+      
+      const countryFilter = document.getElementById('countryFilter');
+      if (countryFilter && countryFilter.options[0]) {
+        countryFilter.options[0].textContent = currentLang === 'de' ? 'Alle Länder' : 'All Countries';
+      }
+      
+      const locationMode = document.getElementById('locationMode');
+      if (locationMode) {
+        const selectedValue = locationMode.value;
+        if (currentLang === 'de') {
+          locationMode.options[0].textContent = 'Automatisch';
+          locationMode.options[7].textContent = 'Keine';
+        } else {
+          locationMode.options[0].textContent = 'Automatic';
+          locationMode.options[7].textContent = 'None';
+        }
+        locationMode.value = selectedValue;
+      }
+      
+      // Sort controls label
+      const sortLabel = document.querySelector('.sort-controls small');
+      if (sortLabel) {
+        sortLabel.textContent = currentLang === 'de' ? 'Sortierung:' : 'Sort by:';
+      }
+      
+      // Station count
+      const stationCount = document.getElementById('stationCount');
+      if (stationCount && stationCount.textContent) {
+        const match = stationCount.textContent.match(/(\d+)/);
+        if (match) {
+          const count = match[1];
+          stationCount.textContent = currentLang === 'de' ? 
+            `${count} Sender` : 
+            `${count} stations`;
+        }
+      }
+      
+      // Load more button
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      if (loadMoreBtn) {
+        loadMoreBtn.textContent = '+20';
+      }
+      
+      // Loading message
+      const loadingDiv = document.querySelector('.loading');
+      if (loadingDiv && !loadingDiv.style.display) {
+        loadingDiv.textContent = currentLang === 'de' ?
+          'Klicke "Suchen" um zu starten...' :
+          'Click "Search" to start...';
+      }
+      
+      // Shuffle section
+      const shuffleToggle = document.getElementById('shuffleToggle');
+      if (shuffleToggle) {
+        shuffleToggle.textContent = currentLang === 'de' ? '🔀 Shuffle starten' : '🔀 Start Shuffle';
+      }
+      
+      const shuffleStatus = document.getElementById('shuffleStatus');
+      if (shuffleStatus && shuffleStatus.textContent) {
+        if (shuffleStatus.textContent.includes('aktiv') || shuffleStatus.textContent.includes('active')) {
+          shuffleStatus.textContent = currentLang === 'de' ? '✅ Shuffle aktiv' : '✅ Shuffle active';
+        }
+      }
+      
+      // Sleep Timer section
+      const sleepToggle = document.getElementById('sleepToggle');
+      if (sleepToggle) {
+        sleepToggle.textContent = currentLang === 'de' ? '⏰ Timer starten' : '⏰ Start Timer';
+      }
+      
+      const sleepStatus = document.getElementById('sleepStatus');
+      if (sleepStatus && sleepStatus.textContent) {
+        if (sleepStatus.textContent.includes('aktiv') || sleepStatus.textContent.includes('active')) {
+          // Keep the dynamic content but translate the "active" part
+          const match = sleepStatus.textContent.match(/(.+)(aktiv|active)/);
+          if (match) {
+            sleepStatus.textContent = match[1] + (currentLang === 'de' ? 'aktiv' : 'active');
+          }
+        }
+      }
+      
+      // Equalizer presets
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        const text = btn.textContent.trim().toLowerCase();
+        if (text === 'flat') btn.textContent = 'Flat';
+        else if (text === 'rock') btn.textContent = 'Rock';
+        else if (text === 'metal') btn.textContent = 'Metal';
+        else if (text === 'bass') btn.textContent = 'Bass';
+      });
+      
+      // Settings Panel
+      const langSettingsLanguage = document.getElementById('lang-settings-language');
+      const langSelectLanguage = document.getElementById('lang-select-language');
+      const langLanguageInfo = document.getElementById('lang-language-info');
+      const langThemeInfo = document.getElementById('lang-theme-info');
+      
+      if (langSettingsLanguage) langSettingsLanguage.textContent = '🌍 Sprache / Language';
+      if (langSelectLanguage) langSelectLanguage.textContent = 'Sprache wählen / Select language:';
+      
+      if (langLanguageInfo) {
+        langLanguageInfo.textContent = currentLang === 'de' ?
+          'Die Sprache wird automatisch erkannt basierend auf deinem Browser.' :
+          'Language is automatically detected based on your browser.';
+      }
+      
+      if (langThemeInfo) {
+        langThemeInfo.textContent = currentLang === 'de' ?
+          'Wähle ein Theme das zu deinem Musikgeschmack passt.' :
+          'Choose a theme that matches your musical taste.';
+      }
+      
+      console.log('Complete UI translated to:', currentLang);
+    }
 
     // --- DOM ELEMENTE ---
     const stationsListEl = document.getElementById("stationsList");
@@ -1698,7 +2259,7 @@ small {
       } else {
         const coords = countryCoords[mode];
         if (coords) {
-          manualLocation = { lat: coords.lat, lon: coords.lon };
+          manualLocation = { lat: coords.lat, lon: coords.lon, country: mode };
           userLocation = manualLocation;
           locationStatus.textContent = `📍 ${coords.name}`;
           if (allStations.length > 0) {
@@ -2392,7 +2953,13 @@ small {
         
         analyser.getByteFrequencyData(dataArray);
         
-        ctx.fillStyle = "#0b0b0f";
+        // Get theme colors from CSS variables
+        const styles = getComputedStyle(document.documentElement);
+        const bgColor = styles.getPropertyValue('--color-bg-primary').trim();
+        const accentColor = styles.getPropertyValue('--color-accent').trim();
+        
+        // Clear canvas with theme background
+        ctx.fillStyle = bgColor || "#0b0b0f";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         const barWidth = (canvas.width / bufferLength) * 2.5;
@@ -2401,9 +2968,23 @@ small {
         for (let i = 0; i < bufferLength; i++) {
           const barHeight = (dataArray[i] / 255) * canvas.height;
           
-          const r = barHeight + 100;
-          const g = 50;
-          const b = 50;
+          // Create gradient based on theme accent color
+          // Parse accent color (hex to RGB)
+          let accentRGB = { r: 239, g: 68, b: 68 }; // Default red
+          if (accentColor.startsWith('#')) {
+            const hex = accentColor.slice(1);
+            accentRGB = {
+              r: parseInt(hex.slice(0, 2), 16),
+              g: parseInt(hex.slice(2, 4), 16),
+              b: parseInt(hex.slice(4, 6), 16)
+            };
+          }
+          
+          // Vary intensity based on frequency
+          const intensity = barHeight / canvas.height;
+          const r = Math.floor(accentRGB.r * intensity + 100);
+          const g = Math.floor(accentRGB.g * intensity + 50);
+          const b = Math.floor(accentRGB.b * intensity + 50);
           
           ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
           ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
@@ -2413,7 +2994,7 @@ small {
       }
       
       draw();
-      console.log("Visualizer started");
+      console.log("Visualizer started with theme colors");
     }
 
     // --- PLAYER CONTROLS ---
@@ -3266,36 +3847,42 @@ small {
     });
 
     // Theme Switching (prepared for future)
+    // Theme Switching
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('brummiesTheme', theme);
+      console.log('Theme applied:', theme);
+    }
+    
     themeOptions.forEach(option => {
       option.addEventListener('click', () => {
         themeOptions.forEach(opt => opt.classList.remove('active'));
         option.classList.add('active');
         const theme = option.dataset.theme;
         
-        // Save to localStorage
-        localStorage.setItem('brummiesTheme', theme);
-        
-        // Future: Apply theme
-        console.log('Theme selected:', theme);
-        
-        // Show feedback
-        const themeName = option.querySelector('.theme-option-name').textContent;
-        alert(`Theme "${themeName}" ausgewählt!\n\nWeitere Themes kommen in zukünftigen Versionen.`);
+        // Apply theme immediately
+        applyTheme(theme);
       });
     });
 
-    // Language Selection (prepared for future)
+    // Language Selection with simplified auto-detection
     languageSelect.addEventListener('change', (e) => {
       const lang = e.target.value;
+      currentLang = lang;
       localStorage.setItem('brummiesLanguage', lang);
-      console.log('Language selected:', lang);
-      alert(`Sprache gewechselt zu: ${lang}\n\nMehrsprachigkeit wird in einer zukünftigen Version implementiert.`);
+      console.log('Language manually changed to:', lang);
+      
+      // Apply translations immediately WITHOUT reload!
+      updateLanguageUI();
     });
 
     // Load saved preferences
-    const savedTheme = localStorage.getItem('brummiesTheme') || 'dark';
-    const savedLang = localStorage.getItem('brummiesLanguage') || 'de';
+    const savedTheme = localStorage.getItem('brummiesTheme') || 'brummie';
     
+    // Apply saved theme
+    applyTheme(savedTheme);
+    
+    // Update theme option visual
     themeOptions.forEach(opt => {
       if (opt.dataset.theme === savedTheme) {
         opt.classList.add('active');
@@ -3304,16 +3891,35 @@ small {
       }
     });
     
-    languageSelect.value = savedLang;
+    // Simplified language auto-detection
+    const savedLang = localStorage.getItem('brummiesLanguage');
+    if (savedLang) {
+      currentLang = savedLang;
+    } else {
+      // Auto-detect: Only German for de-browsers, everything else English
+      const browserLang = navigator.language || navigator.userLanguage || 'en';
+      currentLang = browserLang.startsWith('de') ? 'de' : 'en';
+      console.log('Auto-detected language from browser:', currentLang);
+    }
+    
+    // Set language select to current language
+    if (languageSelect) {
+      languageSelect.value = currentLang || 'en';
+    }
+    
+    // Update UI with detected language
+    updateLanguageUI();
 
     // Donate Button
     donateBtn.addEventListener('click', () => {
-      // Open donation link (you can replace with your actual link)
-      const donationUrl = 'https://www.paypal.com/paypalme/ZaboChris'; // Replace with actual link
+      const donationUrl = 'https://www.paypal.com/paypalme/ZaboChris';
       
-      if (confirm('Vielen Dank für deine Unterstützung! 🙏\n\nMöchtest du zur Donation-Seite weitergeleitet werden?')) {
-        // window.open(donationUrl, '_blank');
-        alert('Donation-Link wird in einer zukünftigen Version aktiviert.\n\nVielen Dank für dein Interesse! ❤️');
+      const message = currentLang === 'de' ?
+        'Vielen Dank für deine Unterstützung! 🙏\n\nMöchtest du zur Donation-Seite weitergeleitet werden?' :
+        'Thank you for your support! 🙏\n\nWould you like to be redirected to the donation page?';
+      
+      if (confirm(message)) {
+        window.open(donationUrl, '_blank');
       }
     });
   </script>
