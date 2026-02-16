@@ -1321,7 +1321,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.0.0</p>
+        <p>Version: 1.0.1</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -1561,7 +1561,7 @@ small {
 
   </main>
 
-<audio id="radioAudio" preload="none" crossorigin="anonymous"></audio>
+<audio id="radioAudio" preload="auto" crossorigin="anonymous"></audio>
 
   <script>
     // --- GLOBALE VARIABLEN ---
@@ -1651,6 +1651,13 @@ small {
     const sleepStatusEl = document.getElementById("sleepStatus");
     const nowPlayingTextEl = document.getElementById("nowPlayingText");
     const copyNowPlayingBtn = document.getElementById("copyNowPlayingBtn");
+
+    // --- MOBILE STREAMING OPTIMIZATIONS ---
+    let reconnectAttempts = 0;
+    let maxReconnectAttempts = 3;
+    let reconnectTimeout = null;
+    let wakeLock = null;
+    let isBuffering = false;
 
     // --- SUBGENRE UPDATE ---
     genreSelect.addEventListener("change", () => {
@@ -2798,6 +2805,165 @@ small {
       stopMetadataPolling();
       stopDataTracking(); // Stop data tracking
       nowPlayingTextEl.textContent = "Verbindungsfehler";
+      
+      // Attempt reconnect for mobile
+      attemptReconnect();
+    });
+
+    // --- MOBILE STREAMING OPTIMIZATIONS ---
+    
+    // Buffer Events - zeigt Buffering an
+    audioEl.addEventListener("waiting", () => {
+      isBuffering = true;
+      stationInfoEl.textContent = "🔄 Buffering...";
+      console.log("Audio buffering...");
+    });
+    
+    audioEl.addEventListener("canplay", () => {
+      isBuffering = false;
+      reconnectAttempts = 0; // Reset auf erfolgreichen Buffer
+      if (currentStation) {
+        stationInfoEl.textContent = `🎶 ${currentStation.genre} · ${currentStation.bitrate}kbps`;
+      }
+      console.log("Audio can play");
+    });
+    
+    // Stalling Detection - kritisch für Mobile
+    audioEl.addEventListener("stalled", () => {
+      console.log("Audio stalled - reconnecting...");
+      attemptReconnect();
+    });
+    
+    audioEl.addEventListener("suspend", () => {
+      console.log("Audio suspended (normal for streaming)");
+    });
+    
+    // Progress Event für Buffer-Monitoring
+    audioEl.addEventListener("progress", () => {
+      if (audioEl.buffered.length > 0) {
+        const bufferedEnd = audioEl.buffered.end(audioEl.buffered.length - 1);
+        const currentTime = audioEl.currentTime;
+        const bufferedAhead = bufferedEnd - currentTime;
+        
+        // Log nur bei wenig Buffer (< 5 Sekunden)
+        if (bufferedAhead < 5) {
+          console.log(`Buffer: ${bufferedAhead.toFixed(1)}s ahead`);
+        }
+      }
+    });
+    
+    // Reconnect Logic
+    function attemptReconnect() {
+      if (!currentStation || reconnectAttempts >= maxReconnectAttempts) {
+        if (reconnectAttempts >= maxReconnectAttempts) {
+          stationInfoEl.textContent = "❌ Verbindung fehlgeschlagen";
+          console.log("Max reconnect attempts reached");
+        }
+        return;
+      }
+      
+      reconnectAttempts++;
+      console.log(`Reconnect attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
+      
+      stationInfoEl.textContent = `🔄 Neuverbindung (${reconnectAttempts}/${maxReconnectAttempts})...`;
+      
+      // Clear existing timeout
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 4000);
+      
+      reconnectTimeout = setTimeout(() => {
+        if (currentStation) {
+          console.log("Attempting to reconnect stream...");
+          const wasPlaying = !audioEl.paused;
+          
+          audioEl.src = currentStation.streamUrl;
+          
+          if (wasPlaying) {
+            audioEl.play().catch(err => {
+              console.error("Reconnect play failed:", err);
+              stationInfoEl.textContent = "❌ Wiedergabe fehlgeschlagen";
+            });
+          }
+        }
+      }, delay);
+    }
+    
+    // Wake Lock API - verhindert Sleep auf Mobile
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Wake Lock activated');
+          
+          wakeLock.addEventListener('release', () => {
+            console.log('Wake Lock released');
+          });
+        } catch (err) {
+          console.log('Wake Lock failed:', err);
+        }
+      }
+    }
+    
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release().then(() => {
+          wakeLock = null;
+        });
+      }
+    }
+    
+    // Aktiviere Wake Lock beim Abspielen
+    audioEl.addEventListener("playing", () => {
+      if (currentStation) {
+        stationInfoEl.textContent = `🎶 ${currentStation.genre} · ${currentStation.bitrate}kbps`;
+      }
+      requestWakeLock();
+    });
+    
+    // Release Wake Lock bei Pause
+    audioEl.addEventListener("pause", () => {
+      releaseWakeLock();
+    });
+    
+    // Visibility Change - behält Streaming bei Tab-Wechsel
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        console.log("Page hidden - maintaining stream");
+        // Stream läuft weiter
+      } else {
+        console.log("Page visible - checking stream");
+        
+        // Check ob Stream noch läuft
+        if (currentStation && audioEl.paused && playBtn.textContent === "⏸ Pause") {
+          console.log("Stream was paused while hidden - attempting resume");
+          audioEl.play().catch(err => {
+            console.error("Resume failed:", err);
+          });
+        }
+        
+        // Re-acquire Wake Lock wenn nötig
+        if (currentStation && !audioEl.paused) {
+          requestWakeLock();
+        }
+      }
+    });
+    
+    // Online/Offline Detection
+    window.addEventListener('online', () => {
+      console.log('Network online');
+      if (currentStation && audioEl.paused && playBtn.textContent === "⏸ Pause") {
+        console.log('Attempting to resume after reconnect');
+        attemptReconnect();
+      }
+    });
+    
+    window.addEventListener('offline', () => {
+      console.log('Network offline');
+      stationInfoEl.textContent = "📡 Keine Verbindung";
     });
 
     // --- EVENT LISTENERS ---
