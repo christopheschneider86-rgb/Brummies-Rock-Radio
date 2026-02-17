@@ -1299,11 +1299,15 @@ small {
         <div class="settings-option">
           <label for="languageSelect" id="lang-select-language">Sprache wählen / Select language:</label>
           <select id="languageSelect">
-            <option value="de">Deutsch</option>
-            <option value="en">English</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="it">🇮🇹 Italiano</option>
           </select>
         </div>
-        <p><small id="lang-language-info">Die Sprache wird automatisch erkannt basierend auf deinem Standort.</small></p>
+        <p id="lang-translation-status" style="margin:4px 0; font-size:11px; opacity:0.7;"></p>
+        <p><small id="lang-language-info">Die Sprache wird automatisch erkannt basierend auf deinem Browser.</small></p>
       </div>
 
       <!-- THEME -->
@@ -1389,7 +1393,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.1.0</p>
+        <p>Version: 1.1.1</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -1599,7 +1603,7 @@ small {
         <label>Bis (Min)</label>
         <input type="number" id="shuffleTo" value="10" min="1" max="120" />
       </div>
-      <small>Springt zufällig zwischen ersten 20 Sendern</small>
+      <small>Springt zufällig zwischen ersten 20 Sendern\n\n </small>
     </div>
 
     <!-- SLEEP -->
@@ -1692,235 +1696,244 @@ small {
     // --- INTERNATIONALIZATION ---
     let currentLang = localStorage.getItem('brummiesLanguage') || null; // null = auto-detect
     
-    const translations = {
-      de: {
-        // Header
-        subtitle: "SHOUTcast Directory · MP3 Streams",
-        installBtn: "📲 App",
-        
-        // Search & Filters
-        searchPlaceholder: "Sender suchen...",
-        searchBtn: "🔍 Suchen",
-        resetFilters: "↺ Reset",
-        showFavorites: "⭐ Favoriten",
-        showAll: "Alle anzeigen",
-        
-        // Genre & Location
-        genreLabel: "Genre",
-        subgenreLabel: "Untergenre",
-        countryLabel: "Land",
-        locationLabel: "Standort",
-        locationAuto: "Auto (GPS)",
-        locationManual: "Manuell",
-        locationNone: "Keine",
-        allGenres: "Alle",
-        allSubgenres: "Alle",
-        allCountries: "Alle",
-        
-        // Sorting
-        sortBy: "Sortierung:",
-        sortFavorites: "⭐ Favoriten",
-        sortDistance: "📍 Distanz",
-        sortListeners: "👥 Hörer",
-        sortBitrate: "🎵 Bitrate",
-        sortName: "🔤 Name",
-        
-        // Station List
-        noStations: "Keine Sender gefunden. Versuche andere Filter.",
-        loading: "Lade Sender...",
-        stationsFound: "Sender gefunden",
-        loadMore: "+ 20 weitere laden",
-        noGpsData: "Keine GPS-Daten",
-        
-        // Player
-        play: "▶ Play",
-        pause: "⏸ Pause",
-        prev: "⏮ Zurück",
-        next: "⏭ Weiter",
-        volume: "Lautstärke",
-        nowPlaying: "🎵 Now Playing",
-        waitingForMetadata: "Warte auf Stream-Metadaten...",
-        copyInfo: "📋 Info kopieren",
-        infoCopied: "✅ Kopiert!",
-        streamError: "❌ Stream-Fehler",
-        connectionError: "Verbindungsfehler",
-        buffering: "🔄 Buffering...",
-        reconnecting: "🔄 Neuverbindung",
-        noConnection: "📡 Keine Verbindung",
-        
-        // Equalizer
-        equalizer: "🎚️ Equalizer",
-        visualizer: "Visualizer",
-        presetFlat: "Flat",
-        presetRock: "Rock",
-        presetMetal: "Metal",
-        presetBass: "Bass",
-        
-        // History & Stats
-        history: "📜 Verlauf",
-        listeningStats: "📊 Statistik",
-        clearHistory: "🗑️ Löschen",
-        clearStats: "🗑️ Löschen",
-        noHistory: "Kein Verlauf vorhanden",
-        noStats: "Keine Statistik vorhanden",
-        sessions: "Sitzungen",
-        totalTime: "Gesamt",
-        
-        // Shuffle & Sleep
-        shuffle: "🔀 Auto-Shuffle",
-        shuffleStart: "🔀 Shuffle starten",
-        shuffleStop: "⏹ Shuffle stoppen",
-        shuffleActive: "Shuffle aktiv",
-        sleepTimer: "⏰ Sleep Timer",
-        sleepStart: "⏰ Timer starten",
-        sleepStop: "⏹ Timer stoppen",
-        sleepActive: "Sleep Timer aktiv",
-        sleepMinutes: "Minuten",
-        sleepClock: "Uhrzeit",
-        sleepEndsAt: "Ende um",
-        
-        // Data Usage
-        dataUsage: "📊 Datenverbrauch",
-        currentSession: "Aktuelle Session",
-        dataTotal: "Gesamt",
-        dataAverage: "Durchschnitt/Tag",
-        dataReset: "🗑️ Daten zurücksetzen",
-        dataResetConfirm: "Datenverbrauch-Historie wirklich löschen?",
-        
-        // Settings
-        settings: "⚙️ Einstellungen",
-        language: "🌍 Sprache / Language",
-        selectLanguage: "Sprache wählen / Select language:",
-        languageInfo: "Die Sprache wird automatisch erkannt basierend auf deinem Standort.",
-        theme: "🎨 Theme",
-        themeInfo: "Weitere Themes kommen in zukünftigen Versionen.",
-        support: "❤️ Unterstützung",
-        supportText: "Diese App ist kostenlos und Open Source. Wenn sie dir gefällt, freue ich mich über eine kleine Unterstützung!",
-        donate: "☕ Buy me a Coffee",
-        donateInfo: "Donations helfen bei der Weiterentwicklung und dem Hosting.",
-        about: "ℹ️ Über diese App",
-        aboutText: "Eine Web-App zum Streamen von Radio-Sendern weltweit.",
-        aboutSource: "Datenquelle: Radio Browser API",
-        aboutFeatures: "30,000+ Sender · Kostenlos · Keine Werbung",
-        close: "✕"
-      },
-      en: {
-        // Header
-        subtitle: "SHOUTcast Directory · MP3 Streams",
-        installBtn: "📲 App",
-        
-        // Search & Filters
-        searchPlaceholder: "Search stations...",
-        searchBtn: "🔍 Search",
-        resetFilters: "↺ Reset",
-        showFavorites: "⭐ Favorites",
-        showAll: "Show all",
-        
-        // Genre & Location
-        genreLabel: "Genre",
-        subgenreLabel: "Subgenre",
-        countryLabel: "Country",
-        locationLabel: "Location",
-        locationAuto: "Auto (GPS)",
-        locationManual: "Manual",
-        locationNone: "None",
-        allGenres: "All",
-        allSubgenres: "All",
-        allCountries: "All",
-        
-        // Sorting
-        sortBy: "Sort by:",
-        sortFavorites: "⭐ Favorites",
-        sortDistance: "📍 Distance",
-        sortListeners: "👥 Listeners",
-        sortBitrate: "🎵 Bitrate",
-        sortName: "🔤 Name",
-        
-        // Station List
-        noStations: "No stations found. Try different filters.",
-        loading: "Loading stations...",
-        stationsFound: "stations found",
-        loadMore: "+ Load 20 more",
-        noGpsData: "No GPS Data",
-        
-        // Player
-        play: "▶ Play",
-        pause: "⏸ Pause",
-        prev: "⏮ Previous",
-        next: "⏭ Next",
-        volume: "Volume",
-        nowPlaying: "🎵 Now Playing",
-        waitingForMetadata: "Waiting for stream metadata...",
-        copyInfo: "📋 Copy info",
-        infoCopied: "✅ Copied!",
-        streamError: "❌ Stream error",
-        connectionError: "Connection error",
-        buffering: "🔄 Buffering...",
-        reconnecting: "🔄 Reconnecting",
-        noConnection: "📡 No connection",
-        
-        // Equalizer
-        equalizer: "🎚️ Equalizer",
-        visualizer: "Visualizer",
-        presetFlat: "Flat",
-        presetRock: "Rock",
-        presetMetal: "Metal",
-        presetBass: "Bass",
-        
-        // History & Stats
-        history: "📜 History",
-        listeningStats: "📊 Statistics",
-        clearHistory: "🗑️ Clear",
-        clearStats: "🗑️ Clear",
-        noHistory: "No history available",
-        noStats: "No statistics available",
-        sessions: "Sessions",
-        totalTime: "Total",
-        
-        // Shuffle & Sleep
-        shuffle: "🔀 Auto-Shuffle",
-        shuffleStart: "🔀 Start Shuffle",
-        shuffleStop: "⏹ Stop Shuffle",
-        shuffleActive: "Shuffle active",
-        sleepTimer: "⏰ Sleep Timer",
-        sleepStart: "⏰ Start Timer",
-        sleepStop: "⏹ Stop Timer",
-        sleepActive: "Sleep timer active",
-        sleepMinutes: "Minutes",
-        sleepClock: "Time",
-        sleepEndsAt: "Ends at",
-        
-        // Data Usage
-        dataUsage: "📊 Data Usage",
-        currentSession: "Current Session",
-        dataTotal: "Total",
-        dataAverage: "Average/Day",
-        dataReset: "🗑️ Reset data",
-        dataResetConfirm: "Really delete data usage history?",
-        
-        // Settings
-        settings: "⚙️ Settings",
-        language: "🌍 Sprache / Language",
-        selectLanguage: "Sprache wählen / Select language:",
-        languageInfo: "Language is automatically detected based on your location.",
-        theme: "🎨 Theme",
-        themeInfo: "More themes coming in future versions.",
-        support: "❤️ Support",
-        supportText: "This app is free and open source. If you like it, I'd appreciate your support!",
-        donate: "☕ Buy me a Coffee",
-        donateInfo: "Donations help with development and hosting.",
-        about: "ℹ️ About this app",
-        aboutText: "A web app for streaming radio stations worldwide.",
-        aboutSource: "Data source: Radio Browser API",
-        aboutFeatures: "30,000+ Stations · Free · No Ads",
-        close: "✕"
-      }
+    // --- AUTO-TRANSLATION ENGINE (MyMemory API - Free, no key needed) ---
+    // All UI strings defined once in German (source language)
+    // Everything else is translated automatically via API
+    
+    const sourceTexts = {
+      // Headers
+      'h2-search': '🔍 Sendersuche',
+      'h2-history': '📜 Verlauf & Statistik',
+      'h2-shuffle': '🔀 Auto-Shuffle',
+      'h2-sleep': '⏰ Sleep Timer',
+      
+      // Labels
+      'label-search': 'Sendersuche',
+      'label-genre': 'Hauptgenre',
+      'label-subgenre': 'Untergenre',
+      'label-country': 'Land',
+      'label-location': 'Standort',
+      'label-volume': 'Lautstärke',
+      
+      // Buttons
+      'btn-search': '🔍 Suchen',
+      'btn-favorites': '⭐ Favoriten',
+      'btn-all': 'Alle anzeigen',
+      'btn-reset': '↺ Reset',
+      'btn-prev': '⏮ Zurück',
+      'btn-next': '⏭ Weiter',
+      'btn-copy': '📋 Info kopieren',
+      'btn-copied': '✅ Kopiert!',
+      'btn-shuffle-start': '🔀 Shuffle starten',
+      'btn-shuffle-stop': '⏹ Shuffle stoppen',
+      'btn-sleep-start': '⏰ Timer starten',
+      'btn-sleep-stop': '⏹ Timer stoppen',
+      
+      // Select options
+      'opt-all-genres': 'Alle Genres',
+      'opt-all-countries': 'Alle Länder',
+      'opt-auto': 'Automatisch',
+      'opt-none': 'Keine',
+      'opt-all': 'Alle',
+      
+      // Status
+      'sort-label': 'Sortierung:',
+      'loading': 'Klicke "Suchen" um zu starten...',
+      'shuffle-active': '✅ Shuffle aktiv',
+      'sleep-active': 'Sleep Timer aktiv',
+      'no-gps': 'Keine GPS-Daten',
+      
+      // Messages
+      'search-placeholder': "z.B. 'Rock', 'Metal'...",
+      'waiting-metadata': 'Warte auf Stream-Metadaten...',
+      'buffering': '🔄 Buffering...',
+      'reconnecting': '🔄 Neuverbindung',
+      'no-connection': '📡 Keine Verbindung',
+      'stream-error': '❌ Stream-Fehler',
+      'stations-singular': 'Sender',
+      'stations-plural': 'Sender',
     };
     
-    // Translation helper function
+    // Translation cache: { 'de|en': { 'Suchen': 'Search', ... } }
+    const translationCache = JSON.parse(localStorage.getItem('brummiesTranslations') || '{}');
+    
+    // MyMemory API - Free, 1000 requests/day, no key needed
+    async function translateText(text, targetLang) {
+      if (targetLang === 'de') return text; // Source is German
+      
+      const cacheKey = `de|${targetLang}`;
+      if (!translationCache[cacheKey]) translationCache[cacheKey] = {};
+      if (translationCache[cacheKey][text]) return translationCache[cacheKey][text];
+      
+      try {
+        // Strip emoji for translation, re-add after
+        const emojiMatch = text.match(/^([^\w\s]+\s?)/);
+        const emoji = emojiMatch ? emojiMatch[1] : '';
+        const cleanText = emoji ? text.slice(emoji.length) : text;
+        
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=de|${targetLang}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.responseStatus === 200) {
+          const translated = emoji + data.responseData.translatedText;
+          translationCache[cacheKey][text] = translated;
+          // Save cache to localStorage
+          localStorage.setItem('brummiesTranslations', JSON.stringify(translationCache));
+          return translated;
+        }
+      } catch (err) {
+        console.warn('Translation failed for:', text, err);
+      }
+      return text; // Fallback to original
+    }
+    
+    // Translate all UI texts at once (batch to save API calls)
+    async function applyTranslations(targetLang) {
+      if (targetLang === 'de') {
+        // Restore German (source)
+        applyTextToUI(sourceTexts);
+        return;
+      }
+      
+      const statusEl = document.getElementById('lang-translation-status');
+      if (statusEl) statusEl.textContent = '⏳ Übersetze...';
+      
+      // Check cache first
+      const cacheKey = `de|${targetLang}`;
+      const cached = translationCache[cacheKey] || {};
+      const textsToTranslate = Object.entries(sourceTexts).filter(([k, v]) => !cached[v]);
+      
+      // Translate missing texts
+      if (textsToTranslate.length > 0) {
+        await Promise.allSettled(
+          textsToTranslate.map(async ([key, text]) => {
+            const translated = await translateText(text, targetLang);
+            cached[text] = translated;
+          })
+        );
+        translationCache[cacheKey] = cached;
+        localStorage.setItem('brummiesTranslations', JSON.stringify(translationCache));
+      }
+      
+      // Build translated map
+      const translated = {};
+      Object.entries(sourceTexts).forEach(([key, text]) => {
+        translated[key] = cached[text] || text;
+      });
+      
+      applyTextToUI(translated);
+      if (statusEl) statusEl.textContent = '✅';
+      setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 2000);
+    }
+    
+    // Apply translated texts to DOM
+    function applyTextToUI(texts) {
+      // Helper
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+      const setAttr = (id, attr, text) => { const el = document.getElementById(id); if (el) el[attr] = text; };
+      
+      // Headers
+      document.querySelectorAll('h2').forEach(h2 => {
+        const t = h2.textContent.trim();
+        if (t.includes('Sendersuche') || t.includes('Station Search') || t.includes('Recherche') || t.includes('Búsqueda') || t.includes('Ricerca')) {
+          h2.textContent = texts['h2-search'];
+        } else if (t.includes('Verlauf') || t.includes('History') || t.includes('Historique') || t.includes('Historial') || t.includes('Cronologia')) {
+          h2.textContent = texts['h2-history'];
+        } else if (t.includes('Shuffle')) {
+          h2.textContent = texts['h2-shuffle'];
+        } else if (t.includes('Sleep') || t.includes('Timer')) {
+          h2.textContent = texts['h2-sleep'];
+        }
+      });
+      
+      // Labels
+      document.querySelectorAll('label').forEach(label => {
+        const t = label.textContent.trim();
+        if (t === 'Sendersuche' || t === 'Station Search' || t === 'Recherche de stations' || t === 'Búsqueda de emisoras' || t === 'Ricerca stazione') {
+          label.textContent = texts['label-search'];
+        } else if (t === 'Hauptgenre' || t === 'Main Genre' || t === 'Genre principal') {
+          label.textContent = texts['label-genre'];
+        } else if (t === 'Untergenre' || t === 'Subgenre' || t === 'Sous-genre') {
+          label.textContent = texts['label-subgenre'];
+        } else if (t === 'Land' || t === 'Country' || t === 'Pays' || t === 'País' || t === 'Paese') {
+          label.textContent = texts['label-country'];
+        } else if (t === 'Standort' || t === 'Location' || t === 'Emplacement' || t === 'Ubicación' || t === 'Posizione') {
+          label.textContent = texts['label-location'];
+        } else if (t === 'Lautstärke' || t === 'Volume') {
+          label.textContent = texts['label-volume'];
+        }
+      });
+      
+      // Buttons
+      const searchBtn = document.getElementById('searchBtn');
+      if (searchBtn && !searchBtn.textContent.includes('↺')) searchBtn.textContent = texts['btn-search'];
+      
+      const showFavBtn = document.getElementById('showFavoritesBtn');
+      if (showFavBtn) {
+        const isFavMode = showFavBtn.dataset.favmode === 'true';
+        showFavBtn.textContent = isFavMode ? texts['btn-all'] : texts['btn-favorites'];
+      }
+      
+      const resetBtn = document.getElementById('resetFilters');
+      if (resetBtn) resetBtn.textContent = texts['btn-reset'];
+      
+      const prevBtn = document.getElementById('prevBtn');
+      if (prevBtn) prevBtn.textContent = texts['btn-prev'];
+      
+      const nextBtn = document.getElementById('nextBtn');
+      if (nextBtn) nextBtn.textContent = texts['btn-next'];
+      
+      const copyBtn = document.getElementById('copyNowPlayingBtn');
+      if (copyBtn && !copyBtn.textContent.includes('✅')) copyBtn.textContent = texts['btn-copy'];
+      
+      // Placeholders
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.placeholder = texts['search-placeholder'];
+      
+      // Select options
+      const genreSelect = document.getElementById('genreSelect');
+      if (genreSelect && genreSelect.options[0]) {
+        genreSelect.options[0].textContent = texts['opt-all-genres'];
+      }
+      
+      const countryFilter = document.getElementById('countryFilter');
+      if (countryFilter && countryFilter.options[0]) {
+        countryFilter.options[0].textContent = texts['opt-all-countries'];
+      }
+      
+      const locationMode = document.getElementById('locationMode');
+      if (locationMode) {
+        if (locationMode.options[0]) locationMode.options[0].textContent = texts['opt-auto'];
+        const noneOpt = Array.from(locationMode.options).find(o => o.value === 'none');
+        if (noneOpt) noneOpt.textContent = texts['opt-none'];
+      }
+      
+      const subgenreSelect = document.getElementById('subgenreSelect');
+      if (subgenreSelect && subgenreSelect.options[0]) {
+        subgenreSelect.options[0].textContent = texts['opt-all'];
+      }
+      
+      // Sort label
+      const sortLabel = document.querySelector('.sort-controls small');
+      if (sortLabel) sortLabel.textContent = texts['sort-label'];
+      
+      // Loading text
+      const loadingDivs = document.querySelectorAll('.loading');
+      loadingDivs.forEach(div => {
+        if (div.textContent.includes('Suchen') || div.textContent.includes('Search') || div.textContent.includes('start') || div.textContent.includes('démarrer')) {
+          div.textContent = texts['loading'];
+        }
+      });
+      
+      // Language select itself
+      const langSelect = document.getElementById('languageSelect');
+      if (langSelect) langSelect.value = currentLang;
+    }
+    
+    // Translation helper - now uses sourceTexts (German = source)
     function t(key) {
-      const lang = currentLang || 'en';
-      return translations[lang][key] || translations['en'][key] || key;
+      return sourceTexts[key] || key;
     }
     
     // Auto-detect language based on location
@@ -1959,7 +1972,11 @@ small {
         langSelect.value = currentLang;
       }
       
-      const t = translations[currentLang];
+      // updateLanguageUI is called for German only - other languages use applyTranslations API
+      if (currentLang === 'de') {
+        applyTextToUI(sourceTexts);
+        return;
+      }
       
       // Update ALL UI text elements based on current language
       
@@ -2872,11 +2889,30 @@ small {
     }
 
     // --- WEB AUDIO EQ & VISUALIZER ---
+    // CarPlay Detection - AudioContext causes 2-second interruptions in CarPlay
+    const isCarPlay = /CarPlay/i.test(navigator.userAgent);
+    if (isCarPlay) {
+      console.log('CarPlay detected - AudioContext/EQ disabled to prevent interruptions');
+      const eqSection = document.getElementById('eq');
+      if (eqSection) eqSection.style.display = 'none';
+    }
+
     function initAudioContext() {
       if (audioContext) return;
       
+      // CRITICAL: Skip Web Audio API for CarPlay!
+      // createMediaElementSource() re-routes audio through a Web Audio processing graph.
+      // CarPlay manages its own audio session - this conflict causes exactly 2-second interruptions
+      // as iOS tries to negotiate the audio session repeatedly.
+      if (isCarPlay) {
+        console.log('CarPlay: Skipping AudioContext to prevent interruptions');
+        return;
+      }
+      
       try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+          latencyHint: 'playback'
+        });
         source = audioContext.createMediaElementSource(audioEl);
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
@@ -3470,8 +3506,12 @@ small {
     
     // Stalling Detection - kritisch für Mobile
     audioEl.addEventListener("stalled", () => {
-      console.log("Audio stalled - reconnecting...");
-      attemptReconnect();
+      console.log("Audio stalled");
+      // CarPlay: 'stalled' fires normally during audio session transitions.
+      // Do NOT reconnect immediately - this causes the 2-second interruption loop.
+      if (!isCarPlay) {
+        attemptReconnect();
+      }
     });
     
     audioEl.addEventListener("suspend", () => {
@@ -3560,6 +3600,11 @@ small {
     function startStreamHeartbeat() {
       stopStreamHeartbeat();
       
+      // CarPlay: Kein aggressives Reconnect - das verursacht die 2s-Unterbrechungen!
+      // Längeres Intervall, nur bei echtem Problem reconnecten
+      const interval = isCarPlay ? 15000 : 5000;
+      let stalledCount = 0;
+      
       heartbeatInterval = setInterval(() => {
         if (!currentStation || audioEl.paused) return;
         
@@ -3567,27 +3612,31 @@ small {
         
         // Check ob Playback fortschreitet
         if (currentTime === lastPlaybackTime && !isBuffering) {
-          console.warn('Stream appears stalled (no playback progress)');
+          stalledCount++;
+          console.warn(`Stream stalled for ${stalledCount * (interval/1000)}s`);
           
-          // Check ob wir wirklich nicht spielen
-          if (!audioEl.paused && audioEl.readyState < 3) {
-            console.log('Stream stalled - attempting reconnect');
+          // Erst nach mehreren Checks reconnecten (verhindert false positives bei CarPlay)
+          const stallThreshold = isCarPlay ? 3 : 1; // CarPlay: erst nach 45s reconnect
+          if (stalledCount >= stallThreshold && !audioEl.paused && audioEl.readyState < 3) {
+            console.log('Stream definitely stalled - attempting reconnect');
+            stalledCount = 0;
             attemptReconnect();
           }
+        } else {
+          stalledCount = 0; // Reset bei normalem Fortschritt
         }
         
         lastPlaybackTime = currentTime;
         
-        // Log Buffer Health
-        if (audioEl.buffered.length > 0) {
+        // Buffer Health (nur wenn nicht CarPlay)
+        if (!isCarPlay && audioEl.buffered.length > 0) {
           const bufferedEnd = audioEl.buffered.end(audioEl.buffered.length - 1);
           const bufferedAhead = bufferedEnd - currentTime;
-          
           if (bufferedAhead < 2) {
-            console.warn(`Low buffer: ${bufferedAhead.toFixed(1)}s - stream may stutter soon`);
+            console.warn(`Low buffer: ${bufferedAhead.toFixed(1)}s`);
           }
         }
-      }, 5000); // Check alle 5 Sekunden
+      }, interval);
       
       console.log('Stream heartbeat monitor started');
     }
@@ -3872,43 +3921,40 @@ small {
       localStorage.setItem('brummiesLanguage', lang);
       console.log('Language manually changed to:', lang);
       
-      // Apply translations immediately WITHOUT reload!
-      updateLanguageUI();
+      // Apply auto-translations via MyMemory API
+      applyTranslations(lang);
     });
 
     // Load saved preferences
     const savedTheme = localStorage.getItem('brummiesTheme') || 'brummie';
-    
-    // Apply saved theme
     applyTheme(savedTheme);
     
-    // Update theme option visual
     themeOptions.forEach(opt => {
-      if (opt.dataset.theme === savedTheme) {
-        opt.classList.add('active');
-      } else {
-        opt.classList.remove('active');
-      }
+      opt.classList.toggle('active', opt.dataset.theme === savedTheme);
     });
     
-    // Simplified language auto-detection
+    // Auto-detect language from browser
     const savedLang = localStorage.getItem('brummiesLanguage');
     if (savedLang) {
       currentLang = savedLang;
     } else {
-      // Auto-detect: Only German for de-browsers, everything else English
-      const browserLang = navigator.language || navigator.userLanguage || 'en';
-      currentLang = browserLang.startsWith('de') ? 'de' : 'en';
-      console.log('Auto-detected language from browser:', currentLang);
+      // Map browser language to supported language
+      const browserLang = (navigator.language || 'en').toLowerCase();
+      if (browserLang.startsWith('de')) currentLang = 'de';
+      else if (browserLang.startsWith('fr')) currentLang = 'fr';
+      else if (browserLang.startsWith('es')) currentLang = 'es';
+      else if (browserLang.startsWith('it')) currentLang = 'it';
+      else currentLang = 'en';
+      console.log('Auto-detected language:', currentLang, '(from browser:', navigator.language, ')');
     }
     
     // Set language select to current language
     if (languageSelect) {
-      languageSelect.value = currentLang || 'en';
+      languageSelect.value = currentLang;
     }
     
-    // Update UI with detected language
-    updateLanguageUI();
+    // Apply translations on load
+    applyTranslations(currentLang);
 
     // Donate Button
     donateBtn.addEventListener('click', () => {
