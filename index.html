@@ -75,6 +75,27 @@
       --color-rasta-yellow: #ffd700;
       --color-rasta-green: #27ae60;
     }
+    
+    /* Theme: Setre (Sunset/Beach - Orange, Petrol, Sand) */
+    [data-theme="setre"] {
+      --color-bg-primary: #1a1f21;
+      --color-bg-secondary: #253237;
+      --color-bg-tertiary: #2f3e44;
+      --color-bg-input: #121617;
+      --color-accent: #ff8c00;
+      --color-accent-hover: #ff7700;
+      --color-text-primary: #f5f5f0;
+      --color-text-secondary: #d9d9cc;
+      --color-text-muted: #8b8b82;
+      --color-border: #ff8c00;
+      --color-gradient-start: #0a7b83;
+      --color-gradient-end: #ff8c00;
+      
+      /* Setre accent colors */
+      --color-orange: #ff8c00;
+      --color-petrol: #0a7b83;
+      --color-sand: #d4a574;
+    }
 
 * { 
   -webkit-tap-highlight-color: transparent;
@@ -1343,6 +1364,16 @@ small {
             </div>
             <div class="theme-option-name">🎵 Glaubnix</div>
           </div>
+          
+          <!-- Setre (Sunset/Beach) -->
+          <div class="theme-option" data-theme="setre">
+            <div class="theme-preview" style="background: #1a1f21;">
+              <div class="theme-preview-color" style="background: #ff8c00;"></div>
+              <div class="theme-preview-color" style="background: #0a7b83;"></div>
+              <div class="theme-preview-color" style="background: #d4a574;"></div>
+            </div>
+            <div class="theme-option-name">🌅 Setre</div>
+          </div>
         </div>
         <p><small id="lang-theme-info">Wähle ein Theme das zu deinem Musikgeschmack passt.</small></p>
       </div>
@@ -1393,7 +1424,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.1.1</p>
+        <p>Version: 1.1.2</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -1603,7 +1634,7 @@ small {
         <label>Bis (Min)</label>
         <input type="number" id="shuffleTo" value="10" min="1" max="120" />
       </div>
-      <small>Springt zufällig zwischen ersten 20 Sendern\n\n </small>
+      <small>Springt zufällig zwischen ersten 20 Sendern</small>
     </div>
 
     <!-- SLEEP -->
@@ -2889,23 +2920,54 @@ small {
     }
 
     // --- WEB AUDIO EQ & VISUALIZER ---
-    // CarPlay Detection - AudioContext causes 2-second interruptions in CarPlay
+    // CarPlay & Bluetooth Detection
     const isCarPlay = /CarPlay/i.test(navigator.userAgent);
+    
+    // Detect Bluetooth audio output (multiple methods)
+    let isBluetoothAudio = false;
+    
+    // Method 1: Check MediaDevices API
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
+        isBluetoothAudio = audioOutputs.some(d => 
+          d.label.toLowerCase().includes('bluetooth') ||
+          d.label.toLowerCase().includes('airpods') ||
+          d.label.toLowerCase().includes('wireless')
+        );
+        console.log('Bluetooth audio detected:', isBluetoothAudio);
+      });
+    }
+    
+    // Method 2: Check for Bluetooth in audio context (fallback)
+    const checkBluetoothAudio = () => {
+      if ('bluetooth' in navigator) {
+        isBluetoothAudio = true;
+      }
+    };
+    checkBluetoothAudio();
+    
+    const isExternalAudio = isCarPlay || isBluetoothAudio;
+    
     if (isCarPlay) {
-      console.log('CarPlay detected - AudioContext/EQ disabled to prevent interruptions');
+      console.log('CarPlay detected - AudioContext/EQ disabled, ultra-conservative streaming');
       const eqSection = document.getElementById('eq');
       if (eqSection) eqSection.style.display = 'none';
+    }
+    
+    if (isBluetoothAudio) {
+      console.log('Bluetooth audio detected - conservative streaming mode');
     }
 
     function initAudioContext() {
       if (audioContext) return;
       
-      // CRITICAL: Skip Web Audio API for CarPlay!
+      // CRITICAL: Skip Web Audio API for external audio (CarPlay/Bluetooth)!
       // createMediaElementSource() re-routes audio through a Web Audio processing graph.
-      // CarPlay manages its own audio session - this conflict causes exactly 2-second interruptions
-      // as iOS tries to negotiate the audio session repeatedly.
-      if (isCarPlay) {
-        console.log('CarPlay: Skipping AudioContext to prevent interruptions');
+      // External audio systems manage their own audio sessions - this conflict causes 
+      // exactly those rhythmic 2-second interruptions as the systems fight for control.
+      if (isExternalAudio) {
+        console.log('External audio detected - Skipping AudioContext to prevent interruptions');
         return;
       }
       
@@ -3507,9 +3569,9 @@ small {
     // Stalling Detection - kritisch für Mobile
     audioEl.addEventListener("stalled", () => {
       console.log("Audio stalled");
-      // CarPlay: 'stalled' fires normally during audio session transitions.
-      // Do NOT reconnect immediately - this causes the 2-second interruption loop.
-      if (!isCarPlay) {
+      // External audio (CarPlay/Bluetooth): 'stalled' fires during normal session transitions.
+      // Do NOT reconnect - this causes rhythmic interruptions.
+      if (!isExternalAudio) {
         attemptReconnect();
       }
     });
@@ -3600,9 +3662,11 @@ small {
     function startStreamHeartbeat() {
       stopStreamHeartbeat();
       
-      // CarPlay: Kein aggressives Reconnect - das verursacht die 2s-Unterbrechungen!
-      // Längeres Intervall, nur bei echtem Problem reconnecten
-      const interval = isCarPlay ? 15000 : 5000;
+      // Bluetooth+CarPlay: Ultra-conservative to avoid rhythmic interruptions
+      // CarPlay alone: 15s, Bluetooth: 10s, Both: 20s, Normal: 5s
+      const interval = (isCarPlay && isBluetoothAudio) ? 20000 : 
+                       isCarPlay ? 15000 : 
+                       isBluetoothAudio ? 10000 : 5000;
       let stalledCount = 0;
       
       heartbeatInterval = setInterval(() => {
@@ -3615,8 +3679,12 @@ small {
           stalledCount++;
           console.warn(`Stream stalled for ${stalledCount * (interval/1000)}s`);
           
-          // Erst nach mehreren Checks reconnecten (verhindert false positives bei CarPlay)
-          const stallThreshold = isCarPlay ? 3 : 1; // CarPlay: erst nach 45s reconnect
+          // External audio: Nur nach vielen Stalls reconnecten (vermeidet false positives)
+          // CarPlay+Bluetooth: 5 checks (100s), CarPlay: 3 checks (45s), Bluetooth: 2 checks (20s), Normal: 1 check
+          const stallThreshold = (isCarPlay && isBluetoothAudio) ? 5 : 
+                                 isCarPlay ? 3 : 
+                                 isBluetoothAudio ? 2 : 1;
+          
           if (stalledCount >= stallThreshold && !audioEl.paused && audioEl.readyState < 3) {
             console.log('Stream definitely stalled - attempting reconnect');
             stalledCount = 0;
@@ -3628,8 +3696,8 @@ small {
         
         lastPlaybackTime = currentTime;
         
-        // Buffer Health (nur wenn nicht CarPlay)
-        if (!isCarPlay && audioEl.buffered.length > 0) {
+        // Buffer Health (skip für external audio - kann false positives geben)
+        if (!isExternalAudio && audioEl.buffered.length > 0) {
           const bufferedEnd = audioEl.buffered.end(audioEl.buffered.length - 1);
           const bufferedAhead = bufferedEnd - currentTime;
           if (bufferedAhead < 2) {
