@@ -1424,7 +1424,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.1.2</p>
+        <p>Version: 1.1.3</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -3126,16 +3126,36 @@ small {
     });
 
     prevBtn.addEventListener("click", () => {
-      if (currentStationIndex > 0) {
-        const prevStation = displayedStations[currentStationIndex - 1];
-        selectStation(prevStation, currentStationIndex - 1);
+      try {
+        if (!displayedStations || displayedStations.length === 0) {
+          console.warn('No stations available');
+          return;
+        }
+        if (currentStationIndex > 0) {
+          const prevStation = displayedStations[currentStationIndex - 1];
+          if (prevStation) {
+            selectStation(prevStation, currentStationIndex - 1);
+          }
+        }
+      } catch (err) {
+        console.error('prevBtn error:', err);
       }
     });
 
     nextBtn.addEventListener("click", () => {
-      if (currentStationIndex < displayedStations.length - 1) {
-        const nextStation = displayedStations[currentStationIndex + 1];
-        selectStation(nextStation, currentStationIndex + 1);
+      try {
+        if (!displayedStations || displayedStations.length === 0) {
+          console.warn('No stations available');
+          return;
+        }
+        if (currentStationIndex < displayedStations.length - 1) {
+          const nextStation = displayedStations[currentStationIndex + 1];
+          if (nextStation) {
+            selectStation(nextStation, currentStationIndex + 1);
+          }
+        }
+      } catch (err) {
+        console.error('nextBtn error:', err);
       }
     });
 
@@ -3399,6 +3419,26 @@ small {
 
     // --- SENDER WÄHLEN ---
     function selectStation(station, index, fromShuffle = false) {
+  try {
+    // Validate inputs
+    if (!station) {
+      console.error('selectStation: station is null or undefined');
+      return;
+    }
+    
+    if (!station.streamUrl) {
+      console.error('selectStation: station has no streamUrl', station);
+      stationInfoEl.textContent = "❌ Kein Stream verfügbar";
+      return;
+    }
+    
+    if (index === undefined || index === null || index < 0) {
+      console.warn('selectStation: invalid index', index);
+      index = 0;
+    }
+    
+    console.log('Selecting station:', station.name, 'at index:', index);
+    
   endListeningSession();
   stopMetadataPolling();
   
@@ -3460,7 +3500,17 @@ small {
       
       addHistoryEntry(fromShuffle ? "🔀 Shuffle zu" : "🎵 Wechsel zu", station);
       renderStations();
+    
+  } catch (err) {
+    console.error('selectStation: Critical error:', err);
+    stationInfoEl.textContent = "❌ Fehler";
+    if (coverEl) coverEl.classList.remove("playing");
+    if (playBtn) {
+      playBtn.textContent = "▶ Play";
+      playBtn.disabled = false;
     }
+  }
+}
 
     // --- MEDIA SESSION API (Lock Screen / Notification Controls) ---
     function updateMediaSession() {
@@ -3482,26 +3532,84 @@ small {
 
         // Action Handlers für Lock Screen
         navigator.mediaSession.setActionHandler('play', () => {
-          audioEl.play();
-          playBtn.textContent = "⏸ Pause";
+          try {
+            if (audioEl && !audioEl.paused) return; // Already playing
+            audioEl.play().catch(err => {
+              console.error('Media Session play failed:', err);
+            });
+            if (playBtn) playBtn.textContent = "⏸ Pause";
+          } catch (err) {
+            console.error('Media Session play handler error:', err);
+          }
         });
 
         navigator.mediaSession.setActionHandler('pause', () => {
-          audioEl.pause();
-          playBtn.textContent = "▶ Play";
+          try {
+            if (audioEl && audioEl.paused) return; // Already paused
+            audioEl.pause();
+            if (playBtn) playBtn.textContent = "▶ Play";
+          } catch (err) {
+            console.error('Media Session pause handler error:', err);
+          }
         });
 
         navigator.mediaSession.setActionHandler('previoustrack', () => {
-          if (currentStationIndex > 0) {
-            const prevStation = displayedStations[currentStationIndex - 1];
-            selectStation(prevStation, currentStationIndex - 1);
+          try {
+            // Validate: displayedStations must exist and have items
+            if (!displayedStations || displayedStations.length === 0) {
+              console.warn('Media Session: No stations available for previoustrack');
+              return;
+            }
+            
+            // Validate: currentStationIndex must be valid
+            if (currentStationIndex === undefined || currentStationIndex === null || currentStationIndex <= 0) {
+              console.warn('Media Session: Already at first station');
+              return;
+            }
+            
+            const prevIndex = currentStationIndex - 1;
+            const prevStation = displayedStations[prevIndex];
+            
+            if (!prevStation) {
+              console.warn('Media Session: Previous station not found at index', prevIndex);
+              return;
+            }
+            
+            console.log('Media Session: Going to previous station:', prevStation.name);
+            selectStation(prevStation, prevIndex);
+          } catch (err) {
+            console.error('Media Session previoustrack handler error:', err);
+            // Don't crash - just log and continue
           }
         });
 
         navigator.mediaSession.setActionHandler('nexttrack', () => {
-          if (currentStationIndex < displayedStations.length - 1) {
-            const nextStation = displayedStations[currentStationIndex + 1];
-            selectStation(nextStation, currentStationIndex + 1);
+          try {
+            // Validate: displayedStations must exist and have items
+            if (!displayedStations || displayedStations.length === 0) {
+              console.warn('Media Session: No stations available for nexttrack');
+              return;
+            }
+            
+            // Validate: currentStationIndex must be valid
+            if (currentStationIndex === undefined || currentStationIndex === null || currentStationIndex >= displayedStations.length - 1) {
+              console.warn('Media Session: Already at last station');
+              return;
+            }
+            
+            const nextIndex = currentStationIndex + 1;
+            const nextStation = displayedStations[nextIndex];
+            
+            if (!nextStation) {
+              console.warn('Media Session: Next station not found at index', nextIndex);
+              return;
+            }
+            
+            console.log('Media Session: Going to next station:', nextStation.name);
+            selectStation(nextStation, nextIndex);
+          } catch (err) {
+            console.error('Media Session nexttrack handler error:', err);
+            // Don't crash - just log and continue
           }
         });
 
