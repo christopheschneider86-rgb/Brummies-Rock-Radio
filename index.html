@@ -1378,6 +1378,38 @@ small {
         <p><small id="lang-theme-info">Wähle ein Theme das zu deinem Musikgeschmack passt.</small></p>
       </div>
 
+      <!-- CLOUD SYNC -->
+      <div class="settings-section">
+        <h3>☁️ Cloud Sync</h3>
+        <div class="sync-status">
+          <p id="syncStatus" style="margin: 8px 0; font-size: 13px;">
+            <span id="syncStatusText">Nicht verbunden</span>
+          </p>
+          <p id="syncLastSync" style="margin: 4px 0; font-size: 11px; opacity: 0.7;"></p>
+        </div>
+        
+        <div id="syncDisconnected" class="sync-actions">
+          <input type="password" id="githubToken" placeholder="GitHub Personal Access Token" 
+                 style="width: 100%; margin-bottom: 8px; padding: 8px; font-size: 12px;">
+          <button id="syncConnect" class="secondary" style="width: 100%;">🔗 Mit GitHub verbinden</button>
+          <p style="font-size: 10px; opacity: 0.6; margin: 8px 0;">
+            <a href="https://github.com/settings/tokens/new?scopes=gist&description=Brummies%20Radio%20Sync" 
+               target="_blank" style="color: var(--color-accent);">Token erstellen →</a>
+            <br>Benötigte Berechtigung: <code style="font-size: 9px;">gist</code>
+          </p>
+        </div>
+        
+        <div id="syncConnected" class="sync-actions" style="display: none;">
+          <p style="font-size: 11px; margin-bottom: 8px;">
+            Verbunden als: <strong id="githubUsername"></strong>
+          </p>
+          <button id="syncNow" class="secondary" style="width: 100%; margin-bottom: 6px;">🔄 Jetzt synchronisieren</button>
+          <button id="syncDisconnect" class="secondary" style="width: 100%;">🔓 Trennen</button>
+        </div>
+        
+        <p><small>Synchronisiert deine Favoriten und deinen Verlauf sicher über GitHub Gists.</small></p>
+      </div>
+
       <!-- DATENVERBRAUCH -->
       <div class="settings-section">
         <h3>📊 Datenverbrauch</h3>
@@ -1424,7 +1456,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.1.4</p>
+        <p>Version: 1.1.5</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -1734,9 +1766,12 @@ small {
     const sourceTexts = {
       // Headers
       'h2-search': '🔍 Sendersuche',
+      'h2-nowplaying': '▶ Now Playing',
       'h2-history': '📜 Verlauf & Statistik',
       'h2-shuffle': '🔀 Auto-Shuffle',
       'h2-sleep': '⏰ Sleep Timer',
+      'h2-equalizer': '🎚️ EQUALIZER & VISUALIZER',
+      'h2-settings': '⚙️ Einstellungen',
       
       // Labels
       'label-search': 'Sendersuche',
@@ -1745,6 +1780,10 @@ small {
       'label-country': 'Land',
       'label-location': 'Standort',
       'label-volume': 'Lautstärke',
+      'label-shuffle-interval': 'Intervall (Minuten)',
+      'label-shuffle-gap': 'Pause zwischen Sendern (Sekunden)',
+      'label-sleep-minutes': 'Minuten',
+      'label-sleep-time': 'Uhrzeit',
       
       // Buttons
       'btn-search': '🔍 Suchen',
@@ -1753,12 +1792,20 @@ small {
       'btn-reset': '↺ Reset',
       'btn-prev': '⏮ Zurück',
       'btn-next': '⏭ Weiter',
+      'btn-play': '▶ Play',
+      'btn-pause': '⏸ Pause',
       'btn-copy': '📋 Info kopieren',
       'btn-copied': '✅ Kopiert!',
       'btn-shuffle-start': '🔀 Shuffle starten',
       'btn-shuffle-stop': '⏹ Shuffle stoppen',
       'btn-sleep-start': '⏰ Timer starten',
       'btn-sleep-stop': '⏹ Timer stoppen',
+      'btn-load-more': '+20',
+      'btn-clear-history': '🗑️ Verlauf löschen',
+      'btn-clear-stats': '🗑️ Statistik löschen',
+      'btn-install': '📲 App installieren',
+      'btn-donate': '☕ Buy me a Coffee',
+      'btn-close': '✕',
       
       // Select options
       'opt-all-genres': 'Alle Genres',
@@ -1767,22 +1814,77 @@ small {
       'opt-none': 'Keine',
       'opt-all': 'Alle',
       
-      // Status
+      // Sort buttons (tooltips/aria-labels would use these)
+      'sort-favorites': 'Favoriten',
+      'sort-distance': 'Distanz',
+      'sort-listeners': 'Hörer',
+      'sort-bitrate': 'Bitrate',
+      'sort-name': 'Name',
+      
+      // Status & Messages
       'sort-label': 'Sortierung:',
       'loading': 'Klicke "Suchen" um zu starten...',
       'shuffle-active': '✅ Shuffle aktiv',
       'sleep-active': 'Sleep Timer aktiv',
+      'sleep-ends-at': 'Endet um',
       'no-gps': 'Keine GPS-Daten',
-      
-      // Messages
       'search-placeholder': "z.B. 'Rock', 'Metal'...",
       'waiting-metadata': 'Warte auf Stream-Metadaten...',
       'buffering': '🔄 Buffering...',
       'reconnecting': '🔄 Neuverbindung',
       'no-connection': '📡 Keine Verbindung',
       'stream-error': '❌ Stream-Fehler',
-      'stations-singular': 'Sender',
-      'stations-plural': 'Sender',
+      'connection-error': 'Verbindungsfehler',
+      'stations-found': 'Sender gefunden',
+      'no-stations': 'Keine Sender gefunden. Versuche andere Filter.',
+      'current-session': 'Aktuelle Session',
+      
+      // History & Stats
+      'history-tab-stations': 'Sender',
+      'history-tab-sessions': 'Sitzungen',
+      'no-history': 'Kein Verlauf vorhanden',
+      'no-stats': 'Keine Statistik vorhanden',
+      'total-time': 'Gesamt',
+      'sessions': 'Sitzungen',
+      
+      // EQ Presets
+      'preset-flat': 'Flat',
+      'preset-rock': 'Rock',
+      'preset-metal': 'Metal',
+      'preset-bass': 'Bass',
+      
+      // Settings sections
+      'settings-language': '🌍 Sprache / Language',
+      'settings-theme': '🎨 Theme',
+      'settings-data': '📊 Datenverbrauch',
+      'settings-support': '❤️ Unterstützung',
+      'settings-about': 'ℹ️ Über diese App',
+      
+      // Settings texts
+      'language-select': 'Sprache wählen / Select language:',
+      'language-info': 'Die Sprache wird automatisch erkannt basierend auf deinem Browser.',
+      'theme-info': 'Wähle ein Theme das zu deinem Musikgeschmack passt.',
+      'data-total': 'Gesamt',
+      'data-average': 'Durchschnitt/Tag',
+      'data-reset': '🗑️ Daten zurücksetzen',
+      'data-reset-confirm': 'Datenverbrauch-Historie wirklich löschen?',
+      'support-text': 'Diese App ist kostenlos und Open Source. Wenn sie dir gefällt, freue ich mich über eine kleine Unterstützung!',
+      'donate-info': 'Donations helfen bei der Weiterentwicklung und dem Hosting.',
+      'about-text': 'Eine Web-App zum Streamen von Radio-Sendern weltweit.',
+      'about-source': 'Datenquelle: Radio Browser API',
+      'about-features': '30,000+ Sender · Kostenlos · Keine Werbung',
+      
+      // Sync (new)
+      'sync-title': '☁️ Cloud Sync',
+      'sync-info': 'Synchronisiere deine Favoriten und deinen Verlauf über GitHub.',
+      'sync-connect': '🔗 Mit GitHub verbinden',
+      'sync-disconnect': '🔓 Trennen',
+      'sync-status-connected': 'Verbunden als',
+      'sync-status-disconnected': 'Nicht verbunden',
+      'sync-last-sync': 'Letzte Sync:',
+      'sync-now': '🔄 Jetzt synchronisieren',
+      'sync-success': '✅ Erfolgreich synchronisiert!',
+      'sync-error': '❌ Sync-Fehler',
     };
     
     // Translation cache: { 'de|en': { 'Suchen': 'Search', ... } }
@@ -1860,45 +1962,72 @@ small {
     
     // Apply translated texts to DOM
     function applyTextToUI(texts) {
-      // Helper
-      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
-      const setAttr = (id, attr, text) => { const el = document.getElementById(id); if (el) el[attr] = text; };
-      
-      // Headers
-      document.querySelectorAll('h2').forEach(h2 => {
-        const t = h2.textContent.trim();
-        if (t.includes('Sendersuche') || t.includes('Station Search') || t.includes('Recherche') || t.includes('Búsqueda') || t.includes('Ricerca')) {
-          h2.textContent = texts['h2-search'];
-        } else if (t.includes('Verlauf') || t.includes('History') || t.includes('Historique') || t.includes('Historial') || t.includes('Cronologia')) {
-          h2.textContent = texts['h2-history'];
+      // ========== HEADERS ==========
+      document.querySelectorAll('h2, h3').forEach(h => {
+        const t = h.textContent.trim();
+        
+        // H2 Headers
+        if (t.includes('Sendersuche') || t.includes('Station') || t.includes('Search') || t.includes('Recherche')) {
+          h.textContent = texts['h2-search'];
+        } else if (t.includes('Now Playing')) {
+          h.textContent = texts['h2-nowplaying'];
+        } else if (t.includes('Verlauf') || t.includes('History') || t.includes('Statistik') || t.includes('Statistics')) {
+          h.textContent = texts['h2-history'];
         } else if (t.includes('Shuffle')) {
-          h2.textContent = texts['h2-shuffle'];
+          h.textContent = texts['h2-shuffle'];
         } else if (t.includes('Sleep') || t.includes('Timer')) {
-          h2.textContent = texts['h2-sleep'];
+          h.textContent = texts['h2-sleep'];
+        } else if (t.includes('EQUALIZER') || t.includes('VISUALIZER')) {
+          h.textContent = texts['h2-equalizer'];
+        } else if (t.includes('Einstellungen') || t.includes('Settings')) {
+          h.textContent = texts['h2-settings'];
+        }
+        
+        // H3 Settings Headers
+        else if (t.includes('Sprache') || t.includes('Language')) {
+          h.textContent = texts['settings-language'];
+        } else if (t.includes('Theme')) {
+          h.textContent = texts['settings-theme'];
+        } else if (t.includes('Cloud Sync')) {
+          h.textContent = '☁️ Cloud Sync';
+        } else if (t.includes('Datenverbrauch') || t.includes('Data')) {
+          h.textContent = texts['settings-data'];
+        } else if (t.includes('Unterstützung') || t.includes('Support')) {
+          h.textContent = texts['settings-support'];
+        } else if (t.includes('Über') || t.includes('About')) {
+          h.textContent = texts['settings-about'];
         }
       });
       
-      // Labels
+      // ========== LABELS ==========
       document.querySelectorAll('label').forEach(label => {
         const t = label.textContent.trim();
-        if (t === 'Sendersuche' || t === 'Station Search' || t === 'Recherche de stations' || t === 'Búsqueda de emisoras' || t === 'Ricerca stazione') {
+        if (t.includes('Sendersuche') || t.includes('Station')) {
           label.textContent = texts['label-search'];
-        } else if (t === 'Hauptgenre' || t === 'Main Genre' || t === 'Genre principal') {
+        } else if (t.includes('Hauptgenre') || t.includes('Main Genre') || t.includes('Genre principal')) {
           label.textContent = texts['label-genre'];
-        } else if (t === 'Untergenre' || t === 'Subgenre' || t === 'Sous-genre') {
+        } else if (t.includes('Untergenre') || t.includes('Subgenre')) {
           label.textContent = texts['label-subgenre'];
-        } else if (t === 'Land' || t === 'Country' || t === 'Pays' || t === 'País' || t === 'Paese') {
+        } else if (t.includes('Land') || t.includes('Country') || t.includes('Pays') || t.includes('País')) {
           label.textContent = texts['label-country'];
-        } else if (t === 'Standort' || t === 'Location' || t === 'Emplacement' || t === 'Ubicación' || t === 'Posizione') {
+        } else if (t.includes('Standort') || t.includes('Location') || t.includes('Emplacement')) {
           label.textContent = texts['label-location'];
-        } else if (t === 'Lautstärke' || t === 'Volume') {
+        } else if (t.includes('Lautstärke') || t.includes('Volume')) {
           label.textContent = texts['label-volume'];
+        } else if (t.includes('Intervall') || t.includes('Interval')) {
+          label.textContent = texts['label-shuffle-interval'];
+        } else if (t.includes('Pause zwischen') || t.includes('Gap')) {
+          label.textContent = texts['label-shuffle-gap'];
+        } else if (t.includes('Minuten') && !label.textContent.includes('Intervall')) {
+          label.textContent = texts['label-sleep-minutes'];
+        } else if (t.includes('Uhrzeit') || t.includes('Time')) {
+          label.textContent = texts['label-sleep-time'];
         }
       });
       
-      // Buttons
+      // ========== BUTTONS ==========
       const searchBtn = document.getElementById('searchBtn');
-      if (searchBtn && !searchBtn.textContent.includes('↺')) searchBtn.textContent = texts['btn-search'];
+      if (searchBtn) searchBtn.textContent = texts['btn-search'];
       
       const showFavBtn = document.getElementById('showFavoritesBtn');
       if (showFavBtn) {
@@ -1910,19 +2039,73 @@ small {
       if (resetBtn) resetBtn.textContent = texts['btn-reset'];
       
       const prevBtn = document.getElementById('prevBtn');
-      if (prevBtn) prevBtn.textContent = texts['btn-prev'];
+      if (prevBtn && !prevBtn.disabled) prevBtn.textContent = texts['btn-prev'];
       
       const nextBtn = document.getElementById('nextBtn');
-      if (nextBtn) nextBtn.textContent = texts['btn-next'];
+      if (nextBtn && !nextBtn.disabled) nextBtn.textContent = texts['btn-next'];
+      
+      const playBtn = document.getElementById('playBtn');
+      if (playBtn) {
+        playBtn.textContent = playBtn.textContent.includes('Pause') || playBtn.textContent.includes('⏸') ?
+          texts['btn-pause'] : texts['btn-play'];
+      }
       
       const copyBtn = document.getElementById('copyNowPlayingBtn');
-      if (copyBtn && !copyBtn.textContent.includes('✅')) copyBtn.textContent = texts['btn-copy'];
+      if (copyBtn) {
+        copyBtn.textContent = copyBtn.textContent.includes('✅') || copyBtn.textContent.includes('Kopiert') ?
+          texts['btn-copied'] : texts['btn-copy'];
+      }
       
-      // Placeholders
+      const shuffleToggle = document.getElementById('shuffleToggle');
+      if (shuffleToggle) {
+        shuffleToggle.textContent = shuffleActive ? texts['btn-shuffle-stop'] : texts['btn-shuffle-start'];
+      }
+      
+      const sleepToggle = document.getElementById('sleepToggle');
+      if (sleepToggle) {
+        sleepToggle.textContent = sleepActive ? texts['btn-sleep-stop'] : texts['btn-sleep-start'];
+      }
+      
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      if (loadMoreBtn) loadMoreBtn.textContent = texts['btn-load-more'];
+      
+      const installBtn = document.getElementById('installBtn');
+      if (installBtn) installBtn.textContent = texts['btn-install'];
+      
+      const donateBtn = document.getElementById('donateBtn');
+      if (donateBtn) donateBtn.textContent = texts['btn-donate'];
+      
+      // GitHub Sync buttons
+      const syncConnect = document.getElementById('syncConnect');
+      if (syncConnect) syncConnect.textContent = texts['sync-connect'];
+      
+      const syncDisconnect = document.getElementById('syncDisconnect');
+      if (syncDisconnect) syncDisconnect.textContent = texts['sync-disconnect'];
+      
+      const syncNow = document.getElementById('syncNow');
+      if (syncNow) syncNow.textContent = texts['sync-now'];
+      
+      // EQ Presets
+      document.querySelectorAll('.preset-btn, #eqPresets button').forEach(btn => {
+        const preset = btn.dataset.preset;
+        if (preset === 'flat') btn.textContent = texts['preset-flat'];
+        else if (preset === 'rock') btn.textContent = texts['preset-rock'];
+        else if (preset === 'metal') btn.textContent = texts['preset-metal'];
+        else if (preset === 'bass') btn.textContent = texts['preset-bass'];
+      });
+      
+      // ========== PLACEHOLDERS ==========
       const searchInput = document.getElementById('searchInput');
       if (searchInput) searchInput.placeholder = texts['search-placeholder'];
       
-      // Select options
+      const githubToken = document.getElementById('githubToken');
+      if (githubToken) {
+        githubToken.placeholder = currentLang === 'de' ? 
+          'GitHub Personal Access Token' : 
+          'GitHub Personal Access Token';
+      }
+      
+      // ========== SELECT OPTIONS ==========
       const genreSelect = document.getElementById('genreSelect');
       if (genreSelect && genreSelect.options[0]) {
         genreSelect.options[0].textContent = texts['opt-all-genres'];
@@ -1945,19 +2128,93 @@ small {
         subgenreSelect.options[0].textContent = texts['opt-all'];
       }
       
-      // Sort label
+      // ========== STATUS & MESSAGES ==========
       const sortLabel = document.querySelector('.sort-controls small');
       if (sortLabel) sortLabel.textContent = texts['sort-label'];
       
-      // Loading text
       const loadingDivs = document.querySelectorAll('.loading');
       loadingDivs.forEach(div => {
-        if (div.textContent.includes('Suchen') || div.textContent.includes('Search') || div.textContent.includes('start') || div.textContent.includes('démarrer')) {
+        if (!div.style.display || div.style.display !== 'none') {
           div.textContent = texts['loading'];
         }
       });
       
-      // Language select itself
+      const shuffleStatus = document.getElementById('shuffleStatus');
+      if (shuffleStatus && shuffleActive) {
+        shuffleStatus.textContent = texts['shuffle-active'];
+      }
+      
+      const sleepStatus = document.getElementById('sleepStatus');
+      if (sleepStatus && sleepActive) {
+        const match = sleepStatus.textContent.match(/\d{2}:\d{2}/);
+        if (match) {
+          sleepStatus.textContent = `${texts['sleep-active']} - ${texts['sleep-ends-at']} ${match[0]}`;
+        } else {
+          sleepStatus.textContent = texts['sleep-active'];
+        }
+      }
+      
+      const stationCount = document.getElementById('stationCount');
+      if (stationCount && stationCount.textContent) {
+        const count = stationCount.textContent.match(/\d+/);
+        if (count) {
+          stationCount.textContent = `${count[0]} ${texts['stations-found']}`;
+        }
+      }
+      
+      // ========== SETTINGS PANEL ==========
+      const langSelectLabel = document.getElementById('lang-select-language');
+      if (langSelectLabel) langSelectLabel.textContent = texts['language-select'];
+      
+      const langInfo = document.getElementById('lang-language-info');
+      if (langInfo) langInfo.textContent = texts['language-info'];
+      
+      const themeInfo = document.getElementById('lang-theme-info');
+      if (themeInfo) themeInfo.textContent = texts['theme-info'];
+      
+      // Data usage
+      document.querySelectorAll('.data-usage-label').forEach(label => {
+        if (label.textContent.includes('Session') || label.textContent.includes('Aktuelle')) {
+          label.textContent = texts['current-session'];
+        } else if (label.textContent.includes('Gesamt') || label.textContent.includes('Total')) {
+          label.textContent = texts['data-total'];
+        } else if (label.textContent.includes('Durchschnitt') || label.textContent.includes('Average')) {
+          label.textContent = texts['data-average'];
+        }
+      });
+      
+      // Support/About sections
+      const supportTexts = document.querySelectorAll('p small');
+      supportTexts.forEach(p => {
+        const t = p.textContent;
+        if (t.includes('kostenlos') || t.includes('Open Source') || t.includes('free')) {
+          p.textContent = texts['support-text'];
+        } else if (t.includes('Donations') || t.includes('Entwicklung')) {
+          p.textContent = texts['donate-info'];
+        } else if (t.includes('Radio-Sendern') || t.includes('streaming radio')) {
+          p.textContent = texts['about-text'];
+        } else if (t.includes('Radio Browser')) {
+          p.textContent = texts['about-source'];
+        } else if (t.includes('30,000') || t.includes('Stations')) {
+          p.textContent = texts['about-features'];
+        } else if (t.includes('Favoriten') && t.includes('GitHub') || t.includes('Synchronisiert')) {
+          p.textContent = currentLang === 'de' ?
+            'Synchronisiert deine Favoriten und deinen Verlauf sicher über GitHub Gists.' :
+            'Synchronizes your favorites and history securely via GitHub Gists.';
+        }
+      });
+      
+      // GitHub Sync status texts
+      const syncStatusText = document.getElementById('syncStatusText');
+      if (syncStatusText && syncConfig.token) {
+        if (syncStatusText.textContent.includes('Verbunden') || syncStatusText.textContent.includes('Connected')) {
+          syncStatusText.textContent = texts['sync-status-connected'];
+        }
+      } else if (syncStatusText) {
+        syncStatusText.textContent = texts['sync-status-disconnected'];
+      }
+      
+      // Language select
       const langSelect = document.getElementById('languageSelect');
       if (langSelect) langSelect.value = currentLang;
     }
@@ -4203,6 +4460,310 @@ small {
     
     // Apply translations on load
     applyTranslations(currentLang);
+
+    // ==================== GITHUB SYNC ====================
+    // Sync Favoriten & Verlauf über GitHub Gists
+    
+    const syncConfig = {
+      token: localStorage.getItem('brummiesGithubToken') || null,
+      gistId: localStorage.getItem('brummiesGistId') || null,
+      username: localStorage.getItem('brummiesGithubUsername') || null,
+      lastSync: localStorage.getItem('brummiesLastSync') || null,
+      autoSync: localStorage.getItem('brummiesAutoSync') === 'true'
+    };
+    
+    const syncConnectBtn = document.getElementById('syncConnect');
+    const syncDisconnectBtn = document.getElementById('syncDisconnect');
+    const syncNowBtn = document.getElementById('syncNow');
+    const githubTokenInput = document.getElementById('githubToken');
+    const syncConnectedDiv = document.getElementById('syncConnected');
+    const syncDisconnectedDiv = document.getElementById('syncDisconnected');
+    const syncStatusText = document.getElementById('syncStatusText');
+    const syncLastSyncText = document.getElementById('syncLastSync');
+    const githubUsernameSpan = document.getElementById('githubUsername');
+    
+    // Update UI based on connection status
+    function updateSyncUI() {
+      if (syncConfig.token && syncConfig.username) {
+        syncConnectedDiv.style.display = 'block';
+        syncDisconnectedDiv.style.display = 'none';
+        syncStatusText.textContent = 'Verbunden';
+        syncStatusText.style.color = '#27ae60';
+        githubUsernameSpan.textContent = syncConfig.username;
+        
+        if (syncConfig.lastSync) {
+          const date = new Date(syncConfig.lastSync);
+          syncLastSyncText.textContent = `Letzte Sync: ${date.toLocaleString('de-DE')}`;
+        }
+      } else {
+        syncConnectedDiv.style.display = 'none';
+        syncDisconnectedDiv.style.display = 'block';
+        syncStatusText.textContent = 'Nicht verbunden';
+        syncStatusText.style.color = '#8b8b8b';
+        syncLastSyncText.textContent = '';
+      }
+    }
+    
+    // Validate GitHub token and get username
+    async function validateGitHubToken(token) {
+      try {
+        const response = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          return { valid: true, username: data.login };
+        }
+        return { valid: false, error: 'Invalid token' };
+      } catch (err) {
+        return { valid: false, error: err.message };
+      }
+    }
+    
+    // Create or update Gist
+    async function syncToGitHub() {
+      if (!syncConfig.token) {
+        alert('Nicht verbunden! Bitte zuerst GitHub Token eingeben.');
+        return;
+      }
+      
+      syncStatusText.textContent = '🔄 Synchronisiere...';
+      syncStatusText.style.color = '#ff8c00';
+      
+      const syncData = {
+        favorites: favorites,
+        history: historyData,
+        listeningStats: listeningStats,
+        timestamp: new Date().toISOString()
+      };
+      
+      const gistData = {
+        description: 'Brummies Rock Radio - Sync Data',
+        public: false,
+        files: {
+          'brummies-radio-sync.json': {
+            content: JSON.stringify(syncData, null, 2)
+          }
+        }
+      };
+      
+      try {
+        let response;
+        
+        if (syncConfig.gistId) {
+          // Update existing Gist
+          response = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `token ${syncConfig.token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gistData)
+          });
+        } else {
+          // Create new Gist
+          response = await fetch('https://api.github.com/gists', {
+            method: 'POST',
+            headers: {
+              'Authorization': `token ${syncConfig.token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gistData)
+          });
+        }
+        
+        if (response.ok) {
+          const data = await response.json();
+          syncConfig.gistId = data.id;
+          syncConfig.lastSync = new Date().toISOString();
+          
+          localStorage.setItem('brummiesGistId', data.id);
+          localStorage.setItem('brummiesLastSync', syncConfig.lastSync);
+          
+          syncStatusText.textContent = '✅ Erfolgreich synchronisiert!';
+          syncStatusText.style.color = '#27ae60';
+          updateSyncUI();
+          
+          setTimeout(() => {
+            syncStatusText.textContent = 'Verbunden';
+          }, 3000);
+        } else {
+          throw new Error(`Sync failed: ${response.status}`);
+        }
+      } catch (err) {
+        console.error('Sync error:', err);
+        syncStatusText.textContent = '❌ Sync-Fehler';
+        syncStatusText.style.color = '#ef4444';
+        alert(`Sync-Fehler: ${err.message}`);
+      }
+    }
+    
+    // Load data from GitHub
+    async function loadFromGitHub() {
+      if (!syncConfig.token || !syncConfig.gistId) {
+        console.log('No sync config available');
+        return;
+      }
+      
+      syncStatusText.textContent = '🔄 Lade Daten...';
+      syncStatusText.style.color = '#ff8c00';
+      
+      try {
+        const response = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
+          headers: {
+            'Authorization': `token ${syncConfig.token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (response.ok) {
+          const gist = await response.json();
+          const fileContent = gist.files['brummies-radio-sync.json'].content;
+          const syncData = JSON.parse(fileContent);
+          
+          // Merge with local data (keep newer entries)
+          if (syncData.favorites) {
+            favorites = [...new Set([...favorites, ...syncData.favorites])];
+            localStorage.setItem('brummiesFavorites', JSON.stringify(favorites));
+          }
+          
+          if (syncData.history) {
+            // Merge histories, remove duplicates by timestamp
+            const mergedHistory = [...historyData, ...syncData.history];
+            const uniqueHistory = Array.from(
+              new Map(mergedHistory.map(item => [item.timestamp, item])).values()
+            );
+            historyData = uniqueHistory.sort((a, b) => 
+              new Date(b.timestamp) - new Date(a.timestamp)
+            ).slice(0, 50); // Keep last 50
+            localStorage.setItem('brummiesHistory', JSON.stringify(historyData));
+          }
+          
+          if (syncData.listeningStats) {
+            // Merge stats
+            Object.keys(syncData.listeningStats).forEach(key => {
+              if (!listeningStats[key]) {
+                listeningStats[key] = syncData.listeningStats[key];
+              } else {
+                listeningStats[key].totalTime = 
+                  (listeningStats[key].totalTime || 0) + 
+                  (syncData.listeningStats[key].totalTime || 0);
+                listeningStats[key].sessions = 
+                  (listeningStats[key].sessions || 0) + 
+                  (syncData.listeningStats[key].sessions || 0);
+              }
+            });
+            localStorage.setItem('brummiesListeningStats', JSON.stringify(listeningStats));
+          }
+          
+          syncStatusText.textContent = '✅ Daten geladen!';
+          syncStatusText.style.color = '#27ae60';
+          
+          // Refresh UI
+          renderStations();
+          
+          setTimeout(() => {
+            syncStatusText.textContent = 'Verbunden';
+          }, 3000);
+        } else {
+          throw new Error(`Load failed: ${response.status}`);
+        }
+      } catch (err) {
+        console.error('Load error:', err);
+        syncStatusText.textContent = '❌ Ladefehler';
+        syncStatusText.style.color = '#ef4444';
+      }
+    }
+    
+    // Connect button handler
+    syncConnectBtn.addEventListener('click', async () => {
+      const token = githubTokenInput.value.trim();
+      
+      if (!token) {
+        alert('Bitte GitHub Token eingeben!');
+        return;
+      }
+      
+      syncStatusText.textContent = '🔄 Verbinde...';
+      syncStatusText.style.color = '#ff8c00';
+      
+      const validation = await validateGitHubToken(token);
+      
+      if (validation.valid) {
+        syncConfig.token = token;
+        syncConfig.username = validation.username;
+        
+        localStorage.setItem('brummiesGithubToken', token);
+        localStorage.setItem('brummiesGithubUsername', validation.username);
+        
+        updateSyncUI();
+        githubTokenInput.value = '';
+        
+        // Initial sync
+        await syncToGitHub();
+      } else {
+        syncStatusText.textContent = '❌ Ungültiges Token';
+        syncStatusText.style.color = '#ef4444';
+        alert(`Token-Fehler: ${validation.error}\n\nBitte überprüfe dein Token.`);
+      }
+    });
+    
+    // Disconnect button handler
+    syncDisconnectBtn.addEventListener('click', () => {
+      if (confirm('GitHub Sync-Verbindung wirklich trennen?')) {
+        syncConfig.token = null;
+        syncConfig.gistId = null;
+        syncConfig.username = null;
+        syncConfig.lastSync = null;
+        
+        localStorage.removeItem('brummiesGithubToken');
+        localStorage.removeItem('brummiesGistId');
+        localStorage.removeItem('brummiesGithubUsername');
+        localStorage.removeItem('brummiesLastSync');
+        
+        updateSyncUI();
+      }
+    });
+    
+    // Sync now button handler
+    syncNowBtn.addEventListener('click', () => {
+      syncToGitHub();
+    });
+    
+    // Auto-sync on favorite/history changes (debounced)
+    let syncTimeout = null;
+    function triggerAutoSync() {
+      if (!syncConfig.token || !syncConfig.autoSync) return;
+      
+      clearTimeout(syncTimeout);
+      syncTimeout = setTimeout(() => {
+        console.log('Auto-syncing...');
+        syncToGitHub();
+      }, 5000); // Wait 5s after last change
+    }
+    
+    // Hook into favorite/history changes
+    const originalAddToFavorites = window.addToFavorites;
+    window.addToFavorites = function(...args) {
+      if (originalAddToFavorites) originalAddToFavorites.apply(this, args);
+      triggerAutoSync();
+    };
+    
+    // Initialize sync UI
+    updateSyncUI();
+    
+    // Load from GitHub on startup if connected
+    if (syncConfig.token && syncConfig.gistId) {
+      loadFromGitHub();
+    }
+    
+    // ==================== END GITHUB SYNC ====================
 
     // Donate Button
     donateBtn.addEventListener('click', () => {
