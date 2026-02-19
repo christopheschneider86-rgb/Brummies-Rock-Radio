@@ -681,6 +681,41 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .radio-group input[type="radio"] {
   accent-color: var(--color-accent);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Sleep Mode Toggle Buttons */
+.sleep-mode-btn {
+  flex: 1;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sleep-mode-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-accent);
+}
+
+.sleep-mode-btn.active {
+  background: var(--color-accent);
+  color: #ffffff;
+  border-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.sleep-mode-btn:active {
+  transform: scale(0.98);
 }
 
 #history, #listeningStats {
@@ -1035,6 +1070,13 @@ small {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
+    align-items: start;
+  }
+  
+  .shuffle-sleep-grid section {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   
   /* Mobile: Stack mit größerem Gap */
@@ -1389,8 +1431,15 @@ small {
         </div>
         
         <div id="syncDisconnected" class="sync-actions">
-          <input type="password" id="githubToken" placeholder="GitHub Personal Access Token" 
-                 style="width: 100%; margin-bottom: 8px; padding: 8px; font-size: 12px;">
+          <input type="text" id="githubToken" 
+                 placeholder="GitHub Personal Access Token" 
+                 autocomplete="off" 
+                 autocapitalize="none" 
+                 spellcheck="false"
+                 style="width: 100%; margin-bottom: 4px; padding: 8px; font-size: 12px; font-family: monospace;">
+          <button id="pasteTokenBtn" class="secondary" style="width: 100%; margin-bottom: 8px; font-size: 11px;">
+            📋 Token einfügen
+          </button>
           <button id="syncConnect" class="secondary" style="width: 100%;">🔗 Mit GitHub verbinden</button>
           <p style="font-size: 10px; opacity: 0.6; margin: 8px 0;">
             <a href="https://github.com/settings/tokens/new?scopes=gist&description=Brummies%20Radio%20Sync" 
@@ -1456,7 +1505,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.1.5</p>
+        <p>Version: 1.1.6</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -1646,10 +1695,10 @@ small {
 </section>
 
 <!-- SHUFFLE & SLEEP NEBENEINANDER -->
-<section style="grid-column: 1 / -1;">
+<div style="grid-column: 1 / -1;">
   <div class="shuffle-sleep-grid">
     <!-- SHUFFLE -->
-    <div>
+    <section>
       <h2>🔀 Auto-Shuffle</h2>
       
       <div style="display: flex; gap: 8px; margin-bottom: 12px;">
@@ -1667,10 +1716,10 @@ small {
         <input type="number" id="shuffleTo" value="10" min="1" max="120" />
       </div>
       <small>Springt zufällig zwischen ersten 20 Sendern</small>
-    </div>
+    </section>
 
-    <!-- SLEEP -->
-    <div>
+    <!-- SLEEP TIMER -->
+    <section>
       <h2>⏰ Sleep Timer</h2>
       
       <div style="display: flex; gap: 8px; margin-bottom: 12px;">
@@ -1679,9 +1728,13 @@ small {
       
       <div id="sleepStatus" class="sleep-status"></div>
       
-      <div class="radio-group">
-        <label><input type="radio" name="sleepMode" value="minutes" checked /> Minuten</label>
-        <label><input type="radio" name="sleepMode" value="clock" /> Uhrzeit</label>
+      <div class="sleep-mode-toggle" style="display: flex; gap: 8px; margin: 12px 0;">
+        <button type="button" class="sleep-mode-btn active" data-mode="minutes">
+          ⏱️ Minuten
+        </button>
+        <button type="button" class="sleep-mode-btn" data-mode="clock">
+          🕐 Uhrzeit
+        </button>
       </div>
       
       <div id="sleepControls">
@@ -1690,9 +1743,9 @@ small {
         <label id="sleepClockLabel" style="display:none;">Ende um</label>
         <input type="time" id="sleepClock" value="23:00" style="display:none;" />
       </div>
-    </div>
+    </section>
   </div>
-</section>
+</div>
 
   </main>
 
@@ -1784,6 +1837,8 @@ small {
       'label-shuffle-gap': 'Pause zwischen Sendern (Sekunden)',
       'label-sleep-minutes': 'Minuten',
       'label-sleep-time': 'Uhrzeit',
+      'sleep-mode-minutes': '⏱️ Minuten',
+      'sleep-mode-clock': '🕐 Uhrzeit',
       
       // Buttons
       'btn-search': '🔍 Suchen',
@@ -1883,6 +1938,8 @@ small {
       'sync-status-disconnected': 'Nicht verbunden',
       'sync-last-sync': 'Letzte Sync:',
       'sync-now': '🔄 Jetzt synchronisieren',
+      'sync-paste-token': '📋 Token einfügen',
+      'sync-token-pasted': '✅ Eingefügt!',
       'sync-success': '✅ Erfolgreich synchronisiert!',
       'sync-error': '❌ Sync-Fehler',
     };
@@ -2066,6 +2123,16 @@ small {
         sleepToggle.textContent = sleepActive ? texts['btn-sleep-stop'] : texts['btn-sleep-start'];
       }
       
+      // Sleep mode toggle buttons
+      const sleepModeButtons = document.querySelectorAll('.sleep-mode-btn');
+      sleepModeButtons.forEach(btn => {
+        if (btn.dataset.mode === 'minutes') {
+          btn.textContent = texts['sleep-mode-minutes'];
+        } else if (btn.dataset.mode === 'clock') {
+          btn.textContent = texts['sleep-mode-clock'];
+        }
+      });
+      
       const loadMoreBtn = document.getElementById('loadMoreBtn');
       if (loadMoreBtn) loadMoreBtn.textContent = texts['btn-load-more'];
       
@@ -2084,6 +2151,11 @@ small {
       
       const syncNow = document.getElementById('syncNow');
       if (syncNow) syncNow.textContent = texts['sync-now'];
+      
+      const pasteToken = document.getElementById('pasteTokenBtn');
+      if (pasteToken && !pasteToken.textContent.includes('✅')) {
+        pasteToken.textContent = texts['sync-paste-token'];
+      }
       
       // EQ Presets
       document.querySelectorAll('.preset-btn, #eqPresets button').forEach(btn => {
@@ -3480,20 +3552,27 @@ small {
     }
 
     // --- SLEEP TIMER (Button + Radio) ---
-    document.querySelectorAll('input[name="sleepMode"]').forEach(radio => {
-      radio.addEventListener("change", (e) => {
-        const mode = e.target.value;
+    // Sleep Mode Toggle Buttons
+    document.querySelectorAll('.sleep-mode-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Remove active from all buttons
+        document.querySelectorAll('.sleep-mode-btn').forEach(b => b.classList.remove('active'));
         
-        if (mode === "minutes") {
-          document.getElementById("sleepMinutesLabel").style.display = "block";
-          document.getElementById("sleepMinutes").style.display = "block";
-          document.getElementById("sleepClockLabel").style.display = "none";
-          document.getElementById("sleepClock").style.display = "none";
+        // Add active to clicked button
+        e.target.classList.add('active');
+        
+        const mode = e.target.dataset.mode;
+        
+        if (mode === 'minutes') {
+          document.getElementById('sleepMinutesLabel').style.display = 'block';
+          document.getElementById('sleepMinutes').style.display = 'block';
+          document.getElementById('sleepClockLabel').style.display = 'none';
+          document.getElementById('sleepClock').style.display = 'none';
         } else {
-          document.getElementById("sleepMinutesLabel").style.display = "none";
-          document.getElementById("sleepMinutes").style.display = "none";
-          document.getElementById("sleepClockLabel").style.display = "block";
-          document.getElementById("sleepClock").style.display = "block";
+          document.getElementById('sleepMinutesLabel').style.display = 'none';
+          document.getElementById('sleepMinutes').style.display = 'none';
+          document.getElementById('sleepClockLabel').style.display = 'block';
+          document.getElementById('sleepClock').style.display = 'block';
         }
       });
     });
@@ -3512,7 +3591,7 @@ small {
         sleepToggle.textContent = "⏹ Timer stoppen";
         sleepToggle.classList.add("active");
         
-        const mode = document.querySelector('input[name="sleepMode"]:checked').value;
+        const mode = document.querySelector('.sleep-mode-btn.active').dataset.mode;
         
         if (mode === "minutes") {
           const minutes = Number(document.getElementById("sleepMinutes").value);
@@ -4476,11 +4555,36 @@ small {
     const syncDisconnectBtn = document.getElementById('syncDisconnect');
     const syncNowBtn = document.getElementById('syncNow');
     const githubTokenInput = document.getElementById('githubToken');
+    const pasteTokenBtn = document.getElementById('pasteTokenBtn');
     const syncConnectedDiv = document.getElementById('syncConnected');
     const syncDisconnectedDiv = document.getElementById('syncDisconnected');
     const syncStatusText = document.getElementById('syncStatusText');
     const syncLastSyncText = document.getElementById('syncLastSync');
     const githubUsernameSpan = document.getElementById('githubUsername');
+    
+    // Paste button handler (especially for iOS)
+    if (pasteTokenBtn) {
+      pasteTokenBtn.addEventListener('click', async () => {
+        try {
+          // Try Clipboard API
+          if (navigator.clipboard && navigator.clipboard.readText) {
+            const text = await navigator.clipboard.readText();
+            githubTokenInput.value = text.trim();
+            pasteTokenBtn.textContent = '✅ Eingefügt!';
+            setTimeout(() => {
+              pasteTokenBtn.textContent = '📋 Token einfügen';
+            }, 2000);
+          } else {
+            // Fallback: show instructions
+            alert('Bitte Token manuell einfügen:\n\n1. Token aus GitHub kopieren\n2. Ins Feld tippen\n3. "Einsetzen" wählen');
+          }
+        } catch (err) {
+          console.error('Paste error:', err);
+          // iOS might block clipboard access - show instructions
+          alert('Clipboard-Zugriff blockiert.\n\nBitte Token manuell einfügen:\n\n1. Token aus GitHub kopieren\n2. Ins Feld tippen\n3. "Einsetzen" wählen');
+        }
+      });
+    }
     
     // Update UI based on connection status
     function updateSyncUI() {
@@ -4521,6 +4625,45 @@ small {
         return { valid: false, error: 'Invalid token' };
       } catch (err) {
         return { valid: false, error: err.message };
+      }
+    }
+    
+    // Find existing Gist (multi-device support)
+    async function findExistingGist() {
+      if (!syncConfig.token) return null;
+      
+      try {
+        console.log('Searching for existing Gist...');
+        
+        // Get all user's Gists
+        const response = await fetch('https://api.github.com/gists', {
+          headers: {
+            'Authorization': `token ${syncConfig.token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (response.ok) {
+          const gists = await response.json();
+          
+          // Find our specific Gist by filename
+          const existingGist = gists.find(gist => 
+            gist.files && gist.files['brummies-radio-sync.json']
+          );
+          
+          if (existingGist) {
+            console.log('Found existing Gist:', existingGist.id);
+            return existingGist.id;
+          }
+          
+          console.log('No existing Gist found');
+          return null;
+        }
+        
+        return null;
+      } catch (err) {
+        console.error('Error finding Gist:', err);
+        return null;
       }
     }
     
@@ -4705,8 +4848,32 @@ small {
         updateSyncUI();
         githubTokenInput.value = '';
         
-        // Initial sync
-        await syncToGitHub();
+        // WICHTIG: Erst nach existierender Gist suchen!
+        syncStatusText.textContent = '🔄 Suche nach existierenden Daten...';
+        const existingGistId = await findExistingGist();
+        
+        if (existingGistId) {
+          // Existierende Gist gefunden → Daten laden
+          console.log('Using existing Gist:', existingGistId);
+          syncConfig.gistId = existingGistId;
+          localStorage.setItem('brummiesGistId', existingGistId);
+          
+          syncStatusText.textContent = '🔄 Lade Cloud-Daten...';
+          await loadFromGitHub();
+          
+          syncStatusText.textContent = '✅ Mit existierenden Daten verbunden!';
+          syncStatusText.style.color = '#27ae60';
+        } else {
+          // Keine Gist gefunden → Erste Synchronisation (neue Gist erstellen)
+          console.log('No existing Gist - creating new one');
+          syncStatusText.textContent = '🔄 Erstelle erste Synchronisation...';
+          await syncToGitHub();
+        }
+        
+        setTimeout(() => {
+          syncStatusText.textContent = 'Verbunden';
+        }, 3000);
+        
       } else {
         syncStatusText.textContent = '❌ Ungültiges Token';
         syncStatusText.style.color = '#ef4444';
@@ -4759,8 +4926,25 @@ small {
     updateSyncUI();
     
     // Load from GitHub on startup if connected
-    if (syncConfig.token && syncConfig.gistId) {
-      loadFromGitHub();
+    if (syncConfig.token) {
+      if (syncConfig.gistId) {
+        // Have both token and gistId → load directly
+        console.log('Startup: Loading from known Gist');
+        loadFromGitHub();
+      } else {
+        // Have token but no gistId → search for existing Gist
+        console.log('Startup: Searching for existing Gist...');
+        findExistingGist().then(gistId => {
+          if (gistId) {
+            console.log('Startup: Found existing Gist:', gistId);
+            syncConfig.gistId = gistId;
+            localStorage.setItem('brummiesGistId', gistId);
+            loadFromGitHub();
+          } else {
+            console.log('Startup: No existing Gist found');
+          }
+        });
+      }
     }
     
     // ==================== END GITHUB SYNC ====================
