@@ -141,6 +141,32 @@ async function syncData() {
   console.log('Background Sync executed');
 }
 
+async function startMetadataPolling(station) {
+  stopMetadataPolling(); // Alten Timer löschen
+  
+  const poll = async () => {
+    try {
+      // Radio-Browser API bietet Infos zum Sender (inkl. Homepage/Click-Count)
+      // Für echte "Now Playing" Daten braucht man oft einen Proxy oder die API des Senders
+      const response = await fetch(`https://de1.api.radio-browser.info/json/stations/byuuid/${station.id}`);
+      const data = await response.json();
+      
+      // Falls der Sender den Titel in der API hinterlegt:
+      if (data[0] && data[0].lastchangetime) {
+         // Hier müsste die Logik rein, die den Titel extrahiert
+         // Da die Radio-Browser API oft nur statische Infos hat, 
+         // ist ein Fallback auf den Sendernamen sinnvoll:
+         updateNowPlayingText(`🎵 ${station.name} - Live Stream`);
+      }
+    } catch (e) {
+      console.error("Metadaten-Fehler", e);
+    }
+  };
+
+  poll();
+  metadataTimer = setInterval(poll, 30000); // Alle 30 Sek. prüfen
+}
+
 // Push Notifications (vorbereitet für Zukunft)
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
