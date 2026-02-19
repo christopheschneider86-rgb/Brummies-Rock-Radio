@@ -1424,7 +1424,7 @@ small {
       <div class="settings-section">
         <h3>ℹ️ Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.1.3</p>
+        <p>Version: 1.1.4</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -3116,12 +3116,26 @@ small {
           audioContext.resume();
         }
         
-        audioEl.play().catch(err => {
-          console.error("Play error:", err);
-          stationInfoEl.textContent = "❌ Fehler";
-        });
+        audioEl.play()
+          .then(() => {
+            playBtn.textContent = "⏸ Pause";
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'playing';
+            }
+          })
+          .catch(err => {
+            console.error("Play error:", err);
+            stationInfoEl.textContent = "❌ Fehler";
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'paused';
+            }
+          });
       } else {
         audioEl.pause();
+        playBtn.textContent = "▶ Play";
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused';
+        }
       }
     });
 
@@ -3478,6 +3492,11 @@ small {
         playBtn.disabled = false;
         coverEl.classList.add("playing");
         
+        // iOS: Set Media Session playback state
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing';
+        }
+        
         startListeningSession(station);
         startMetadataPolling();
         startDataTracking(); // Start data usage tracking
@@ -3496,6 +3515,11 @@ small {
         console.error("Stream error:", err);
         stationInfoEl.textContent = "❌ Fehler";
         coverEl.classList.remove("playing");
+        
+        // iOS: Set Media Session playback state on error
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused';
+        }
       });
       
       addHistoryEntry(fromShuffle ? "🔀 Shuffle zu" : "🎵 Wechsel zu", station);
@@ -3531,23 +3555,58 @@ small {
         });
 
         // Action Handlers für Lock Screen
+        // iOS-compatible Media Session handlers
         navigator.mediaSession.setActionHandler('play', () => {
           try {
-            if (audioEl && !audioEl.paused) return; // Already playing
-            audioEl.play().catch(err => {
-              console.error('Media Session play failed:', err);
-            });
-            if (playBtn) playBtn.textContent = "⏸ Pause";
+            // iOS: Check if audio element has a source and is ready
+            if (!audioEl || !audioEl.src) {
+              console.warn('Media Session play: No audio source');
+              return;
+            }
+            
+            if (!audioEl.paused) {
+              console.log('Media Session play: Already playing');
+              return;
+            }
+            
+            // iOS requires immediate state update
+            navigator.mediaSession.playbackState = 'playing';
+            
+            // Start playback
+            const playPromise = audioEl.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  console.log('Media Session play: Success');
+                  if (playBtn) playBtn.textContent = "⏸ Pause";
+                })
+                .catch(err => {
+                  console.error('Media Session play failed:', err);
+                  navigator.mediaSession.playbackState = 'paused';
+                  if (playBtn) playBtn.textContent = "▶ Play";
+                });
+            }
           } catch (err) {
             console.error('Media Session play handler error:', err);
+            navigator.mediaSession.playbackState = 'paused';
           }
         });
 
         navigator.mediaSession.setActionHandler('pause', () => {
           try {
-            if (audioEl && audioEl.paused) return; // Already paused
+            if (!audioEl) return;
+            
+            if (audioEl.paused) {
+              console.log('Media Session pause: Already paused');
+              return;
+            }
+            
+            // iOS requires immediate state update
+            navigator.mediaSession.playbackState = 'paused';
+            
             audioEl.pause();
             if (playBtn) playBtn.textContent = "▶ Play";
+            console.log('Media Session pause: Success');
           } catch (err) {
             console.error('Media Session pause handler error:', err);
           }
@@ -3555,61 +3614,59 @@ small {
 
         navigator.mediaSession.setActionHandler('previoustrack', () => {
           try {
-            // Validate: displayedStations must exist and have items
+            // iOS: Minimal validation, fast execution
             if (!displayedStations || displayedStations.length === 0) {
-              console.warn('Media Session: No stations available for previoustrack');
+              console.warn('Media Session: No stations');
               return;
             }
             
-            // Validate: currentStationIndex must be valid
-            if (currentStationIndex === undefined || currentStationIndex === null || currentStationIndex <= 0) {
-              console.warn('Media Session: Already at first station');
+            if (currentStationIndex === undefined || currentStationIndex <= 0) {
+              console.warn('Media Session: At first station');
               return;
             }
             
             const prevIndex = currentStationIndex - 1;
             const prevStation = displayedStations[prevIndex];
             
-            if (!prevStation) {
-              console.warn('Media Session: Previous station not found at index', prevIndex);
+            if (!prevStation || !prevStation.streamUrl) {
+              console.warn('Media Session: Invalid previous station');
               return;
             }
             
-            console.log('Media Session: Going to previous station:', prevStation.name);
+            // iOS: Execute immediately, don't wait
+            console.log('Media Session: Previous ->', prevStation.name);
             selectStation(prevStation, prevIndex);
           } catch (err) {
-            console.error('Media Session previoustrack handler error:', err);
-            // Don't crash - just log and continue
+            console.error('Media Session previoustrack error:', err);
           }
         });
 
         navigator.mediaSession.setActionHandler('nexttrack', () => {
           try {
-            // Validate: displayedStations must exist and have items
+            // iOS: Minimal validation, fast execution
             if (!displayedStations || displayedStations.length === 0) {
-              console.warn('Media Session: No stations available for nexttrack');
+              console.warn('Media Session: No stations');
               return;
             }
             
-            // Validate: currentStationIndex must be valid
-            if (currentStationIndex === undefined || currentStationIndex === null || currentStationIndex >= displayedStations.length - 1) {
-              console.warn('Media Session: Already at last station');
+            if (currentStationIndex === undefined || currentStationIndex >= displayedStations.length - 1) {
+              console.warn('Media Session: At last station');
               return;
             }
             
             const nextIndex = currentStationIndex + 1;
             const nextStation = displayedStations[nextIndex];
             
-            if (!nextStation) {
-              console.warn('Media Session: Next station not found at index', nextIndex);
+            if (!nextStation || !nextStation.streamUrl) {
+              console.warn('Media Session: Invalid next station');
               return;
             }
             
-            console.log('Media Session: Going to next station:', nextStation.name);
+            // iOS: Execute immediately, don't wait
+            console.log('Media Session: Next ->', nextStation.name);
             selectStation(nextStation, nextIndex);
           } catch (err) {
-            console.error('Media Session nexttrack handler error:', err);
-            // Don't crash - just log and continue
+            console.error('Media Session nexttrack error:', err);
           }
         });
 
@@ -3635,11 +3692,21 @@ small {
       endListeningSession();
       stopMetadataPolling();
       stopDataTracking(); // Stop data tracking
+      
+      // iOS: Sync Media Session state
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+      }
     });
 
     audioEl.addEventListener("playing", () => {
       if (currentStation) {
         stationInfoEl.textContent = `🎶 ${currentStation.genre} · ${currentStation.bitrate}kbps`;
+      }
+      
+      // iOS: Sync Media Session state
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
       }
     });
 
@@ -3651,6 +3718,11 @@ small {
       stopMetadataPolling();
       stopDataTracking(); // Stop data tracking
       nowPlayingTextEl.textContent = "Verbindungsfehler";
+      
+      // iOS: Sync Media Session state
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+      }
       
       // Attempt reconnect for mobile
       attemptReconnect();
