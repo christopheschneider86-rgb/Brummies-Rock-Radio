@@ -2965,16 +2965,38 @@ small {
     }
 
     // --- METADATA FETCHING ---
-    function startMetadataPolling() {
-      stopMetadataPolling();
-      if (!currentStation) return;
-      
+function startMetadataPolling() {
+  stopMetadataPolling();
+
       // Sofort beim Start
-      fetchStreamMetadata();
+      fetchStreamMetadata();  
+
+  // Wir nutzen die globale Variable currentStation, die in selectStation gesetzt wird
+  if (!currentStation) return;
+  
+  const poll = async () => {
+    try {
+      // Nutze currentStation statt des (fehlenden) Arguments
+      const response = await fetch(`https://de1.api.radio-browser.info/json/stations/byuuid/${currentStation.id}`);
+      const data = await response.json();
       
-      // Dann alle 10 Sekunden
-      metadataTimer = setInterval(fetchStreamMetadata, 10000);
+      if (data && data[0]) {
+        // Hier setzen wir den Text. 
+        // Hinweis: Echte Songtitel liefert die API leider selten direkt, 
+        // aber so bleibt die Anzeige zumindest stabil.
+        updateNowPlayingText(`🎵 ${currentStation.name} - Live Stream`);
+      }
+    } catch (e) {
+      console.error("Metadaten-Fehler:", e);
+      // Fallback, falls die API hakt
+      updateNowPlayingText(`🎵 ${currentStation.name} - Live`);
     }
+  };
+
+  poll(); // Sofort ausführen
+  metadataTimer = setInterval(poll, 10000); // Alle 10 Sek. aktualisieren
+}
+
 
     function stopMetadataPolling() {
       if (metadataTimer) {
