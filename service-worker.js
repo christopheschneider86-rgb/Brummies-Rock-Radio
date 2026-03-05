@@ -1,5 +1,15 @@
-const CACHE_NAME = 'brummies-radio-v2';
-const urlsToCache = [
+// ─── Brummies Rock Radio – Service Worker ────────────────────────────────────
+// v3 – Compatibility fixes:
+//   • AbortSignal.timeout() replaced with manual AbortController (works on all
+//     browsers incl. older iOS Safari and Android Chrome < 103)
+//   • Stricter stream-bypass regex (avoids mis-caching audio chunks)
+//   • Cache-first for static assets with stale-while-revalidate
+//   • Network-first for API with offline fallback
+//   • Push notifications ready
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CACHE_NAME = 'brummies-radio-v3';
+const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
@@ -7,177 +17,137 @@ const urlsToCache = [
   './icon-512.png'
 ];
 
-// Install Service Worker
-self.addEventListener('install', (event) => {
+// ── Helper: fetch with manual timeout ────────────────────────────────────────
+// Replaces AbortSignal.timeout() which requires Chrome 103+/Safari 16+
+function fetchWithTimeout(request, ms) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  return fetch(request, { signal: ctrl.signal })
+    .then(resp => { clearTimeout(timer); return resp; })
+    .catch(err  => { clearTimeout(timer); throw err;  });
+}
+
+// ── Install ───────────────────────────────────────────────────────────────────
+self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache);
-      })
+      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate Service Worker
-self.addEventListener('activate', (event) => {
+// ── Activate: remove old caches ───────────────────────────────────────────────
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Old cache deleted:', cacheName);
-            return caches.delete(cacheName);
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(k => k !== CACHE_NAME)
+          .map(k => { console.log('[SW] Deleted old cache:', k); return caches.delete(k); })
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // 1. Audio streams – always network, never cache.
+  //    Matches common stream hostnames, audio file extensions,
+  //    and typical Icecast/Shoutcast ports so range-requests work natively.
+  const isAudioStream =
+    /stream|icecast|shoutcast|listen|radio/i.test(url.hostname) ||
+    /\.(mp3|m3u8?|pls|aac|ogg|opus)(\?|$)/i.test(url.pathname) ||
+    url.port === '8000' || url.port === '8080';
+
+  if (isAudioStream) {
+    // Do NOT call event.respondWith – let the browser handle it natively
+    // so ICY metadata headers and range requests work correctly.
+    return;
+  }
+
+  // 2. Radio Browser API + Translation API – network first, 10 s timeout, cache fallback
+  if (url.hostname.includes('radio-browser.info') ||
+      url.hostname.includes('mymemory.translated.net')) {
+    event.respondWith(
+      fetchWithTimeout(req, 10000)
+        .then(resp => {
+          if (resp.ok) {
+            const clone = resp.clone();
+            caches.open(CACHE_NAME).then(c => c.put(req, clone));
           }
+          return resp;
         })
-      );
+        .catch(() =>
+          caches.match(req).then(cached => {
+            if (cached) {
+              console.log('[SW] API offline – cached response used');
+              return cached;
+            }
+            return new Response(JSON.stringify({ error: 'Network unavailable' }), {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          })
+        )
+    );
+    return;
+  }
+
+  // 3. Static assets – cache first, stale-while-revalidate in background
+  if (req.method === 'GET') {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        // Always try to revalidate in background
+        const networkFetch = fetchWithTimeout(req, 8000)
+          .then(resp => {
+            if (resp && resp.ok) {
+              const clone = resp.clone();
+              caches.open(CACHE_NAME).then(c => c.put(req, clone));
+            }
+            return resp;
+          })
+          .catch(() => null);
+
+        // Serve cache immediately; fall back to network if not cached
+        return cached || networkFetch;
+      })
+    );
+  }
+});
+
+// ── Background Sync ───────────────────────────────────────────────────────────
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-data') {
+    event.waitUntil(Promise.resolve().then(() => {
+      console.log('[SW] Background Sync executed');
+    }));
+  }
+});
+
+// ── Push Notifications ────────────────────────────────────────────────────────
+self.addEventListener('push', event => {
+  const data = event.data ? event.data.json() : {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Brummies Rock Radio', {
+      body:      data.body || 'Neue Benachrichtigung',
+      icon:      './icon-192.png',
+      badge:     './icon-192.png',
+      tag:       'brummies-notification',
+      renotify:  true
     })
   );
-  return self.clients.claim();
 });
 
-// Fetch - Optimiert für Mobile
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  
-  // Radio-Streams: Immer Network (können nicht gecacht werden)
-  if (url.hostname.includes('stream') || 
-      url.pathname.includes('.mp3') ||
-      url.pathname.includes('.m3u') ||
-      url.pathname.includes('.pls')) {
-    event.respondWith(
-      fetch(event.request, {
-        // Optimierungen für Streaming
-        mode: 'cors',
-        credentials: 'omit'
-      }).catch(() => {
-        // Fallback bei Netzwerkfehler
-        return new Response('Stream unavailable', {
-          status: 503,
-          statusText: 'Service Unavailable'
-        });
-      })
-    );
-    return;
-  }
-  
-  // Radio Browser API: Network First mit Cache Fallback
-  if (url.hostname.includes('radio-browser.info')) {
-    event.respondWith(
-      fetch(event.request, {
-        // Timeout für schnellere Fehler-Erkennung
-        signal: AbortSignal.timeout(10000) // 10s timeout
-      })
-      .then(response => {
-        // Cache erfolgreiche API-Responses
-        if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Fallback auf gecachte API-Response
-        return caches.match(event.request).then(cached => {
-          if (cached) {
-            console.log('Using cached API response');
-            return cached;
-          }
-          return new Response('{"error": "Network unavailable"}', {
-            status: 503,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        });
-      })
-    );
-    return;
-  }
-  
-  // Statische Ressourcen: Cache First
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          // Aus Cache, update im Hintergrund
-          fetch(event.request).then(networkResponse => {
-            if (networkResponse.ok) {
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(event.request, networkResponse);
-              });
-            }
-          }).catch(() => {
-            // Ignore network errors for background updates
-          });
-          
-          return response;
-        }
-        
-        // Nicht im Cache, hole vom Netzwerk
-        return fetch(event.request).then(networkResponse => {
-          // Cache erfolgreiche Responses
-          if (networkResponse.ok) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        });
-      })
-  );
-});
-
-// Background Sync für Favoriten/Verlauf (optional)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-data') {
-    event.waitUntil(syncData());
-  }
-});
-
-async function syncData() {
-  // Hier könnte man Favoriten/Verlauf mit Server synchronisieren
-  console.log('Background Sync executed');
-}
-
-async function startMetadataPolling(station) {
-  stopMetadataPolling(); // Alten Timer löschen
-  
-  const poll = async () => {
-    try {
-      // Radio-Browser API bietet Infos zum Sender (inkl. Homepage/Click-Count)
-      // Für echte "Now Playing" Daten braucht man oft einen Proxy oder die API des Senders
-      const response = await fetch(`https://de1.api.radio-browser.info/json/stations/byuuid/${station.id}`);
-      const data = await response.json();
-      
-      // Falls der Sender den Titel in der API hinterlegt:
-      if (data[0] && data[0].lastchangetime) {
-         // Hier müsste die Logik rein, die den Titel extrahiert
-         // Da die Radio-Browser API oft nur statische Infos hat, 
-         // ist ein Fallback auf den Sendernamen sinnvoll:
-         updateNowPlayingText(`🎵 ${station.name} - Live Stream`);
-      }
-    } catch (e) {
-      console.error("Metadaten-Fehler", e);
-    }
-  };
-
-  poll();
-  metadataTimer = setInterval(poll, 30000); // Alle 30 Sek. prüfen
-}
-
-// Push Notifications (vorbereitet für Zukunft)
-self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Brummies Rock Radio';
-  const options = {
-    body: data.body || 'New notification',
-    icon: './icon-192.png',
-    badge: './icon-192.png'
-  };
-  
+// ── Notification Click: focus existing window or open new one ─────────────────
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      if (list.length > 0) return list[0].focus();
+      return clients.openWindow('./');
+    })
   );
 });
