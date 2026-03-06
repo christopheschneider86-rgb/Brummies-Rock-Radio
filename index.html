@@ -120,25 +120,49 @@ body {
 header {
   position: sticky;
   top: 0;
-  z-index: 1000;
-  padding: 16px 24px;
+  z-index: 9999;
+  padding: 12px 24px;
   background: linear-gradient(90deg, var(--color-gradient-start), var(--color-gradient-end));
   border-bottom: 2px solid var(--color-accent);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
+  transition: padding 0.3s ease;
 }
 
-header > div:first-child {
+.header-left {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 6px;
   flex: 1;
 }
 
-header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; }
-header .subtitle { font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: center; }
+#headerLogo {
+  width: 46px;
+  height: 46px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
+  max-height: 60px;
+  opacity: 1;
+}
+
+/* Scrolled state: text fades, logo gets bigger */
+header.scrolled { padding: 8px 24px; }
+header.scrolled #headerLogo { width: 64px; height: 64px; }
+header.scrolled .header-text { max-height: 0; opacity: 0; pointer-events: none; margin: 0; }
+
+header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; }
+header .subtitle { font-size: 10px; opacity: 0.7; margin-top: 2px; white-space: nowrap; }
 
 main {
   display: grid;
@@ -1431,7 +1455,10 @@ small {
       max-width: 100%;
       height: auto;
       user-select: none;
+      touch-action: none;
+      cursor: grab;
     }
+    .circular-timer:active, .circular-clock:active { cursor: grabbing; }
     
     .sleep-mode-toggle {
       display: flex;
@@ -1620,14 +1647,16 @@ small {
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
-  <header>
-    <div>
-      <!-- <i data-lucide="radio"></i> -->
-      <h1><img src="images/logo.png" alt="Brummy" width="45" height="45"> Brummies Rock Radio</h1>
-      <div class="subtitle">by ZaboChris · MP3 Streams</div>
+  <header id="mainHeader">
+    <div class="header-left">
+      <img id="headerLogo" src="images/logo.png" alt="Brummy">
+      <div class="header-text">
+        <h1>Brummies Rock Radio</h1>
+        <div class="subtitle">by ZaboChris · MP3 Streams</div>
+      </div>
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
-      <button id="settingsBtn" title="Einstellungen"><i data-lucide="menu"></i></button>
+      <button id="settingsBtn" title="Einstellungen"><i data-lucide="settings"></i></button>
       <button id="installBtn" class="secondary" style="display: none; margin: 0; padding: 6px 12px; font-size: 11px;"><i data-lucide="download"></i> App</button>
       <span id="pwaStatus" style="font-size: 10px; opacity: 0.7;"></span>
     </div>
@@ -1826,7 +1855,7 @@ small {
       <div class="settings-section">
         <h3><i data-lucide="info"></i> Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.2.0</p>
+        <p>Version: 1.2.1</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -2070,40 +2099,45 @@ small {
       <h2><i data-lucide="shuffle"></i> Auto-Shuffle</h2>
       
       <div class="timer-container">
-        <svg class="circular-timer" viewBox="0 0 200 120" width="200" height="120">
-          <!-- Background arc -->
-          <path d="M 20,100 A 80,80 0 0,1 180,100" 
-                fill="none" 
-                stroke="var(--color-bg-tertiary)" 
-                stroke-width="12"/>
-          
-          <!-- Active arc (will be updated via JS) -->
-          <path id="shuffleArc" 
-                d="M 20,100 A 80,80 0 0,1 180,100" 
-                fill="none" 
-                stroke="var(--color-accent)" 
-                stroke-width="12" 
-                opacity="0.3"/>
-          
+        <svg class="circular-timer" viewBox="0 0 200 185" width="200" height="185">
+          <!-- Background arc: 270° clockwise from 135° to 45° -->
+          <!-- Start: cos(135°)=−0.7071, sin(135°)=0.7071 → (43.43, 156.57) -->
+          <!-- End:   cos(45°)=0.7071,  sin(45°)=0.7071  → (156.57, 156.57) -->
+          <path d="M 43.43,156.57 A 80,80 0 1,1 156.57,156.57"
+                fill="none"
+                stroke="var(--color-bg-tertiary)"
+                stroke-width="12"
+                stroke-linecap="round"/>
+
+          <!-- Active arc (updated by JS) -->
+          <path id="shuffleArc"
+                d=""
+                fill="none"
+                stroke="var(--color-accent)"
+                stroke-width="12"
+                stroke-linecap="round"
+                opacity="0.9"/>
+
           <!-- Tick marks -->
           <g id="shuffleTicks"></g>
-          
+
           <!-- Draggable handle -->
-          <circle id="shuffleHandle" 
-                  cx="100" cy="100" r="10" 
-                  fill="var(--color-accent)" 
-                  cursor="pointer"/>
-          
-          <!-- Center display -->
-          <text x="100" y="80" 
-                text-anchor="middle" 
-                font-size="32" 
-                font-weight="bold" 
-                fill="var(--color-text-primary)" 
+          <circle id="shuffleHandle"
+                  cx="43.43" cy="156.57" r="10"
+                  fill="var(--color-accent)"
+                  cursor="pointer"
+                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
+
+          <!-- Center value -->
+          <text x="100" y="88"
+                text-anchor="middle"
+                font-size="36"
+                font-weight="bold"
+                fill="var(--color-text-primary)"
                 id="shuffleValue">0</text>
-          <text x="100" y="95" 
-                text-anchor="middle" 
-                font-size="12" 
+          <text x="100" y="106"
+                text-anchor="middle"
+                font-size="12"
                 fill="var(--color-text-secondary)">Minuten</text>
         </svg>
       </div>
@@ -2137,40 +2171,43 @@ small {
       <!-- Countdown Timer -->
       <div id="sleepCountdown" class="sleep-control active">
         <div class="timer-container">
-          <svg class="circular-timer" viewBox="0 0 200 120" width="200" height="120">
-            <!-- Background arc -->
-            <path d="M 20,100 A 80,80 0 0,1 180,100" 
-                  fill="none" 
-                  stroke="var(--color-bg-tertiary)" 
-                  stroke-width="12"/>
-            
+          <svg class="circular-timer" viewBox="0 0 200 185" width="200" height="185">
+            <!-- Background arc: 270° -->
+            <path d="M 43.43,156.57 A 80,80 0 1,1 156.57,156.57"
+                  fill="none"
+                  stroke="var(--color-bg-tertiary)"
+                  stroke-width="12"
+                  stroke-linecap="round"/>
+
             <!-- Active arc -->
-            <path id="sleepArc" 
-                  d="M 20,100 A 80,80 0 0,1 180,100" 
-                  fill="none" 
-                  stroke="var(--color-accent)" 
-                  stroke-width="12" 
-                  opacity="0.3"/>
-            
+            <path id="sleepArc"
+                  d=""
+                  fill="none"
+                  stroke="var(--color-accent)"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  opacity="0.9"/>
+
             <!-- Tick marks -->
             <g id="sleepTicks"></g>
-            
+
             <!-- Draggable handle -->
-            <circle id="sleepHandle" 
-                    cx="100" cy="100" r="10" 
-                    fill="var(--color-accent)" 
-                    cursor="pointer"/>
-            
-            <!-- Center display -->
-            <text x="100" y="80" 
-                  text-anchor="middle" 
-                  font-size="32" 
-                  font-weight="bold" 
-                  fill="var(--color-text-primary)" 
+            <circle id="sleepHandle"
+                    cx="43.43" cy="156.57" r="10"
+                    fill="var(--color-accent)"
+                    cursor="pointer"
+                    filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
+
+            <!-- Center value -->
+            <text x="100" y="88"
+                  text-anchor="middle"
+                  font-size="36"
+                  font-weight="bold"
+                  fill="var(--color-text-primary)"
                   id="sleepValue">0</text>
-            <text x="100" y="95" 
-                  text-anchor="middle" 
-                  font-size="12" 
+            <text x="100" y="106"
+                  text-anchor="middle"
+                  font-size="12"
                   fill="var(--color-text-secondary)">Minuten</text>
           </svg>
         </div>
@@ -3460,36 +3497,11 @@ small {
     // --- METADATA FETCHING ---
 function startMetadataPolling() {
   stopMetadataPolling();
-
-      // Sofort beim Start
-      fetchStreamMetadata();  
-
-  // Wir nutzen die globale Variable currentStation, die in selectStation gesetzt wird
   if (!currentStation) return;
-  
-  const poll = async () => {
-    try {
-      // Nutze currentStation statt des (fehlenden) Arguments
-      const response = await fetch(`https://de1.api.radio-browser.info/json/stations/byuuid/${currentStation.id}`);
-      const data = await response.json();
-      
-      if (data && data[0]) {
-        // Hier setzen wir den Text. 
-        // Hinweis: Echte Songtitel liefert die API leider selten direkt, 
-        // aber so bleibt die Anzeige zumindest stabil.
-        updateNowPlayingText(`🎵 ${currentStation.name} - Live Stream`);
-      }
-    } catch (e) {
-      console.error("Metadaten-Fehler:", e);
-      // Fallback, falls die API hakt
-      updateNowPlayingText(`🎵 ${currentStation.name} - Live`);
-    }
-  };
 
-  poll(); // Sofort ausführen
-  metadataTimer = setInterval(poll, 10000); // Alle 10 Sek. aktualisieren
+  fetchStreamMetadata();
+  metadataTimer = setInterval(fetchStreamMetadata, 15000);
 }
-
 
     function stopMetadataPolling() {
       if (metadataTimer) {
@@ -3498,51 +3510,124 @@ function startMetadataPolling() {
       }
     }
 
+    // ── Real Now-Playing fetcher ───────────────────────────────────────────────
     async function fetchStreamMetadata() {
       if (!currentStation || audioEl.paused) return;
-      
+
+      // Snapshot which station we're fetching for — ignore result if station changed meanwhile
+      const stationAtStart = currentStation;
+
+      const streamUrl = currentStation.streamUrl;
+      let base, mountPath;
       try {
-        // Methode 1: Radio Browser API - Click-URL abrufen (gibt manchmal Metadata zurück)
-        const response = await fetch(`https://de1.api.radio-browser.info/json/url/${currentStation.id}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Radio Browser Response:", data);
-          
-          // Manchmal enthält die API aktuelle Infos im Namen
-          if (data.name && data.name !== currentStation.name) {
-            updateNowPlayingText(data.name);
+        const u = new URL(streamUrl);
+        base = `${u.protocol}//${u.host}`;
+        mountPath = u.pathname; // e.g. "/rock" or "/stream/128"
+      } catch { return; }
+
+      // Ordered list of endpoints to try, most reliable first.
+      // parseIcecastJson gets the mount path so it can match the right source.
+      const endpoints = [
+        { url: `${base}/status-json.xsl`, parse: (t) => parseIcecastJson(t, mountPath) },
+        { url: `${base}/stats?json=1`,    parse: parseShoutcastJson },
+        { url: `${base}/7.html`,          parse: parseShoutcast7 },
+        { url: `${base}/status.xsl`,      parse: parseIcecastXml },
+        { url: `${base}/currentsong`,     parse: (t) => t.trim() || null },
+        { url: `${base}/nowplaying`,      parse: (t) => t.trim() || null },
+        { url: `${base}/now-playing.json`,parse: parseGenericJson },
+        { url: `${base}/np.json`,         parse: parseGenericJson },
+      ];
+
+      for (const ep of endpoints) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 4000);
+          const res = await fetch(ep.url, { mode: 'cors', cache: 'no-store', signal: ctrl.signal });
+          clearTimeout(timer);
+          if (!res.ok) continue;
+          const text = await res.text();
+          const title = ep.parse(text);
+          if (title && title.length > 1 && !title.toLowerCase().includes('unknown')) {
+            // Guard: only update if we're still on the same station
+            if (currentStation === stationAtStart) {
+              updateNowPlayingText(`🎵 ${title}`);
+            }
             return;
           }
-        }
-        
-        // Methode 2: Station Info nochmal abrufen
-        const stationResponse = await fetch(`https://de1.api.radio-browser.info/json/stations/byuuid/${currentStation.id}`);
-        
-        if (stationResponse.ok) {
-          const stationData = await stationResponse.json();
-          if (stationData && stationData.length > 0) {
-            const st = stationData[0];
-            
-            // Prüfe auf Updates im Namen oder Homepage
-            if (st.homepage && st.homepage.includes('nowplaying')) {
-              updateNowPlayingText(`🎵 Info verfügbar auf: ${st.homepage}`);
-              return;
-            }
-            
-            // Wenn nichts gefunden: Generische Info
-            if (!currentMetadata || currentMetadata === "Warte auf Stream-Metadaten...") {
-              updateNowPlayingText(`🎵 ${currentStation.name} - Live Stream läuft`);
+        } catch { /* try next */ }
+      }
+
+      if (currentStation === stationAtStart) {
+        updateNowPlayingText(`🎵 ${currentStation.name} – Live`);
+      }
+    }
+
+    // ── Parsers for different server formats ───────────────────────────────────
+
+    function parseIcecastJson(text, mountPath) {
+      try {
+        const j = JSON.parse(text);
+        const src = j?.icestats?.source;
+        const sources = Array.isArray(src) ? src : (src ? [src] : []);
+
+        // First pass: try to find a source whose listenurl matches our mount path
+        if (mountPath && mountPath !== '/') {
+          const mount = mountPath.toLowerCase();
+          for (const s of sources) {
+            const listenurl = (s?.listenurl || '').toLowerCase();
+            const serverName = (s?.['server_name'] || s?.server_name || '').toLowerCase();
+            // Match if the listenurl ends with our mount path
+            if (listenurl.endsWith(mount) || listenurl.includes(mount)) {
+              const t = s?.title || s?.['stream-title'] || s?.artist;
+              if (t) return t;
             }
           }
         }
-        
-      } catch (error) {
-        console.log("Metadata fetch error:", error);
-        if (!currentMetadata || currentMetadata === "Warte auf Stream-Metadaten...") {
-          updateNowPlayingText(`🎵 ${currentStation.name} - Live Stream`);
+
+        // Fallback: only use first source if there's exactly one (no ambiguity)
+        if (sources.length === 1) {
+          const t = sources[0]?.title || sources[0]?.['stream-title'] || sources[0]?.artist;
+          if (t) return t;
         }
-      }
+      } catch {}
+      return null;
+    }
+
+    function parseShoutcastJson(text) {
+      try {
+        const j = JSON.parse(text);
+        return j?.songtitle || j?.song || j?.currentSong || j?.title || null;
+      } catch {}
+      return null;
+    }
+
+    function parseShoutcast7(text) {
+      // Format: "HTTP/1.0 200 OK\n...\n<html><body>200,listeners,max,br,SONGTITLE,genre,url</body></html>"
+      try {
+        const m = text.match(/<body>([\s\S]*?)<\/body>/i);
+        if (!m) return null;
+        const parts = m[1].trim().split(',');
+        // Field 4 (index 4) is the song title
+        if (parts.length >= 5 && parts[4]?.trim()) return parts[4].trim();
+      } catch {}
+      return null;
+    }
+
+    function parseIcecastXml(text) {
+      try {
+        const m = text.match(/<title>(.*?)<\/title>/i);
+        return m?.[1]?.trim() || null;
+      } catch {}
+      return null;
+    }
+
+    function parseGenericJson(text) {
+      try {
+        const j = JSON.parse(text);
+        return j?.title || j?.song || j?.track || j?.now_playing?.song?.title
+          || j?.current_track?.title || j?.live?.is_live ? null : (j?.song?.title || null);
+      } catch {}
+      return null;
     }
 
     function updateNowPlayingText(text) {
@@ -5833,80 +5918,134 @@ function initShuffleTimer() {
   const statusDiv = document.getElementById('shuffleStatus');
   
   if (!handle || !svg) return;
-  
+
+  // ── 270° arc geometry ──────────────────────────────────────────────────────
+  // Arc runs clockwise from atan2 angle 135° (lower-left, 0 min)
+  //   through -90° (top, 30 min) to 45° (lower-right, 60 min).
+  // Total arc: 270°. Dead zone (gap): 90° at bottom centre.
+  // center SVG: (100, 100), radius: 80
+
+  const R = 80;
+  const CX = 100, CY = 100;
+  const START_DEG = 135;  // atan2° at 0 min
+
+  function minutesToAtanDeg(minutes) {
+    // Each minute = 270/60 = 4.5° clockwise from start
+    let deg = START_DEG + (minutes / 60) * 270;
+    if (deg > 180) deg -= 360;   // normalise to -180..180
+    return deg;
+  }
+
+  function atanDegToXY(deg) {
+    const rad = deg * Math.PI / 180;
+    return { x: CX + R * Math.cos(rad), y: CY + R * Math.sin(rad) };
+  }
+
   // Draw tick marks
   for (let i = 0; i <= 60; i += 5) {
-    const angle = 180 + (i / 60) * 180; // LEFT to RIGHT
-    const rad = angle * Math.PI / 180;
-    const x1 = 100 + 70 * Math.cos(rad);
-    const y1 = 100 + 70 * Math.sin(rad);
-    const x2 = 100 + 75 * Math.cos(rad);
-    const y2 = 100 + 75 * Math.sin(rad);
-    
+    const deg = minutesToAtanDeg(i);
+    const rad = deg * Math.PI / 180;
+    const isMajor = i % 15 === 0;
+    const r1 = isMajor ? 65 : 68;
+    const r2 = isMajor ? 75 : 72;
+    const x1 = CX + r1 * Math.cos(rad);
+    const y1 = CY + r1 * Math.sin(rad);
+    const x2 = CX + r2 * Math.cos(rad);
+    const y2 = CY + r2 * Math.sin(rad);
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1);
-    line.setAttribute('y1', y1);
-    line.setAttribute('x2', x2);
-    line.setAttribute('y2', y2);
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
     line.setAttribute('stroke', 'var(--color-text-muted)');
-    line.setAttribute('stroke-width', i % 10 === 0 ? '2' : '1');
-    line.setAttribute('opacity', '0.5');
+    line.setAttribute('stroke-width', isMajor ? '2.5' : '1.5');
+    line.setAttribute('opacity', '0.6');
+    line.setAttribute('stroke-linecap', 'round');
     ticksGroup.appendChild(line);
+
+    // Labels at 0, 15, 30, 45, 60
+    if (i % 15 === 0) {
+      const lr = 58;
+      const tx = CX + lr * Math.cos(rad);
+      const ty = CY + lr * Math.sin(rad);
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', tx); txt.setAttribute('y', ty + 4);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-size', '9');
+      txt.setAttribute('fill', 'var(--color-text-muted)');
+      txt.textContent = i;
+      ticksGroup.appendChild(txt);
+    }
   }
-  
-  // Drag functionality
+
+  // Drag state
   let dragging = false;
-  
+  let dragCenterX = 0, dragCenterY = 0;
+
   function updateShuffleTimer(minutes) {
     shuffleState.minutes = Math.max(0, Math.min(60, minutes));
     valueText.textContent = shuffleState.minutes;
-    
-    const angle = 180 + (shuffleState.minutes / 60) * 180;
-    const rad = angle * Math.PI / 180;
-    const x = 100 + 80 * Math.cos(rad);
-    const y = 100 + 80 * Math.sin(rad);
-    handle.setAttribute('cx', x);
-    handle.setAttribute('cy', y);
-    
-    const startAngle = 180;
-    const endAngle = 180 + (shuffleState.minutes / 60) * 180;
-    const startRad = startAngle * Math.PI / 180;
-    const endRad = endAngle * Math.PI / 180;
-    const startX = 100 + 80 * Math.cos(startRad);
-    const startY = 100 + 80 * Math.sin(startRad);
-    const endX = 100 + 80 * Math.cos(endRad);
-    const endY = 100 + 80 * Math.sin(endRad);
-    const largeArc = shuffleState.minutes > 30 ? 1 : 0;
-    arc.setAttribute('d', `M ${startX},${startY} A 80,80 0 ${largeArc},1 ${endX},${endY}`);
+
+    // Handle position
+    const p = atanDegToXY(minutesToAtanDeg(shuffleState.minutes));
+    handle.setAttribute('cx', p.x);
+    handle.setAttribute('cy', p.y);
+
+    // Active arc path
+    if (shuffleState.minutes === 0) {
+      arc.setAttribute('d', '');
+      return;
+    }
+    const startPt = atanDegToXY(START_DEG);  // fixed 0-min point
+    const endPt   = p;
+    const clockwiseDeg = (minutesToAtanDeg(shuffleState.minutes) - START_DEG + 360) % 360;
+    const largeArc = clockwiseDeg > 180 ? 1 : 0;
+    arc.setAttribute('d',
+      `M ${startPt.x.toFixed(2)},${startPt.y.toFixed(2)} A ${R},${R} 0 ${largeArc},1 ${endPt.x.toFixed(2)},${endPt.y.toFixed(2)}`
+    );
   }
-  
+
+  function computeCenter() {
+    const rect = svg.getBoundingClientRect();
+    // Center (100,100) in viewBox 200×185
+    dragCenterX = rect.left + rect.width  * (CX / 200);
+    dragCenterY = rect.top  + rect.height * (CY / 185);
+  }
+
   function handleDrag(e) {
     if (!dragging) return;
-    
-    const rect = svg.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height;
-    
+    if (e.cancelable) e.preventDefault();
+
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    
-    let angle = Math.atan2(clientY - centerY, clientX - centerX) * 180 / Math.PI;
-    
-    if (angle < -180) angle = -180;
-    if (angle > 0) angle = 0;
-    
-    const minutes = Math.round(((angle + 180) / 180) * 60);
+
+    const dx = clientX - dragCenterX;
+    const dy = clientY - dragCenterY;
+
+    const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    // How far clockwise from start (135°)?
+    const clockwiseDeg = (angleDeg - START_DEG + 360) % 360;
+
+    // Dead zone: > 270° means the gap at the bottom
+    if (clockwiseDeg > 270) return;
+
+    const minutes = Math.round((clockwiseDeg / 270) * 60);
     updateShuffleTimer(minutes);
   }
-  
-  handle.addEventListener('mousedown', () => { dragging = true; });
-  handle.addEventListener('touchstart', () => { dragging = true; });
-  
+
+  function startDrag(e) {
+    dragging = true;
+    computeCenter();
+    e.preventDefault();
+  }
+
+  handle.addEventListener('mousedown', startDrag);
+  handle.addEventListener('touchstart', startDrag, { passive: false });
   document.addEventListener('mousemove', handleDrag);
-  document.addEventListener('touchmove', handleDrag);
-  
-  document.addEventListener('mouseup', () => { dragging = false; });
+  document.addEventListener('touchmove', handleDrag, { passive: false });
+  document.addEventListener('mouseup',  () => { dragging = false; });
   document.addEventListener('touchend', () => { dragging = false; });
+
+  updateShuffleTimer(0);
   
   // Toggle button
   toggleBtn.addEventListener('click', () => {
@@ -6086,83 +6225,98 @@ function initSleepCountdown() {
   const ticksGroup = document.getElementById('sleepTicks');
   
   if (!handle || !svg) return;
-  
-  // Draw tick marks
-  for (let i = 0; i <= 60; i += 5) {
-    const angle = 180 + (i / 60) * 180;
-    const rad = angle * Math.PI / 180;
-    const x1 = 100 + 70 * Math.cos(rad);
-    const y1 = 100 + 70 * Math.sin(rad);
-    const x2 = 100 + 75 * Math.cos(rad);
-    const y2 = 100 + 75 * Math.sin(rad);
-    
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1);
-    line.setAttribute('y1', y1);
-    line.setAttribute('x2', x2);
-    line.setAttribute('y2', y2);
-    line.setAttribute('stroke', 'var(--color-text-muted)');
-    line.setAttribute('stroke-width', i % 10 === 0 ? '2' : '1');
-    line.setAttribute('opacity', '0.5');
-    ticksGroup.appendChild(line);
+
+  const R = 80;
+  const CX = 100, CY = 100;
+  const START_DEG = 135;
+
+  function minutesToAtanDeg(minutes) {
+    let deg = START_DEG + (minutes / 60) * 270;
+    if (deg > 180) deg -= 360;
+    return deg;
   }
-  
-  // Drag functionality
+  function atanDegToXY(deg) {
+    const rad = deg * Math.PI / 180;
+    return { x: CX + R * Math.cos(rad), y: CY + R * Math.sin(rad) };
+  }
+
+  // Draw tick marks and labels
+  for (let i = 0; i <= 60; i += 5) {
+    const deg = minutesToAtanDeg(i);
+    const rad = deg * Math.PI / 180;
+    const isMajor = i % 15 === 0;
+    const r1 = isMajor ? 65 : 68;
+    const r2 = isMajor ? 75 : 72;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', CX + r1 * Math.cos(rad)); line.setAttribute('y1', CY + r1 * Math.sin(rad));
+    line.setAttribute('x2', CX + r2 * Math.cos(rad)); line.setAttribute('y2', CY + r2 * Math.sin(rad));
+    line.setAttribute('stroke', 'var(--color-text-muted)');
+    line.setAttribute('stroke-width', isMajor ? '2.5' : '1.5');
+    line.setAttribute('opacity', '0.6');
+    line.setAttribute('stroke-linecap', 'round');
+    ticksGroup.appendChild(line);
+
+    if (i % 15 === 0) {
+      const lr = 58;
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', CX + lr * Math.cos(rad));
+      txt.setAttribute('y', CY + lr * Math.sin(rad) + 4);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-size', '9');
+      txt.setAttribute('fill', 'var(--color-text-muted)');
+      txt.textContent = i;
+      ticksGroup.appendChild(txt);
+    }
+  }
+
   let dragging = false;
-  
+  let dragCenterX = 0, dragCenterY = 0;
+
   function updateSleepCountdown(minutes) {
     sleepState.minutes = Math.max(0, Math.min(60, minutes));
     valueText.textContent = sleepState.minutes;
-    
-    // Update handle position
-    const angle = 180 + (sleepState.minutes / 60) * 180;
-    const rad = angle * Math.PI / 180;
-    const x = 100 + 80 * Math.cos(rad);
-    const y = 100 + 80 * Math.sin(rad);
-    handle.setAttribute('cx', x);
-    handle.setAttribute('cy', y);
-    
-    // Update arc
-    const startAngle = 180;
-    const endAngle = 180 + (sleepState.minutes / 60) * 180;
-    const startRad = startAngle * Math.PI / 180;
-    const endRad = endAngle * Math.PI / 180;
-    const startX = 100 + 80 * Math.cos(startRad);
-    const startY = 100 + 80 * Math.sin(startRad);
-    const endX = 100 + 80 * Math.cos(endRad);
-    const endY = 100 + 80 * Math.sin(endRad);
-    const largeArc = sleepState.minutes > 30 ? 1 : 0;
-    arc.setAttribute('d', `M ${startX},${startY} A 80,80 0 ${largeArc},1 ${endX},${endY}`);
+
+    const p = atanDegToXY(minutesToAtanDeg(sleepState.minutes));
+    handle.setAttribute('cx', p.x);
+    handle.setAttribute('cy', p.y);
+
+    if (sleepState.minutes === 0) { arc.setAttribute('d', ''); return; }
+    const startPt = atanDegToXY(START_DEG);
+    const clockwiseDeg = (minutesToAtanDeg(sleepState.minutes) - START_DEG + 360) % 360;
+    const largeArc = clockwiseDeg > 180 ? 1 : 0;
+    arc.setAttribute('d',
+      `M ${startPt.x.toFixed(2)},${startPt.y.toFixed(2)} A ${R},${R} 0 ${largeArc},1 ${p.x.toFixed(2)},${p.y.toFixed(2)}`
+    );
   }
-  
+
+  function computeCenter() {
+    const rect = svg.getBoundingClientRect();
+    dragCenterX = rect.left + rect.width  * (CX / 200);
+    dragCenterY = rect.top  + rect.height * (CY / 185);
+  }
+
   function handleDrag(e) {
     if (!dragging) return;
-    
-    const rect = svg.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height;
-    
+    if (e.cancelable) e.preventDefault();
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    
-    let angle = Math.atan2(clientY - centerY, clientX - centerX) * 180 / Math.PI;
-    
-    if (angle < -180) angle = -180;
-    if (angle > 0) angle = 0;
-    
-    const minutes = Math.round(((angle + 180) / 180) * 60);
-    updateSleepCountdown(minutes);
+    const dx = clientX - dragCenterX;
+    const dy = clientY - dragCenterY;
+    const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+    const clockwiseDeg = (angleDeg - START_DEG + 360) % 360;
+    if (clockwiseDeg > 270) return;
+    updateSleepCountdown(Math.round((clockwiseDeg / 270) * 60));
   }
-  
-  handle.addEventListener('mousedown', () => { dragging = true; });
-  handle.addEventListener('touchstart', () => { dragging = true; });
-  
+
+  function startDrag(e) { dragging = true; computeCenter(); e.preventDefault(); }
+
+  handle.addEventListener('mousedown', startDrag);
+  handle.addEventListener('touchstart', startDrag, { passive: false });
   document.addEventListener('mousemove', handleDrag);
-  document.addEventListener('touchmove', handleDrag);
-  
-  document.addEventListener('mouseup', () => { dragging = false; });
+  document.addEventListener('touchmove', handleDrag, { passive: false });
+  document.addEventListener('mouseup',  () => { dragging = false; });
   document.addEventListener('touchend', () => { dragging = false; });
-  
+
   updateSleepCountdown(0);
 }
 
@@ -6230,33 +6384,30 @@ function initSleepClock() {
   
   function handleDrag(e) {
     if (!dragging) return;
-    
-    const rect = svg.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
+    if (e.cancelable) e.preventDefault();
+
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    
-    let angle = Math.atan2(clientY - centerY, clientX - centerX) * 180 / Math.PI;
+
+    // Convert screen pixel → SVG coordinate space (clock center = 100,100)
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+    let angle = Math.atan2(svgPt.y - 100, svgPt.x - 100) * 180 / Math.PI;
     angle = (angle + 90 + 360) % 360;
-    
+
     const halfHour = Math.round((angle / 360) * 48) % 48;
     updateClock(halfHour);
   }
-  
-  svg.addEventListener('mousedown', (e) => { 
-    dragging = true;
-    handleDrag(e);
-  });
-  svg.addEventListener('touchstart', (e) => { 
-    dragging = true;
-    handleDrag(e);
-  });
-  
+
+  svg.addEventListener('mousedown', (e) => { dragging = true; handleDrag(e); });
+  svg.addEventListener('touchstart', (e) => { dragging = true; e.preventDefault(); handleDrag(e); }, { passive: false });
+
   document.addEventListener('mousemove', handleDrag);
-  document.addEventListener('touchmove', handleDrag);
-  
+  document.addEventListener('touchmove', handleDrag, { passive: false });
+
   document.addEventListener('mouseup', () => { dragging = false; });
   document.addEventListener('touchend', () => { dragging = false; });
   
@@ -6282,6 +6433,22 @@ if (document.readyState === 'loading') {
 }
 
 // ========== END INTERACTIVE TIMER JAVASCRIPT ==========
+
+// ── HEADER SCROLL BEHAVIOUR ──────────────────────────────────────────────────
+(function() {
+  const header = document.getElementById('mainHeader');
+  if (!header) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        header.classList.toggle('scrolled', window.scrollY > 40);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+})();
 
   </script>
 </body>
