@@ -13,8 +13,8 @@ const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './images/icon-192.png',
+  './images/icon-512.png'
 ];
 
 // ── Helper: fetch with manual timeout ────────────────────────────────────────
@@ -133,8 +133,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'Brummies Rock Radio', {
       body:      data.body || 'Neue Benachrichtigung',
-      icon:      './icon-192.png',
-      badge:     './icon-192.png',
+      icon:      './images/icon-192.png',
+      badge:     './images/icon-192.png',
       tag:       'brummies-notification',
       renotify:  true
     })
