@@ -1204,7 +1204,7 @@ small {
   width: 100%;
   height: 100vh;
   background: #0b0b0f;
-  z-index: 2000;
+  z-index: 99999;
   transition: right 0.3s ease-in-out;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -1390,7 +1390,7 @@ small {
   width: 100%;
   height: 100vh;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 1999;
+  z-index: 99998;
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -1855,7 +1855,7 @@ small {
       <div class="settings-section">
         <h3><i data-lucide="info"></i> Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.2.1</p>
+        <p>Version: 1.2.2</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -3550,7 +3550,7 @@ function startMetadataPolling() {
           if (title && title.length > 1 && !title.toLowerCase().includes('unknown')) {
             // Guard: only update if we're still on the same station
             if (currentStation === stationAtStart) {
-              updateNowPlayingText(`🎵 ${title}`);
+              updateNowPlayingText(`${title}`);
             }
             return;
           }
@@ -3558,7 +3558,7 @@ function startMetadataPolling() {
       }
 
       if (currentStation === stationAtStart) {
-        updateNowPlayingText(`🎵 ${currentStation.name} – Live`);
+        updateNowPlayingText(`${currentStation.name} – Live`);
       }
     }
 
