@@ -5317,10 +5317,29 @@ function startMetadataPolling() {
 
     // Theme Switching (prepared for future)
     // Theme Switching
+    function updateThemeCursor() {
+      const style  = getComputedStyle(document.documentElement);
+      const fill   = style.getPropertyValue('--color-bg-primary').trim();
+      const stroke = style.getPropertyValue('--color-accent').trim();
+      if (!fill || !stroke) return;
+
+      function makeURI(svgBody, w, h) {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>${svgBody}</svg>`;
+        return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+      }
+
+      const arrowBody = `<path d='M3 2L3 17L7 13L10 20L12 19L9 12L14 12Z' fill='${fill}' stroke='${stroke}' stroke-width='1.5' stroke-linejoin='round'/>`;
+      const arrowURI  = makeURI(arrowBody, 20, 24);
+
+      let tag = document.getElementById('themeCursorStyle');
+      if (!tag) { tag = document.createElement('style'); tag.id = 'themeCursorStyle'; document.head.appendChild(tag); }
+      tag.textContent = `html { cursor: ${arrowURI} 3 2, auto; }`;
+    }
+
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('brummiesTheme', theme);
-      console.log('Theme applied:', theme);
+      requestAnimationFrame(updateThemeCursor);
     }
 
     // ====== CUSTOM THEME CREATOR ======
@@ -5385,6 +5404,8 @@ function startMetadataPolling() {
       // Mark custom option active
       document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
       document.getElementById('customThemeToggle').classList.add('active');
+
+      updateThemeCursor();
     }
 
     function loadCustomThemeValues() {
