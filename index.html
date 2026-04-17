@@ -1381,6 +1381,71 @@ small {
   transform: translateY(0);
 }
 
+/* What's New Modal */
+#whatsNewOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 100000;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#whatsNewOverlay.show {
+  display: flex;
+}
+#whatsNewModal {
+  background: var(--color-bg-secondary);
+  border-radius: 16px;
+  max-width: 420px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: whatsNewIn 0.25s ease;
+}
+@keyframes whatsNewIn {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+#whatsNewModal h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: var(--color-accent);
+}
+#whatsNewModal .wnv {
+  font-size: 11px;
+  opacity: 0.6;
+  margin: 0 0 16px;
+}
+#whatsNewModal ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#whatsNewModal ul li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.4;
+}
+#whatsNewModal ul li .wn-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+#whatsNewModal ul li strong {
+  display: block;
+  margin-bottom: 2px;
+}
+#whatsNewCloseBtn {
+  width: 100%;
+}
+
 /* Overlay for mobile */
 #settingsOverlay {
   display: none;
@@ -1664,6 +1729,38 @@ small {
 
   <!-- SETTINGS PANEL -->
   <div id="settingsOverlay"></div>
+
+  <!-- WHAT'S NEW MODAL -->
+  <div id="whatsNewOverlay">
+    <div id="whatsNewModal">
+      <h2>Neuigkeiten</h2>
+      <p class="wnv">Version 1.2.3</p>
+      <ul>
+        <li>
+          <span class="wn-icon">🔍</span>
+          <div>
+            <strong>Song direkt suchen</strong>
+            Der Button neben dem Lauffeld öffnet jetzt eine Google-Suche mit dem aktuellen Song – ideal um Interpret und Album schnell zu finden.
+          </div>
+        </li>
+        <li>
+          <span class="wn-icon">💾</span>
+          <div>
+            <strong>Einstellungen sichern</strong>
+            Exportiere deine Favoriten, Theme, EQ und Verlauf als Datei – und lade sie auf einem anderen Gerät wieder ein. Zu finden unter <em>Einstellungen → Einstellungen sichern</em>.
+          </div>
+        </li>
+        <li>
+          <span class="wn-icon">🎚️</span>
+          <div>
+            <strong>EQ-Einstellungen werden gespeichert</strong>
+            Deine Equalizer-Einstellungen bleiben jetzt auch nach einem Neustart der App erhalten.
+          </div>
+        </li>
+      </ul>
+      <button id="whatsNewCloseBtn"><i data-lucide="check"></i> Alles klar!</button>
+    </div>
+  </div>
   <div id="settingsPanel">
     <div class="settings-header">
       <h2><i data-lucide="settings"></i> Einstellungen</h2>
@@ -1802,43 +1899,18 @@ small {
         </div>
       </div>
 
-      <!-- CLOUD SYNC -->
+      <!-- CONFIG DATEI -->
       <div class="settings-section">
-        <h3><i data-lucide="cloud"></i> Cloud Sync</h3>
-        <div class="sync-status">
-          <p id="syncStatus" style="margin: 8px 0; font-size: 13px;">
-            <span id="syncStatusText">Nicht verbunden</span>
-          </p>
-          <p id="syncLastSync" style="margin: 4px 0; font-size: 11px; opacity: 0.7;"></p>
-        </div>
-        
-        <div id="syncDisconnected" class="sync-actions">
-          <input type="text" id="githubToken" 
-                 placeholder="GitHub Personal Access Token" 
-                 autocomplete="off" 
-                 autocapitalize="none" 
-                 spellcheck="false"
-                 style="width: 100%; margin-bottom: 4px; padding: 8px; font-size: 12px; font-family: monospace;">
-          <button id="pasteTokenBtn" class="secondary" style="width: 100%; margin-bottom: 8px; font-size: 11px;">
-            <i data-lucide="clipboard"></i> Token einfügen
-          </button>
-          <button id="syncConnect" class="secondary" style="width: 100%;"><i data-lucide="link"></i> Mit GitHub verbinden</button>
-          <p style="font-size: 10px; opacity: 0.6; margin: 8px 0;">
-            <a href="https://github.com/settings/tokens/new?scopes=gist&description=Brummies%20Radio%20Sync" 
-               target="_blank" style="color: var(--color-accent);">Token erstellen →</a>
-            <br>Benötigte Berechtigung: <code style="font-size: 9px;">gist</code>
-          </p>
-        </div>
-        
-        <div id="syncConnected" class="sync-actions" style="display: none;">
-          <p style="font-size: 11px; margin-bottom: 8px;">
-            Verbunden als: <strong id="githubUsername"></strong>
-          </p>
-          <button id="syncNow" class="secondary" style="width: 100%; margin-bottom: 6px;"><i data-lucide="refresh-cw"></i> Jetzt synchronisieren</button>
-          <button id="syncDisconnect" class="secondary" style="width: 100%;"><i data-lucide="unlock"></i> Trennen</button>
-        </div>
-        
-        <p><small>Synchronisiert deine Favoriten und deinen Verlauf sicher über GitHub Gists.</small></p>
+        <h3><i data-lucide="file-down"></i> Einstellungen sichern</h3>
+        <p style="font-size: 12px; margin-bottom: 12px;">Exportiere deine Favoriten, Theme, EQ-Einstellungen und Verlauf als Datei – und lade sie auf einem anderen Gerät wieder ein.</p>
+        <button id="configExportBtn" class="secondary" style="width: 100%; margin-bottom: 8px;">
+          <i data-lucide="download"></i> Einstellungen exportieren
+        </button>
+        <button id="configImportBtn" class="secondary" style="width: 100%;">
+          <i data-lucide="upload"></i> Einstellungen importieren
+        </button>
+        <input type="file" id="configFileInput" accept=".json" style="display: none;">
+        <p id="configImportStatus" style="font-size: 11px; margin-top: 8px; min-height: 16px;"></p>
       </div>
 
 
@@ -1855,7 +1927,7 @@ small {
       <div class="settings-section">
         <h3><i data-lucide="info"></i> Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.2.2</p>
+        <p>Version: 1.2.3</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
       </div>
@@ -1966,7 +2038,7 @@ small {
     <div id="nowPlayingScroll" style="flex: 1; min-width: 0;">
       <div id="nowPlayingText">Warte auf Stream-Metadaten...</div>
     </div>
-    <button id="copyNowPlayingBtn" class="secondary" disabled style="padding: 4px 8px; font-size: 11px; height: 32px; flex-shrink: 0;"><i data-lucide="clipboard" width="14" height="14"></i></button>
+    <button id="searchNowPlayingBtn" class="secondary" disabled style="padding: 4px 8px; font-size: 11px; height: 32px; flex-shrink: 0;" title="Im Browser suchen"><i data-lucide="search" width="14" height="14"></i></button>
   </div>
 
   <div id="volumeControl">
@@ -2334,8 +2406,20 @@ small {
             const valueDisplay = document.querySelector(`.eq-value[data-index="${index}"]`);
             if (valueDisplay) valueDisplay.textContent = `${value > 0 ? '+' : ''}${value} dB`;
           });
+          localStorage.setItem('brummiesEqValues', JSON.stringify(values));
         });
       });
+
+      // Restore saved EQ values
+      const savedEq = JSON.parse(localStorage.getItem('brummiesEqValues') || 'null');
+      if (savedEq) {
+        savedEq.forEach((val, idx) => {
+          const slider = document.querySelector(`#eq input[data-index="${idx}"]`);
+          const display = document.querySelector(`.eq-value[data-index="${idx}"]`);
+          if (slider) slider.value = val;
+          if (display) display.textContent = `${val > 0 ? '+' : ''}${val} dB`;
+        });
+      }
     });
     
     // --- INTERNATIONALIZATION ---
@@ -2636,11 +2720,7 @@ small {
         setIcon(playBtn, coverEl.classList.contains('playing') ? 'pause' : 'play');
       }
       
-      const copyBtn = document.getElementById('copyNowPlayingBtn');
-      if (copyBtn) {
-        copyBtn.textContent = copyBtn.textContent.includes('✅') || copyBtn.textContent.includes('Kopiert') ?
-          texts['btn-copied'] : texts['btn-copy'];
-      }
+      // search button is icon-only, no translation needed
       
       const shuffleToggle = document.getElementById('shuffleToggle');
       if (shuffleToggle) {
@@ -2672,20 +2752,6 @@ small {
       if (donateBtn) donateBtn.textContent = texts['btn-donate'];
       
       // GitHub Sync buttons
-      const syncConnect = document.getElementById('syncConnect');
-      if (syncConnect) syncConnect.textContent = texts['sync-connect'];
-      
-      const syncDisconnect = document.getElementById('syncDisconnect');
-      if (syncDisconnect) syncDisconnect.textContent = texts['sync-disconnect'];
-      
-      const syncNow = document.getElementById('syncNow');
-      if (syncNow) syncNow.textContent = texts['sync-now'];
-      
-      const pasteToken = document.getElementById('pasteTokenBtn');
-      if (pasteToken && !pasteToken.textContent.includes('✅')) {
-        pasteToken.textContent = texts['sync-paste-token'];
-      }
-      
       // EQ Presets
       document.querySelectorAll('.preset-btn, #eqPresets button').forEach(btn => {
         const preset = btn.dataset.preset;
@@ -2936,14 +3002,7 @@ small {
       const nextBtn = document.getElementById('nextBtn');
       if (nextBtn) nextBtn.textContent = currentLang === 'de' ? '⏭ Weiter' : '⏭ Next';
       
-      const copyNowPlayingBtn = document.getElementById('copyNowPlayingBtn');
-      if (copyNowPlayingBtn) {
-        if (copyNowPlayingBtn.textContent.includes('Kopiert') || copyNowPlayingBtn.textContent.includes('Copied')) {
-          copyNowPlayingBtn.textContent = currentLang === 'de' ? '✅ Kopiert!' : '✅ Copied!';
-        } else {
-          copyNowPlayingBtn.textContent = currentLang === 'de' ? '📋 Info kopieren' : '📋 Copy info';
-        }
-      }
+      // search button is icon-only, no translation needed
       
       // Select options
       const genreSelect = document.getElementById('genreSelect');
@@ -3112,7 +3171,7 @@ small {
     const sleepToggle = document.getElementById("sleepToggle");
     const sleepStatusEl = document.getElementById("sleepStatus");
     const nowPlayingTextEl = document.getElementById("nowPlayingText");
-    const copyNowPlayingBtn = document.getElementById("copyNowPlayingBtn");
+    const copyNowPlayingBtn = document.getElementById("searchNowPlayingBtn");
 
     // ── setIcon helper: sets a lucide icon on a button without text ──────────
     function setIcon(btn, iconName) {
@@ -3649,10 +3708,8 @@ function startMetadataPolling() {
 
     copyNowPlayingBtn.addEventListener("click", () => {
       if (currentMetadata) {
-        navigator.clipboard.writeText(currentMetadata).then(() => {
-          copyNowPlayingBtn.textContent = "✅ Kopiert!";
-          setTimeout(() => copyNowPlayingBtn.textContent = "📋 Info kopieren", 2000);
-        });
+        const query = encodeURIComponent(currentMetadata);
+        window.open(`https://www.google.com/search?q=${query}`, '_blank');
       }
     });
 
@@ -4007,6 +4064,8 @@ function startMetadataPolling() {
             if (filters[idx]) filters[idx].gain.value = val;
             const disp = document.querySelector(`.eq-value[data-index="${idx}"]`);
             if (disp) disp.textContent = `${val > 0 ? '+' : ''}${val} dB`;
+            const allVals = Array.from(document.querySelectorAll('#eq input[type=range]')).map(s => Number(s.value));
+            localStorage.setItem('brummiesEqValues', JSON.stringify(allVals));
           });
         });
 
@@ -5457,414 +5516,118 @@ function startMetadataPolling() {
     // Apply translations on load
     applyTranslations(currentLang);
 
-    // ==================== GITHUB SYNC ====================
-    // Sync Favoriten & Verlauf über GitHub Gists
-    
-    const syncConfig = {
-      token: localStorage.getItem('brummiesGithubToken') || null,
-      gistId: localStorage.getItem('brummiesGistId') || null,
-      username: localStorage.getItem('brummiesGithubUsername') || null,
-      lastSync: localStorage.getItem('brummiesLastSync') || null,
-      autoSync: localStorage.getItem('brummiesAutoSync') === 'true'
-    };
-    
-    const syncConnectBtn = document.getElementById('syncConnect');
-    const syncDisconnectBtn = document.getElementById('syncDisconnect');
-    const syncNowBtn = document.getElementById('syncNow');
-    const githubTokenInput = document.getElementById('githubToken');
-    const pasteTokenBtn = document.getElementById('pasteTokenBtn');
-    const syncConnectedDiv = document.getElementById('syncConnected');
-    const syncDisconnectedDiv = document.getElementById('syncDisconnected');
-    const syncStatusText = document.getElementById('syncStatusText');
-    const syncLastSyncText = document.getElementById('syncLastSync');
-    const githubUsernameSpan = document.getElementById('githubUsername');
-    
-    // Paste button handler (especially for iOS)
-    if (pasteTokenBtn) {
-      pasteTokenBtn.addEventListener('click', async () => {
-        try {
-          // Try Clipboard API
-          if (navigator.clipboard && navigator.clipboard.readText) {
-            const text = await navigator.clipboard.readText();
-            githubTokenInput.value = text.trim();
-            pasteTokenBtn.textContent = '✅ Eingefügt!';
-            setTimeout(() => {
-              pasteTokenBtn.textContent = '📋 Token einfügen';
-            }, 2000);
-          } else {
-            // Fallback: show instructions
-            alert('Bitte Token manuell einfügen:\n\n1. Token aus GitHub kopieren\n2. Ins Feld tippen\n3. "Einsetzen" wählen');
-          }
-        } catch (err) {
-          console.error('Paste error:', err);
-          // iOS might block clipboard access - show instructions
-          alert('Clipboard-Zugriff blockiert.\n\nBitte Token manuell einfügen:\n\n1. Token aus GitHub kopieren\n2. Ins Feld tippen\n3. "Einsetzen" wählen');
-        }
+    // ==================== CONFIG EXPORT / IMPORT ====================
+
+    function getEqValues() {
+      return Array.from(document.querySelectorAll('#eq input[type=range]'))
+        .map(s => Number(s.value));
+    }
+
+    function applyEqValues(values) {
+      if (!Array.isArray(values)) return;
+      values.forEach((val, idx) => {
+        const slider = document.querySelector(`#eq input[data-index="${idx}"]`);
+        const display = document.querySelector(`.eq-value[data-index="${idx}"]`);
+        if (slider) slider.value = val;
+        if (display) display.textContent = `${val > 0 ? '+' : ''}${val} dB`;
+        if (filters[idx]) filters[idx].gain.value = val;
       });
     }
-    
-    // Update UI based on connection status
-    function updateSyncUI() {
-      if (syncConfig.token && syncConfig.username) {
-        syncConnectedDiv.style.display = 'block';
-        syncDisconnectedDiv.style.display = 'none';
-        syncStatusText.textContent = 'Verbunden';
-        syncStatusText.style.color = '#27ae60';
-        githubUsernameSpan.textContent = syncConfig.username;
-        
-        if (syncConfig.lastSync) {
-          const date = new Date(syncConfig.lastSync);
-          syncLastSyncText.textContent = `Letzte Sync: ${date.toLocaleString('de-DE')}`;
-        }
-      } else {
-        syncConnectedDiv.style.display = 'none';
-        syncDisconnectedDiv.style.display = 'block';
-        syncStatusText.textContent = 'Nicht verbunden';
-        syncStatusText.style.color = '#8b8b8b';
-        syncLastSyncText.textContent = '';
-      }
-    }
-    
-    // Validate GitHub token and get username
-    async function validateGitHubToken(token) {
-      try {
-        const response = await fetch('https://api.github.com/user', {
-          headers: {
-            'Authorization': `token ${token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          return { valid: true, username: data.login };
-        }
-        return { valid: false, error: 'Invalid token' };
-      } catch (err) {
-        return { valid: false, error: err.message };
-      }
-    }
-    
-    // Find existing Gist (multi-device support)
-    async function findExistingGist() {
-      if (!syncConfig.token) return null;
-      
-      try {
-        console.log('Searching for existing Gist...');
-        
-        // Get all user's Gists
-        const response = await fetch('https://api.github.com/gists', {
-          headers: {
-            'Authorization': `token ${syncConfig.token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (response.ok) {
-          const gists = await response.json();
-          
-          // Find our specific Gist by filename
-          const existingGist = gists.find(gist => 
-            gist.files && gist.files['brummies-radio-sync.json']
-          );
-          
-          if (existingGist) {
-            console.log('Found existing Gist:', existingGist.id);
-            return existingGist.id;
-          }
-          
-          console.log('No existing Gist found');
-          return null;
-        }
-        
-        return null;
-      } catch (err) {
-        console.error('Error finding Gist:', err);
-        return null;
-      }
-    }
-    
-    // Create or update Gist
-    async function syncToGitHub() {
-      if (!syncConfig.token) {
-        alert('Nicht verbunden! Bitte zuerst GitHub Token eingeben.');
-        return;
-      }
-      
-      syncStatusText.textContent = '🔄 Synchronisiere...';
-      syncStatusText.style.color = '#ff8c00';
-      
-      const syncData = {
-        favorites: favorites,
-        history: historyData,
-        listeningStats: listeningStats,
-        timestamp: new Date().toISOString()
+
+    function exportConfig() {
+      const config = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        favorites: JSON.parse(localStorage.getItem('brummiesFavorites') || '[]'),
+        theme: localStorage.getItem('brummiesTheme') || 'brummie',
+        customTheme: JSON.parse(localStorage.getItem('brummiesCustomTheme') || 'null'),
+        eqValues: JSON.parse(localStorage.getItem('brummiesEqValues') || 'null') || getEqValues(),
+        language: localStorage.getItem('brummiesLanguage'),
+        history: JSON.parse(localStorage.getItem('brummiesHistory') || '[]'),
+        listeningStats: JSON.parse(localStorage.getItem('brummiesListeningStats') || '{}')
       };
-      
-      const gistData = {
-        description: 'Brummies Rock Radio - Sync Data',
-        public: false,
-        files: {
-          'brummies-radio-sync.json': {
-            content: JSON.stringify(syncData, null, 2)
-          }
-        }
-      };
-      
-      try {
-        let response;
-        
-        if (syncConfig.gistId) {
-          // Update existing Gist
-          response = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
-            method: 'PATCH',
-            headers: {
-              'Authorization': `token ${syncConfig.token}`,
-              'Accept': 'application/vnd.github.v3+json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(gistData)
-          });
-        } else {
-          // Create new Gist
-          response = await fetch('https://api.github.com/gists', {
-            method: 'POST',
-            headers: {
-              'Authorization': `token ${syncConfig.token}`,
-              'Accept': 'application/vnd.github.v3+json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(gistData)
-          });
-        }
-        
-        if (response.ok) {
-          const data = await response.json();
-          syncConfig.gistId = data.id;
-          syncConfig.lastSync = new Date().toISOString();
-          
-          localStorage.setItem('brummiesGistId', data.id);
-          localStorage.setItem('brummiesLastSync', syncConfig.lastSync);
-          
-          syncStatusText.textContent = '✅ Erfolgreich synchronisiert!';
-          syncStatusText.style.color = '#27ae60';
-          updateSyncUI();
-          
-          setTimeout(() => {
-            syncStatusText.textContent = 'Verbunden';
-          }, 3000);
-        } else {
-          throw new Error(`Sync failed: ${response.status}`);
-        }
-      } catch (err) {
-        console.error('Sync error:', err);
-        syncStatusText.textContent = '❌ Sync-Fehler';
-        syncStatusText.style.color = '#ef4444';
-        alert(`Sync-Fehler: ${err.message}`);
-      }
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `brummies-config-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
-    
-    // Load data from GitHub
-    async function loadFromGitHub() {
-      if (!syncConfig.token || !syncConfig.gistId) {
-        console.log('No sync config available');
-        return;
-      }
-      
-      syncStatusText.textContent = '🔄 Lade Daten...';
-      syncStatusText.style.color = '#ff8c00';
-      
-      try {
-        const response = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
-          headers: {
-            'Authorization': `token ${syncConfig.token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (response.ok) {
-          const gist = await response.json();
-          const fileContent = gist.files['brummies-radio-sync.json'].content;
-          const syncData = JSON.parse(fileContent);
-          
-          // Merge with local data (keep newer entries)
-          if (syncData.favorites) {
-            favorites = [...new Set([...favorites, ...syncData.favorites])];
+
+    function importConfig(file) {
+      const statusEl = document.getElementById('configImportStatus');
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const config = JSON.parse(e.target.result);
+          if (!config.version) throw new Error('Ungültige Konfigurationsdatei');
+
+          if (Array.isArray(config.favorites)) {
+            favorites = config.favorites;
             localStorage.setItem('brummiesFavorites', JSON.stringify(favorites));
           }
-          
-          if (syncData.history) {
-            // Merge histories, remove duplicates by timestamp
-            const mergedHistory = [...historyData, ...syncData.history];
-            const uniqueHistory = Array.from(
-              new Map(mergedHistory.map(item => [item.timestamp, item])).values()
-            );
-            historyData = uniqueHistory.sort((a, b) => 
-              new Date(b.timestamp) - new Date(a.timestamp)
-            ).slice(0, 50); // Keep last 50
+          if (config.theme) {
+            localStorage.setItem('brummiesTheme', config.theme);
+            applyTheme(config.theme);
+          }
+          if (config.customTheme) {
+            localStorage.setItem('brummiesCustomTheme', JSON.stringify(config.customTheme));
+          }
+          if (Array.isArray(config.eqValues)) {
+            localStorage.setItem('brummiesEqValues', JSON.stringify(config.eqValues));
+            applyEqValues(config.eqValues);
+          }
+          if (config.language !== undefined) {
+            localStorage.setItem('brummiesLanguage', config.language);
+          }
+          if (Array.isArray(config.history)) {
+            historyData = config.history;
             localStorage.setItem('brummiesHistory', JSON.stringify(historyData));
           }
-          
-          if (syncData.listeningStats) {
-            // Merge stats
-            Object.keys(syncData.listeningStats).forEach(key => {
-              if (!listeningStats[key]) {
-                listeningStats[key] = syncData.listeningStats[key];
-              } else {
-                listeningStats[key].totalTime = 
-                  (listeningStats[key].totalTime || 0) + 
-                  (syncData.listeningStats[key].totalTime || 0);
-                listeningStats[key].sessions = 
-                  (listeningStats[key].sessions || 0) + 
-                  (syncData.listeningStats[key].sessions || 0);
-              }
-            });
+          if (config.listeningStats && typeof config.listeningStats === 'object') {
+            listeningStats = config.listeningStats;
             localStorage.setItem('brummiesListeningStats', JSON.stringify(listeningStats));
           }
-          
-          syncStatusText.textContent = '✅ Daten geladen!';
-          syncStatusText.style.color = '#27ae60';
-          
-          // Refresh UI
+
           renderStations();
-          
-          setTimeout(() => {
-            syncStatusText.textContent = 'Verbunden';
-          }, 3000);
-        } else {
-          throw new Error(`Load failed: ${response.status}`);
+          statusEl.textContent = '✅ Einstellungen geladen!';
+          statusEl.style.color = '#27ae60';
+          setTimeout(() => { statusEl.textContent = ''; }, 4000);
+        } catch (err) {
+          statusEl.textContent = '❌ Fehler: ' + err.message;
+          statusEl.style.color = '#ef4444';
         }
-      } catch (err) {
-        console.error('Load error:', err);
-        syncStatusText.textContent = '❌ Ladefehler';
-        syncStatusText.style.color = '#ef4444';
-      }
+      };
+      reader.readAsText(file);
     }
-    
-    // Connect button handler
-    syncConnectBtn.addEventListener('click', async () => {
-      const token = githubTokenInput.value.trim();
-      
-      if (!token) {
-        alert('Bitte GitHub Token eingeben!');
-        return;
-      }
-      
-      syncStatusText.textContent = '🔄 Verbinde...';
-      syncStatusText.style.color = '#ff8c00';
-      
-      const validation = await validateGitHubToken(token);
-      
-      if (validation.valid) {
-        syncConfig.token = token;
-        syncConfig.username = validation.username;
-        
-        localStorage.setItem('brummiesGithubToken', token);
-        localStorage.setItem('brummiesGithubUsername', validation.username);
-        
-        updateSyncUI();
-        githubTokenInput.value = '';
-        
-        // WICHTIG: Erst nach existierender Gist suchen!
-        syncStatusText.textContent = '🔄 Suche nach existierenden Daten...';
-        const existingGistId = await findExistingGist();
-        
-        if (existingGistId) {
-          // Existierende Gist gefunden → Daten laden
-          console.log('Using existing Gist:', existingGistId);
-          syncConfig.gistId = existingGistId;
-          localStorage.setItem('brummiesGistId', existingGistId);
-          
-          syncStatusText.textContent = '🔄 Lade Cloud-Daten...';
-          await loadFromGitHub();
-          
-          syncStatusText.textContent = '✅ Mit existierenden Daten verbunden!';
-          syncStatusText.style.color = '#27ae60';
-        } else {
-          // Keine Gist gefunden → Erste Synchronisation (neue Gist erstellen)
-          console.log('No existing Gist - creating new one');
-          syncStatusText.textContent = '🔄 Erstelle erste Synchronisation...';
-          await syncToGitHub();
-        }
-        
-        setTimeout(() => {
-          syncStatusText.textContent = 'Verbunden';
-        }, 3000);
-        
-      } else {
-        syncStatusText.textContent = '❌ Ungültiges Token';
-        syncStatusText.style.color = '#ef4444';
-        alert(`Token-Fehler: ${validation.error}\n\nBitte überprüfe dein Token.`);
-      }
+
+    document.getElementById('configExportBtn').addEventListener('click', exportConfig);
+
+    document.getElementById('configImportBtn').addEventListener('click', () => {
+      document.getElementById('configFileInput').click();
     });
-    
-    // Disconnect button handler
-    syncDisconnectBtn.addEventListener('click', () => {
-      if (confirm('GitHub Sync-Verbindung wirklich trennen?')) {
-        syncConfig.token = null;
-        syncConfig.gistId = null;
-        syncConfig.username = null;
-        syncConfig.lastSync = null;
-        
-        localStorage.removeItem('brummiesGithubToken');
-        localStorage.removeItem('brummiesGistId');
-        localStorage.removeItem('brummiesGithubUsername');
-        localStorage.removeItem('brummiesLastSync');
-        
-        updateSyncUI();
-      }
+
+    document.getElementById('configFileInput').addEventListener('change', (e) => {
+      if (e.target.files[0]) importConfig(e.target.files[0]);
+      e.target.value = '';
     });
-    
-    // Sync now button handler
-    syncNowBtn.addEventListener('click', () => {
-      syncToGitHub();
-    });
-    
-    // Auto-sync on favorite/history changes (debounced)
-    let syncTimeout = null;
-    function triggerAutoSync() {
-      if (!syncConfig.token || !syncConfig.autoSync) return;
-      
-      clearTimeout(syncTimeout);
-      syncTimeout = setTimeout(() => {
-        console.log('Auto-syncing...');
-        syncToGitHub();
-      }, 5000); // Wait 5s after last change
+
+    // ==================== END CONFIG EXPORT / IMPORT ====================
+
+    // ==================== WHAT'S NEW ====================
+    const CURRENT_VERSION = '1.2.3';
+    const seenVersion = localStorage.getItem('brummiesSeenVersion');
+    if (seenVersion !== CURRENT_VERSION) {
+      const overlay = document.getElementById('whatsNewOverlay');
+      overlay.classList.add('show');
+      lucide.createIcons();
+      document.getElementById('whatsNewCloseBtn').addEventListener('click', () => {
+        overlay.classList.remove('show');
+        localStorage.setItem('brummiesSeenVersion', CURRENT_VERSION);
+      });
     }
-    
-    // Hook into favorite/history changes
-    const originalAddToFavorites = window.addToFavorites;
-    window.addToFavorites = function(...args) {
-      if (originalAddToFavorites) originalAddToFavorites.apply(this, args);
-      triggerAutoSync();
-    };
-    
-    // Initialize sync UI
-    updateSyncUI();
-    
-    // Load from GitHub on startup if connected
-    if (syncConfig.token) {
-      if (syncConfig.gistId) {
-        // Have both token and gistId → load directly
-        console.log('Startup: Loading from known Gist');
-        loadFromGitHub();
-      } else {
-        // Have token but no gistId → search for existing Gist
-        console.log('Startup: Searching for existing Gist...');
-        findExistingGist().then(gistId => {
-          if (gistId) {
-            console.log('Startup: Found existing Gist:', gistId);
-            syncConfig.gistId = gistId;
-            localStorage.setItem('brummiesGistId', gistId);
-            loadFromGitHub();
-          } else {
-            console.log('Startup: No existing Gist found');
-          }
-        });
-      }
-    }
-    
-    // ==================== END GITHUB SYNC ====================
+    // ==================== END WHAT'S NEW ====================
 
     // Donate Button
     donateBtn.addEventListener('click', () => {
