@@ -1826,8 +1826,15 @@ small {
   <div id="whatsNewOverlay">
     <div id="whatsNewModal">
       <h2>Neuigkeiten</h2>
-      <p class="wnv">Version 1.2.4</p>
+      <p class="wnv">Version 1.2.5</p>
       <ul>
+        <li>
+          <span class="wn-icon">🔒</span>
+          <div>
+            <strong>Nur sichere Streams (HTTPS)</strong>
+            Neuer Filter in der Sendersuche – aktiviere ihn um ausschließlich Sender mit verschlüsselter Stream-URL anzuzeigen. Das verhindert die "nicht sicher"-Warnung im Browser.
+          </div>
+        </li>
         <li>
           <span class="wn-icon">🎬</span>
           <div>
@@ -2026,7 +2033,7 @@ small {
       <div class="settings-section">
         <h3><i data-lucide="info"></i> Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.2.4</p>
+        <p>Version: 1.2.5</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
         <button id="checkUpdateBtn" class="secondary" style="width:100%; margin-top:12px;">
@@ -5866,7 +5873,7 @@ function startMetadataPolling() {
     // ==================== END CONFIG EXPORT / IMPORT ====================
 
     // ==================== WHAT'S NEW ====================
-    const CURRENT_VERSION = '1.2.4';
+    const CURRENT_VERSION = '1.2.5';
     const seenVersion = localStorage.getItem('brummiesSeenVersion');
     if (seenVersion !== CURRENT_VERSION) {
       const overlay = document.getElementById('whatsNewOverlay');
