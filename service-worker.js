@@ -8,13 +8,15 @@
 //   • Push notifications ready
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'brummies-radio-v3';
+const CACHE_NAME = 'brummies-radio-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './images/icon-192.png',
-  './images/icon-512.png'
+  './images/icon-512.png',
+  './videos/part1.mp4',
+  './videos/part2.mp4'
 ];
 
 // ── Helper: fetch with manual timeout ────────────────────────────────────────

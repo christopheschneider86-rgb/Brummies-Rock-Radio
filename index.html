@@ -1437,6 +1437,37 @@ small {
   transform: translateY(0);
 }
 
+/* Update Banner */
+#updateBanner {
+  position: fixed;
+  top: -80px;
+  left: 0;
+  right: 0;
+  z-index: 100001;
+  background: var(--color-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: top 0.4s ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+#updateBanner.show { top: 0; }
+#updateBanner button {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.5);
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* What's New Modal */
 #whatsNewOverlay {
   display: none;
@@ -1784,6 +1815,11 @@ small {
   </header>
 
   <!-- SETTINGS PANEL -->
+  <div id="updateBanner">
+    <span>Update verfügbar!</span>
+    <button id="updateReloadBtn">Jetzt neu laden</button>
+  </div>
+
   <div id="settingsOverlay"></div>
 
   <!-- WHAT'S NEW MODAL -->
@@ -1993,6 +2029,10 @@ small {
         <p>Version: 1.2.4</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
+        <button id="checkUpdateBtn" class="secondary" style="width:100%; margin-top:12px;">
+          <i data-lucide="refresh-cw"></i> Nach Updates suchen
+        </button>
+        <p id="checkUpdateStatus" style="font-size:11px; margin-top:6px; min-height:14px;"></p>
       </div>
     </div>
   </div>
@@ -5824,6 +5864,70 @@ function startMetadataPolling() {
       });
     }
     // ==================== END WHAT'S NEW ====================
+
+    // ==================== PWA UPDATE CHECK ====================
+    if ('serviceWorker' in navigator) {
+      const updateBanner     = document.getElementById('updateBanner');
+      const updateReloadBtn  = document.getElementById('updateReloadBtn');
+      const checkUpdateBtn   = document.getElementById('checkUpdateBtn');
+      const checkUpdateStatus = document.getElementById('checkUpdateStatus');
+
+      function showUpdateBanner() {
+        updateBanner.classList.add('show');
+      }
+
+      // Reload only when an update was actually found (not on first SW install)
+      let updateReady = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (updateReady) window.location.reload();
+      });
+
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) return;
+        // Already a waiting SW when page opened (downloaded in background)
+        if (reg.waiting) showUpdateBanner();
+        reg.addEventListener('updatefound', () => {
+          reg.installing.addEventListener('statechange', function () {
+            if (this.state === 'installed' && navigator.serviceWorker.controller) {
+              updateReady = true;
+              showUpdateBanner();
+            }
+          });
+        });
+      });
+
+      updateReloadBtn.addEventListener('click', () => {
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (reg?.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          else window.location.reload();
+        });
+      });
+
+      checkUpdateBtn.addEventListener('click', async () => {
+        checkUpdateBtn.disabled = true;
+        setIcon(checkUpdateBtn, 'loader');
+        checkUpdateStatus.textContent = '';
+        try {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg) {
+            await reg.update();
+            if (reg.waiting) {
+              showUpdateBanner();
+              checkUpdateStatus.textContent = '✅ Update gefunden!';
+            } else {
+              checkUpdateStatus.textContent = '✅ App ist aktuell.';
+            }
+          } else {
+            checkUpdateStatus.textContent = '⚠️ Kein Service Worker aktiv.';
+          }
+        } catch {
+          checkUpdateStatus.textContent = '❌ Offline – kein Update möglich.';
+        }
+        setIcon(checkUpdateBtn, 'refresh-cw');
+        checkUpdateBtn.disabled = false;
+      });
+    }
+    // ==================== END PWA UPDATE CHECK ====================
 
     // Donate Button
     donateBtn.addEventListener('click', () => {
