@@ -736,18 +736,18 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   background: #0b0b0f;
 }
 
-#bgVideo {
+.bg-vid {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 0.7s ease;
+  transition: opacity 0.8s ease;
   pointer-events: none;
 }
 
-#bgVideo.visible { opacity: 1; }
+.bg-vid.visible { opacity: 1; }
 
 #visualizer {
   position: relative;
@@ -2169,9 +2169,8 @@ small {
       </div>
       
       <div id="vizWrapper">
-        <video id="bgVideo" muted playsinline preload="auto">
-          <source src="videos/part1.mp4" type="video/mp4">
-        </video>
+        <video id="bgVideo1" class="bg-vid" muted playsinline preload="auto"></video>
+        <video id="bgVideo2" class="bg-vid" muted playsinline preload="auto"></video>
         <canvas id="visualizer"></canvas>
         <div id="vizControls">
           <button id="videoToggleBtn" title="Video an/aus"><i data-lucide="video"></i></button>
@@ -4222,7 +4221,7 @@ function startMetadataPolling() {
         const accentColor = styles.getPropertyValue('--color-accent').trim();
         
         // Clear canvas – transparent when video is running, solid otherwise
-        const bgVid = document.getElementById('bgVideo');
+        const bgVid = vidEls && vidEls[activeVid];
         if (bgVid && !bgVid.paused) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = 'rgba(0,0,0,0.18)';
@@ -5619,29 +5618,59 @@ function startMetadataPolling() {
     applyTranslations(currentLang);
 
     // ==================== BG VIDEO ====================
-    const bgVideoEl = document.getElementById('bgVideo');
-    const bgVideos  = ['videos/part1.mp4', 'videos/part2.mp4'];
-    let bgVideoIndex = 0;
+    const bgClips   = [
+      { src: 'videos/part1.mp4', startTime: 1 },
+      { src: 'videos/part2.mp4', startTime: 0 }
+    ];
+    const vidEls    = [
+      document.getElementById('bgVideo1'),
+      document.getElementById('bgVideo2')
+    ];
+    let clipInVid   = [0, 1]; // which bgClips index is loaded in each element
+    let activeVid   = 0;
+
+    function loadClipInto(vidIdx, clipIdx) {
+      const vid  = vidEls[vidIdx];
+      const clip = bgClips[clipIdx];
+      vid.src    = clip.src;
+      vid.load();
+      if (clip.startTime > 0) {
+        vid.addEventListener('loadedmetadata', function onMeta() {
+          vid.currentTime = clip.startTime;
+          vid.removeEventListener('loadedmetadata', onMeta);
+        });
+      }
+      clipInVid[vidIdx] = clipIdx;
+    }
+
+    function onVidEnded(i) {
+      if (i !== activeVid) return;
+      const next        = 1 - i;
+      const nextNextIdx = (clipInVid[next] + 1) % bgClips.length;
+      vidEls[next].play().catch(() => {});
+      vidEls[next].classList.add('visible');
+      vidEls[i].classList.remove('visible');
+      activeVid = next;
+      // After crossfade completes, reload the hidden element with the clip after next
+      setTimeout(() => loadClipInto(i, nextNextIdx), 900);
+    }
+
+    vidEls[0].addEventListener('ended', () => onVidEnded(0));
+    vidEls[1].addEventListener('ended', () => onVidEnded(1));
+
+    // Preload both clips on startup
+    loadClipInto(0, 0);
+    loadClipInto(1, 1);
 
     function startBgVideo() {
       if (!videoEnabled) return;
-      bgVideoEl.src = bgVideos[bgVideoIndex];
-      bgVideoEl.load();
-      bgVideoEl.play().catch(() => {});
-      bgVideoEl.classList.add('visible');
+      vidEls[activeVid].play().catch(() => {});
+      vidEls[activeVid].classList.add('visible');
     }
 
     function stopBgVideo() {
-      bgVideoEl.pause();
-      bgVideoEl.classList.remove('visible');
+      vidEls.forEach(v => { v.pause(); v.classList.remove('visible'); });
     }
-
-    bgVideoEl.addEventListener('ended', () => {
-      bgVideoIndex = (bgVideoIndex + 1) % bgVideos.length;
-      bgVideoEl.src = bgVideos[bgVideoIndex];
-      bgVideoEl.load();
-      bgVideoEl.play().catch(() => {});
-    });
 
     audioEl.addEventListener('play',  startBgVideo);
     audioEl.addEventListener('pause', stopBgVideo);
