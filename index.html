@@ -2094,6 +2094,12 @@ small {
     </div>
   </div>
 
+  <label style="display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:12px; cursor:pointer;">
+    <input type="checkbox" id="httpsOnlyToggle" style="width:auto; margin:0; accent-color:var(--color-accent);">
+    <i data-lucide="lock" style="width:13px; height:13px; flex-shrink:0;"></i>
+    Nur sichere Streams (HTTPS)
+  </label>
+
   <div class="filter-row">
     <button id="searchBtn"><i data-lucide="search"></i> Suchen</button>
     <button id="showFavoritesBtn" class="secondary"><i data-lucide="star"></i> Favoriten</button>
@@ -3590,17 +3596,25 @@ small {
       renderStations();
     }
 
+    const httpsOnlyToggle = document.getElementById('httpsOnlyToggle');
+    httpsOnlyToggle.addEventListener('change', renderStations);
+
     function renderStations() {
       stationsListEl.innerHTML = "";
-      
-      if (allStations.length === 0) {
-        stationsListEl.innerHTML = '<div class="loading">Keine Sender gefunden</div>';
+
+      const httpsOnly = httpsOnlyToggle.checked;
+      const filtered  = httpsOnly
+        ? allStations.filter(s => s.streamUrl && s.streamUrl.startsWith('https://'))
+        : allStations;
+
+      if (filtered.length === 0) {
+        stationsListEl.innerHTML = `<div class="loading">${httpsOnly ? '🔒 Keine HTTPS-Sender gefunden – Filter deaktivieren?' : 'Keine Sender gefunden'}</div>`;
         stationCountEl.textContent = "0 Sender";
         return;
       }
-      
-      displayedStations = allStations.slice(0, displayLimit);
-      stationCountEl.textContent = `${displayedStations.length} von ${allStations.length}`;
+
+      displayedStations = filtered.slice(0, displayLimit);
+      stationCountEl.textContent = `${displayedStations.length} von ${filtered.length}${httpsOnly ? ' 🔒' : ''}`;
       
       displayedStations.forEach((st, index) => {
         const row = document.createElement("div");
