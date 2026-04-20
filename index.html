@@ -1487,13 +1487,19 @@ small {
   border-radius: 16px;
   max-width: 420px;
   width: 100%;
-  padding: 24px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   animation: whatsNewIn 0.25s ease;
 }
 @keyframes whatsNewIn {
   from { opacity: 0; transform: scale(0.92) translateY(12px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+#whatsNewModalHeader {
+  padding: 20px 20px 0;
+  flex-shrink: 0;
 }
 #whatsNewModal h2 {
   margin: 0 0 4px;
@@ -1503,12 +1509,17 @@ small {
 #whatsNewModal .wnv {
   font-size: 11px;
   opacity: 0.6;
-  margin: 0 0 16px;
+  margin: 0 0 8px;
+}
+#whatsNewModalBody {
+  overflow-y: auto;
+  padding: 0 20px 8px;
+  flex: 1;
 }
 #whatsNewModal ul {
   list-style: none;
   padding: 0;
-  margin: 0 0 20px;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1521,13 +1532,18 @@ small {
   line-height: 1.4;
 }
 #whatsNewModal ul li .wn-icon {
-  font-size: 18px;
+  font-size: 16px;
   flex-shrink: 0;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 #whatsNewModal ul li strong {
   display: block;
   margin-bottom: 2px;
+}
+#whatsNewModalFooter {
+  padding: 12px 20px 20px;
+  border-top: 1px solid var(--color-bg-tertiary);
+  flex-shrink: 0;
 }
 #whatsNewCloseBtn {
   width: 100%;
@@ -1825,46 +1841,52 @@ small {
   <!-- WHAT'S NEW MODAL -->
   <div id="whatsNewOverlay">
     <div id="whatsNewModal">
-      <h2>Neuigkeiten</h2>
-      <p class="wnv">Version 1.2.5</p>
-      <ul>
-        <li>
-          <span class="wn-icon">🔒</span>
-          <div>
-            <strong>Nur sichere Streams (HTTPS)</strong>
-            Neuer Filter in der Sendersuche – aktiviere ihn um ausschließlich Sender mit verschlüsselter Stream-URL anzuzeigen. Das verhindert die "nicht sicher"-Warnung im Browser.
-          </div>
-        </li>
-        <li>
-          <span class="wn-icon">🎬</span>
-          <div>
-            <strong>Video-Hintergrund im Visualizer</strong>
-            Wenn Musik spielt, läuft ein Video im Hintergrund des Visualizers. Über die Buttons im Visualizer kann das Video an-/ausgeschaltet und der Verlauf eingeklappt werden, damit der Visualizer mehr Platz bekommt.
-          </div>
-        </li>
-        <li>
-          <span class="wn-icon">🔍</span>
-          <div>
-            <strong>Song direkt suchen</strong>
-            Der Button neben dem Lauffeld öffnet jetzt eine Google-Suche mit dem aktuellen Song – ideal um Interpret und Album schnell zu finden.
-          </div>
-        </li>
-        <li>
-          <span class="wn-icon">💾</span>
-          <div>
-            <strong>Einstellungen sichern</strong>
-            Exportiere deine Favoriten, Theme, EQ und Verlauf als Datei – und lade sie auf einem anderen Gerät wieder ein. Zu finden unter <em>Einstellungen → Einstellungen sichern</em>.
-          </div>
-        </li>
-        <li>
-          <span class="wn-icon">🎚️</span>
-          <div>
-            <strong>EQ-Einstellungen werden gespeichert</strong>
-            Deine Equalizer-Einstellungen bleiben jetzt auch nach einem Neustart der App erhalten.
-          </div>
-        </li>
-      </ul>
-      <button id="whatsNewCloseBtn"><i data-lucide="check"></i> Alles klar!</button>
+      <div id="whatsNewModalHeader">
+        <h2>Neuigkeiten</h2>
+        <p class="wnv">Version 1.2.5</p>
+      </div>
+      <div id="whatsNewModalBody">
+        <ul>
+          <li>
+            <span class="wn-icon">🔒</span>
+            <div>
+              <strong>Nur sichere Streams (HTTPS)</strong>
+              Neuer Filter in der Sendersuche – verhindert die "nicht sicher"-Warnung im Browser.
+            </div>
+          </li>
+          <li>
+            <span class="wn-icon">🎬</span>
+            <div>
+              <strong>Video-Hintergrund im Visualizer</strong>
+              Läuft beim Musik hören im Hintergrund. Buttons im Visualizer zum An-/Ausschalten und Verlauf einklappen.
+            </div>
+          </li>
+          <li>
+            <span class="wn-icon">🔍</span>
+            <div>
+              <strong>Song direkt suchen</strong>
+              Button neben dem Lauffeld öffnet eine Google-Suche mit dem aktuellen Song.
+            </div>
+          </li>
+          <li>
+            <span class="wn-icon">💾</span>
+            <div>
+              <strong>Einstellungen sichern</strong>
+              Favoriten, Theme, EQ und Verlauf als Datei exportieren und auf anderen Geräten laden.
+            </div>
+          </li>
+          <li>
+            <span class="wn-icon">🎚️</span>
+            <div>
+              <strong>EQ-Einstellungen werden gespeichert</strong>
+              Bleiben jetzt auch nach einem Neustart erhalten.
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div id="whatsNewModalFooter">
+        <button id="whatsNewCloseBtn"><i data-lucide="check"></i> Alles klar!</button>
+      </div>
     </div>
   </div>
   <div id="settingsPanel">
@@ -2465,6 +2487,7 @@ small {
     const allStations = [];
     let displayedStations = [];
     let favorites = JSON.parse(localStorage.getItem("brummiesFavorites") || "[]");
+    let favoriteStationsData = JSON.parse(localStorage.getItem("brummiesFavoritesData") || "{}");
     let historyData = JSON.parse(localStorage.getItem("brummiesHistory") || "[]");
     let listeningStats = JSON.parse(localStorage.getItem("brummiesListeningStats") || "{}");
     let currentStation = null;
@@ -3556,11 +3579,6 @@ small {
         list = list.filter(s => s.country === country);
       }
       
-      // Nur Favoriten anzeigen wenn aktiviert
-      if (showOnlyFavorites) {
-        list = list.filter(s => favorites.includes(s.id));
-      }
-      
       list.sort((a, b) => {
         for (const sortType of currentSort) {
           let result = 0;
@@ -3609,19 +3627,31 @@ small {
     function renderStations() {
       stationsListEl.innerHTML = "";
 
-      const httpsOnly = httpsOnlyToggle.checked;
-      const filtered  = httpsOnly
-        ? allStations.filter(s => s.streamUrl && s.streamUrl.startsWith('https://'))
-        : allStations;
+      let sourceStations;
 
-      if (filtered.length === 0) {
-        stationsListEl.innerHTML = `<div class="loading">${httpsOnly ? '🔒 Keine HTTPS-Sender gefunden – Filter deaktivieren?' : 'Keine Sender gefunden'}</div>`;
-        stationCountEl.textContent = "0 Sender";
-        return;
+      if (showOnlyFavorites) {
+        // Favoriten-Modus: direkt aus gespeicherten Stationsdaten, alle anderen Filter ignoriert
+        sourceStations = Object.values(favoriteStationsData);
+        if (sourceStations.length === 0) {
+          stationsListEl.innerHTML = '<div class="loading">⭐ Noch keine Favoriten gespeichert.</div>';
+          stationCountEl.textContent = "0 Sender";
+          loadMoreBtn.style.display = "none";
+          return;
+        }
+      } else {
+        const httpsOnly = httpsOnlyToggle.checked;
+        sourceStations = httpsOnly
+          ? allStations.filter(s => s.streamUrl && s.streamUrl.startsWith('https://'))
+          : allStations;
+        if (sourceStations.length === 0) {
+          stationsListEl.innerHTML = `<div class="loading">${httpsOnly ? '🔒 Keine HTTPS-Sender gefunden – Filter deaktivieren?' : 'Keine Sender gefunden'}</div>`;
+          stationCountEl.textContent = "0 Sender";
+          return;
+        }
       }
 
-      displayedStations = filtered.slice(0, displayLimit);
-      stationCountEl.textContent = `${displayedStations.length} von ${filtered.length}${httpsOnly ? ' 🔒' : ''}`;
+      displayedStations = sourceStations.slice(0, displayLimit);
+      stationCountEl.textContent = `${displayedStations.length} von ${sourceStations.length}${showOnlyFavorites ? ' ⭐' : (httpsOnlyToggle.checked ? ' 🔒' : '')}`;
       
       displayedStations.forEach((st, index) => {
         const row = document.createElement("div");
@@ -3674,16 +3704,20 @@ small {
         stationsListEl.appendChild(row);
       });
       
-      loadMoreBtn.style.display = displayedStations.length < allStations.length ? "block" : "none";
+      loadMoreBtn.style.display = displayedStations.length < sourceStations.length ? "block" : "none";
     }
 
     function toggleFavorite(id) {
       if (favorites.includes(id)) {
         favorites = favorites.filter(f => f !== id);
+        delete favoriteStationsData[id];
       } else {
         favorites.push(id);
+        const st = allStations.find(s => s.id === id);
+        if (st) favoriteStationsData[id] = st;
       }
       localStorage.setItem("brummiesFavorites", JSON.stringify(favorites));
+      localStorage.setItem("brummiesFavoritesData", JSON.stringify(favoriteStationsData));
       renderStations();
     }
 
