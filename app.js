@@ -6,6 +6,16 @@
     // 60 fps draw() loop never touches getComputedStyle.
     let cachedBgColor     = '';
     let cachedAccentColor = '';
+
+    // ── Recording state ───────────────────────────────────────────────────────
+    let mediaRecDest      = null;  // MediaStreamDestination (created in initAudioContext)
+    let mediaRecorder     = null;  // active MediaRecorder instance
+    let recChunks         = [];    // accumulated Blob chunks for current recording
+    let recMode           = 'manual'; // 'manual' | 'autosplit'
+    let recStartTime      = null;  // Date.now() when current session started
+    let recTimerInterval  = null;  // interval for the clock display
+    let recTitleAtStart   = '';    // metadata at the start of the current session
+    let recPendingSplit   = false; // true when autosplit triggered a stop-and-restart
     let favorites = JSON.parse(localStorage.getItem("brummiesFavorites") || "[]");
     let favoriteStationsData = JSON.parse(localStorage.getItem("brummiesFavoritesData") || "{}");
     let historyData = JSON.parse(localStorage.getItem("brummiesHistory") || "[]");
@@ -1379,7 +1389,10 @@ function startMetadataPolling() {
 
     function updateNowPlayingText(text) {
       if (text && text !== currentMetadata) {
+        const oldMetadata = currentMetadata;
         currentMetadata = text;
+        // Notify recording module of track change (for auto-split mode)
+        if (window._recOnTrackChange) window._recOnTrackChange(oldMetadata);
         nowPlayingTextEl.textContent = text;
         copyNowPlayingBtn.disabled = false;
         
@@ -1744,6 +1757,10 @@ function startMetadataPolling() {
         filters[filters.length - 1].connect(analyser);
         analyser.connect(audioContext.destination);
 
+        // Recording tap – parallel to speakers, receives EQ-processed audio
+        mediaRecDest = audioContext.createMediaStreamDestination();
+        analyser.connect(mediaRecDest);
+
         // Wire EQ sliders
         document.querySelectorAll('#eq input[type=range]').forEach(slider => {
           slider.addEventListener('input', () => {
@@ -1759,6 +1776,7 @@ function startMetadataPolling() {
 
         audioContextReady = true;
         if (!visualizerActive) startVisualizer();
+        if (window._recUpdateAvailability) window._recUpdateAvailability();
         console.log('AudioContext ready');
       } catch (err) {
         console.error('AudioContext init failed:', err);
@@ -2257,6 +2275,7 @@ function startMetadataPolling() {
     
   endListeningSession();
   stopMetadataPolling();
+  if (window._recStopOnStationChange) window._recStopOnStationChange();
 
   currentStation = station;
   currentStationIndex = index;
@@ -2283,6 +2302,10 @@ function startMetadataPolling() {
 
   // Hide any previous EQ warning
   showEQWarning(false);
+
+  // Update recording availability (CORS status not yet known → will also be
+  // called again inside initAudioContext once the probe completes)
+  if (window._recUpdateAvailability) window._recUpdateAvailability();
 
   // Setup audio with CORS probe (sets audioEl.src internally)
   setupAudioForStation(station).then(() => {
@@ -3003,11 +3026,339 @@ function startMetadataPolling() {
     settingsOverlay.addEventListener('click', closeSettingsPanel);
 
     // Close on ESC key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && settingsPanel.classList.contains('open')) {
-        closeSettingsPanel();
+    // ── Keyboard shortcuts ────────────────────────────────────────────────────
+    (function initKeyboardShortcuts() {
+      // Toast helper
+      const kbToast = document.getElementById('kbToast');
+      let kbToastTimer = null;
+      function showToast(msg) {
+        if (!kbToast) return;
+        kbToast.textContent = msg;
+        kbToast.classList.add('show');
+        clearTimeout(kbToastTimer);
+        kbToastTimer = setTimeout(() => kbToast.classList.remove('show'), 1600);
       }
-    });
+
+      // Mute state tracker (separate from volume slider)
+      let mutedVol = null; // volume before muting
+
+      document.addEventListener('keydown', (e) => {
+        // Always: Escape closes settings
+        if (e.key === 'Escape') {
+          if (settingsPanel.classList.contains('open')) closeSettingsPanel();
+          return;
+        }
+
+        // Ignore shortcuts when user is typing in an input / textarea / select
+        const tag = document.activeElement?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        // Also ignore when a modifier key is held (browser shortcuts, etc.)
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+        switch (e.key) {
+          // ── Play / Pause ───────────────────────────────────────────────────
+          case ' ':
+          case 'k':
+            e.preventDefault();
+            if (!currentStation) return;
+            if (audioEl.paused) {
+              playBtn.click();
+              showToast('▶ Play');
+            } else {
+              playBtn.click();
+              showToast('⏸ Pause');
+            }
+            break;
+
+          // ── Previous / Next station ────────────────────────────────────────
+          case 'ArrowLeft':
+            e.preventDefault();
+            if (!prevBtn.disabled) { prevBtn.click(); showToast('⏮ Vorheriger Sender'); }
+            break;
+          case 'ArrowRight':
+            e.preventDefault();
+            if (!nextBtn.disabled) { nextBtn.click(); showToast('⏭ Nächster Sender'); }
+            break;
+
+          // ── Volume up / down ───────────────────────────────────────────────
+          case 'ArrowUp': {
+            e.preventDefault();
+            if (!volumeRange) return;
+            const newVol = Math.min(100, Number(volumeRange.value) + 5);
+            volumeRange.value = newVol;
+            volumeRange.dispatchEvent(new Event('input'));
+            showToast(`🔊 ${newVol} %`);
+            break;
+          }
+          case 'ArrowDown': {
+            e.preventDefault();
+            if (!volumeRange) return;
+            const newVol = Math.max(0, Number(volumeRange.value) - 5);
+            volumeRange.value = newVol;
+            volumeRange.dispatchEvent(new Event('input'));
+            showToast(`🔉 ${newVol} %`);
+            break;
+          }
+
+          // ── Mute / Unmute ──────────────────────────────────────────────────
+          case 'm':
+          case 'M':
+            if (!volumeRange) return;
+            if (mutedVol === null) {
+              // Mute: remember current volume, set to 0
+              mutedVol = Number(volumeRange.value);
+              volumeRange.value = 0;
+              volumeRange.dispatchEvent(new Event('input'));
+              showToast('🔇 Stummgeschaltet');
+            } else {
+              // Unmute: restore
+              volumeRange.value = mutedVol;
+              volumeRange.dispatchEvent(new Event('input'));
+              showToast(`🔊 ${mutedVol} %`);
+              mutedVol = null;
+            }
+            break;
+
+          // ── Favourite toggle ───────────────────────────────────────────────
+          case 'f':
+          case 'F':
+            if (!currentStation) return;
+            toggleFavorite(currentStation.id);
+            showToast(favorites.includes(currentStation.id) ? '⭐ Favorit hinzugefügt' : '☆ Favorit entfernt');
+            break;
+        }
+      });
+    })();
+
+    // ── Recording module ──────────────────────────────────────────────────────
+    (function initRecording() {
+      const recBtn              = document.getElementById('recBtn');
+      const recAutoSplit        = document.getElementById('recAutoSplit');
+      const recTimerEl          = document.getElementById('recTimer');
+      const recNoteEl           = document.getElementById('recNote');
+      const recSection          = document.getElementById('recSection');
+      // Settings-panel elements for folder picker
+      const recFolderRow        = document.getElementById('recFolderRow');
+      const recFolderName       = document.getElementById('recFolderName');
+      const recChangeFolderBtn  = document.getElementById('recChangeFolderBtn');
+      const recFolderUnsupported = document.getElementById('recFolderUnsupported');
+
+      if (!recBtn) return;
+
+      // ── File System Access API ────────────────────────────────────────────────
+      const fsDirPickerSupported = ('showDirectoryPicker' in window);
+      let dirHandle = null;   // FileSystemDirectoryHandle, null = use downloads
+
+      if (fsDirPickerSupported) {
+        if (recFolderRow)         recFolderRow.style.display        = 'block';
+        if (recFolderUnsupported) recFolderUnsupported.style.display = 'none';
+      } else {
+        if (recFolderRow)         recFolderRow.style.display        = 'none';
+        if (recFolderUnsupported) recFolderUnsupported.style.display = 'block';
+      }
+
+      async function pickFolder() {
+        try {
+          dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+          if (recFolderName) recFolderName.textContent = '📁 ' + dirHandle.name;
+        } catch (e) {
+          if (e.name !== 'AbortError') console.warn('[REC] pickFolder:', e);
+        }
+      }
+
+      if (recChangeFolderBtn) {
+        recChangeFolderBtn.addEventListener('click', pickFolder);
+      }
+
+      // ── Preferred MIME type (browser-compatible) ────────────────────────────
+      function getBestMime() {
+        const candidates = [
+          'audio/webm;codecs=opus',
+          'audio/webm',
+          'audio/mp4',
+          'audio/ogg;codecs=opus',
+          ''
+        ];
+        return candidates.find(t => !t || MediaRecorder.isTypeSupported(t)) || '';
+      }
+
+      // ── File extension from MIME ─────────────────────────────────────────────
+      function extFor(mime) {
+        if (mime.includes('ogg'))  return 'ogg';
+        if (mime.includes('mp4'))  return 'm4a';
+        return 'webm';
+      }
+
+      // ── Safe filename ────────────────────────────────────────────────────────
+      function safeFilename(raw, fallback) {
+        const cleaned = (raw || fallback || 'aufnahme')
+          .replace(/[<>:"/\\|?*\x00-\x1f]/g, '')
+          .trim()
+          .slice(0, 80);
+        return cleaned || 'aufnahme';
+      }
+
+      // ── Timer display ────────────────────────────────────────────────────────
+      function startRecTimer() {
+        recStartTime = Date.now();
+        if (recTimerEl) recTimerEl.textContent = '0:00';
+        recTimerInterval = setInterval(() => {
+          const s = Math.floor((Date.now() - recStartTime) / 1000);
+          const m = Math.floor(s / 60);
+          if (recTimerEl) recTimerEl.textContent = `${m}:${String(s % 60).padStart(2, '0')}`;
+        }, 500);
+      }
+
+      function stopRecTimer() {
+        clearInterval(recTimerInterval);
+        recTimerInterval = null;
+        if (recTimerEl) recTimerEl.textContent = '';
+      }
+
+      // ── Save helper ───────────────────────────────────────────────────────────
+      async function downloadChunks(chunks, title, mime) {
+        if (!chunks.length) return;
+        const blob = new Blob(chunks, { type: mime || chunks[0].type });
+        const ext  = extFor(blob.type);
+        const name = safeFilename(title, currentStation?.name) + '.' + ext;
+
+        // Try File System Access API first (saves to chosen folder)
+        if (dirHandle) {
+          try {
+            const fileHandle = await dirHandle.getFileHandle(name, { create: true });
+            const writable   = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            showToast(`💾 ${name}`);
+            return;
+          } catch (e) {
+            console.warn('[REC] Could not write to folder, falling back to download:', e);
+            // Permission may have expired – reset handle so user knows
+            dirHandle = null;
+            if (recFolderName) recFolderName.textContent = '';
+          }
+        }
+
+        // Fallback: classic <a> download
+        const url = URL.createObjectURL(blob);
+        const a   = Object.assign(document.createElement('a'), { href: url, download: name });
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 8000);
+        showToast(`💾 ${name}`);
+      }
+
+      // ── Start a fresh MediaRecorder session ──────────────────────────────────
+      function startSession() {
+        if (!mediaRecDest) {
+          recNoteEl.textContent = '⚠️ Aufnahme benötigt einen CORS-fähigen Sender';
+          return false;
+        }
+        const mime = getBestMime();
+        recChunks = [];
+        recTitleAtStart = currentMetadata;
+        try {
+          mediaRecorder = new MediaRecorder(
+            mediaRecDest.stream,
+            mime ? { mimeType: mime } : {}
+          );
+        } catch (err) {
+          recNoteEl.textContent = '⚠️ MediaRecorder nicht unterstützt';
+          console.error('[REC]', err);
+          return false;
+        }
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data && e.data.size > 0) recChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          // Save what we have (async – fire and forget, order preserved per session)
+          const chunksToSave = recChunks.slice();
+          const titleToSave  = recTitleAtStart;
+          recChunks = [];
+          downloadChunks(chunksToSave, titleToSave, mime).catch(console.error);
+
+          // Auto-split: immediately restart for the new track
+          if (recPendingSplit) {
+            recPendingSplit  = false;
+            recTitleAtStart  = currentMetadata;
+            mediaRecorder.start(1000);
+            startRecTimer();
+          }
+        };
+
+        mediaRecorder.start(1000); // collect in 1-second chunks
+        startRecTimer();
+        recNoteEl.textContent = '';
+        return true;
+      }
+
+      // ── Stop and download current session ────────────────────────────────────
+      function stopSession() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          recPendingSplit = false;
+          mediaRecorder.stop();
+        }
+        stopRecTimer();
+        recBtn.classList.remove('recording');
+      }
+
+      // ── Called by updateNowPlayingText when title changes ────────────────────
+      window._recOnTrackChange = function(oldTitle) {
+        if (recMode !== 'autosplit') return;
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+        // Mark as split so onstop restarts
+        recPendingSplit = true;
+        recTitleAtStart = oldTitle;   // save current title before it changes
+        mediaRecorder.stop();
+        stopRecTimer();
+        // onstop will restart and call startRecTimer again
+      };
+
+      // ── Button click ─────────────────────────────────────────────────────────
+      recBtn.addEventListener('click', async () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          stopSession();
+        } else {
+          // On first click with FS API available: ask for folder if not yet chosen
+          if (fsDirPickerSupported && !dirHandle) {
+            await pickFolder();
+            // pickFolder resolves even if cancelled – we still start recording
+          }
+          if (startSession()) {
+            recBtn.classList.add('recording');
+          }
+        }
+      });
+
+      // ── Mode checkbox ────────────────────────────────────────────────────────
+      if (recAutoSplit) {
+        recAutoSplit.addEventListener('change', () => {
+          recMode = recAutoSplit.checked ? 'autosplit' : 'manual';
+        });
+      }
+
+      // ── Enable / disable button based on player state ─────────────────────────
+      // Called from selectStation and stopStation
+      window._recUpdateAvailability = function() {
+        const hasStation = !!currentStation;
+        const hasCors    = !!mediaRecDest;
+        recSection.style.display = hasStation ? 'block' : 'none';
+        recBtn.disabled = !hasStation || !hasCors;
+        if (hasStation && !hasCors) {
+          recNoteEl.textContent = '⚠️ Dieser Sender unterstützt keine Aufnahme (kein CORS)';
+        } else {
+          recNoteEl.textContent = '';
+        }
+      };
+
+      // ── Stop recording on station change ─────────────────────────────────────
+      window._recStopOnStationChange = function() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          stopSession();
+        }
+      };
+    })();
 
     // Theme Switching (prepared for future)
     // Theme Switching
@@ -3476,7 +3827,7 @@ function startMetadataPolling() {
     // ==================== END CONFIG EXPORT / IMPORT ====================
 
     // ==================== WHAT'S NEW ====================
-    const CURRENT_VERSION = '1.2.5';
+    const CURRENT_VERSION = '1.3.0';
     const seenVersion = localStorage.getItem('brummiesSeenVersion');
     if (seenVersion !== CURRENT_VERSION) {
       const overlay = document.getElementById('whatsNewOverlay');

@@ -44,48 +44,30 @@
 
   <div id="settingsOverlay"></div>
 
+  <!-- KEYBOARD SHORTCUT TOAST -->
+  <div id="kbToast"></div>
+
   <!-- WHAT'S NEW MODAL -->
   <div id="whatsNewOverlay">
     <div id="whatsNewModal">
       <div id="whatsNewModalHeader">
         <h2>Neuigkeiten</h2>
-        <p class="wnv">Version 1.2.5</p>
+        <p class="wnv">Version 1.3.0</p>
       </div>
       <div id="whatsNewModalBody">
         <ul>
           <li>
-            <span class="wn-icon">🔒</span>
+            <span class="wn-icon">⌨️</span>
             <div>
-              <strong>Nur sichere Streams (HTTPS)</strong>
-              Neuer Filter in der Sendersuche – verhindert die "nicht sicher"-Warnung im Browser.
+              <strong>Tastaturkürzel</strong>
+              Leertaste Play/Pause · ← → Sender wechseln · ↑ ↓ Lautstärke · M Stummschalten · F Favorit. Vollständige Übersicht in den Einstellungen.
             </div>
           </li>
           <li>
-            <span class="wn-icon">🎬</span>
+            <span class="wn-icon">🔴</span>
             <div>
-              <strong>Video-Hintergrund im Visualizer</strong>
-              Läuft beim Musik hören im Hintergrund. Buttons im Visualizer zum An-/Ausschalten und Verlauf einklappen.
-            </div>
-          </li>
-          <li>
-            <span class="wn-icon">🔍</span>
-            <div>
-              <strong>Song direkt suchen</strong>
-              Button neben dem Lauffeld öffnet eine Google-Suche mit dem aktuellen Song.
-            </div>
-          </li>
-          <li>
-            <span class="wn-icon">💾</span>
-            <div>
-              <strong>Einstellungen sichern</strong>
-              Favoriten, Theme, EQ und Verlauf als Datei exportieren und auf anderen Geräten laden.
-            </div>
-          </li>
-          <li>
-            <span class="wn-icon">🎚️</span>
-            <div>
-              <strong>EQ-Einstellungen werden gespeichert</strong>
-              Bleiben jetzt auch nach einem Neustart erhalten.
+              <strong>Stream-Aufnahme</strong>
+              Aufnahme-Button links neben dem Lauftext. Zwei Modi: Daueraufzeichnung oder automatischer Split bei Titelwechsel – jeder Song als eigene Datei. Speicherordner frei wählbar (Chrome/Edge).
             </div>
           </li>
         </ul>
@@ -233,9 +215,22 @@
         </div>
       </div>
 
+      <!-- RECORDING -->
+      <div class="settings-section" id="recSettingsSection">
+        <h3><i data-lucide="circle-dot"></i> Aufnahme</h3>
+        <div id="recFolderRow">
+          <p style="font-size:12px; margin-bottom:10px;">Wähle einen Ordner, in dem aufgenommene Tracks gespeichert werden. Nur in Chrome und Edge verfügbar – andere Browser speichern in Downloads.</p>
+          <button id="recChangeFolderBtn" class="secondary" style="width:100%;">
+            <i data-lucide="folder-open"></i> Speicherordner wählen
+          </button>
+          <p id="recFolderName" style="font-size:11px; margin-top:6px; color:var(--color-text-muted);"></p>
+        </div>
+        <p id="recFolderUnsupported" style="font-size:12px; color:var(--color-text-muted); display:none;">Ordnerauswahl wird von diesem Browser nicht unterstützt. Aufnahmen gehen in den Download-Ordner.</p>
+      </div>
+
       <!-- CONFIG DATEI -->
       <div class="settings-section">
-        <h3><i data-lucide="file-down"></i> Einstellungen sichern</h3>
+        <h3><i data-lucide="file-down"></i> Import / Export</h3>
         <p style="font-size: 12px; margin-bottom: 12px;">Exportiere deine Favoriten, Theme, EQ-Einstellungen und Verlauf als Datei – und lade sie auf einem anderen Gerät wieder ein.</p>
         <button id="configExportBtn" class="secondary" style="width: 100%; margin-bottom: 8px;">
           <i data-lucide="download"></i> Einstellungen exportieren
@@ -257,11 +252,26 @@
         <p style="margin-top: 12px;"><small>Donations helfen bei der Weiterentwicklung und dem Hosting.</small></p>
       </div>
 
+      <!-- KEYBOARD SHORTCUTS -->
+      <div class="settings-section">
+        <h3><i data-lucide="keyboard"></i> Tastaturkürzel</h3>
+        <table class="shortcuts-table">
+          <tbody>
+            <tr><td><kbd>Space</kbd></td><td>Play / Pause</td></tr>
+            <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Vorheriger / Nächster Sender</td></tr>
+            <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Lautstärke +5 % / −5 %</td></tr>
+            <tr><td><kbd>M</kbd></td><td>Stummschalten / An</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Favorit toggeln</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Einstellungen schließen</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <!-- ABOUT -->
       <div class="settings-section">
         <h3><i data-lucide="info"></i> Über diese App</h3>
         <p><strong>Brummies Rock Radio</strong></p>
-        <p>Version: 1.2.5</p>
+        <p>Version: 1.3.0</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
         <button id="checkUpdateBtn" class="secondary" style="width:100%; margin-top:12px;">
@@ -377,12 +387,36 @@
     <button id="nextBtn" disabled><i data-lucide="skip-forward"></i></button>
   </div>
 
-  <!-- NOW PLAYING LAUFTEXT -->
-  <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
-    <div id="nowPlayingScroll" style="flex: 1; min-width: 0;">
+  <!-- NOW PLAYING + RECORDING (one coherent block) -->
+  <div id="nowPlayingBlock">
+
+    <!-- Left: Recording button + live timer -->
+    <div id="recControl">
+      <button id="recBtn" disabled title="Aufnahme starten / stoppen">
+        <span class="rec-dot"></span>
+      </button>
+      <span id="recTimer"></span>
+    </div>
+
+    <!-- Center: scrolling title -->
+    <div id="nowPlayingScroll">
       <div id="nowPlayingText">Warte auf Stream-Metadaten...</div>
     </div>
-    <button id="searchNowPlayingBtn" class="secondary" disabled style="padding: 4px 8px; font-size: 11px; height: 32px; flex-shrink: 0;" title="Im Browser suchen"><i data-lucide="search" width="14" height="14"></i></button>
+
+    <!-- Right: Google search -->
+    <button id="searchNowPlayingBtn" class="secondary" disabled title="Im Browser suchen">
+      <i data-lucide="search" width="14" height="14"></i>
+    </button>
+
+  </div>
+
+  <!-- Recording options – compact row directly below the title strip -->
+  <div id="recSection">
+    <label id="recAutoSplitLabel">
+      <input type="checkbox" id="recAutoSplit">
+      Bei Titelwechsel neuen Track starten
+    </label>
+    <div id="recNote"></div>
   </div>
 
   <div id="volumeControl">
