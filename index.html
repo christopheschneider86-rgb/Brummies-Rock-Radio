@@ -5830,6 +5830,7 @@ function startMetadataPolling() {
         version: 1,
         exportedAt: new Date().toISOString(),
         favorites: JSON.parse(localStorage.getItem('brummiesFavorites') || '[]'),
+        favoritesData: JSON.parse(localStorage.getItem('brummiesFavoritesData') || '{}'),
         theme: localStorage.getItem('brummiesTheme') || 'brummie',
         customTheme: JSON.parse(localStorage.getItem('brummiesCustomTheme') || 'null'),
         eqValues: JSON.parse(localStorage.getItem('brummiesEqValues') || 'null') || getEqValues(),
@@ -5857,6 +5858,10 @@ function startMetadataPolling() {
           if (Array.isArray(config.favorites)) {
             favorites = config.favorites;
             localStorage.setItem('brummiesFavorites', JSON.stringify(favorites));
+          }
+          if (config.favoritesData && typeof config.favoritesData === 'object') {
+            favoriteStationsData = config.favoritesData;
+            localStorage.setItem('brummiesFavoritesData', JSON.stringify(favoriteStationsData));
           }
           if (config.theme) {
             localStorage.setItem('brummiesTheme', config.theme);
