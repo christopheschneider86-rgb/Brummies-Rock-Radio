@@ -5886,6 +5886,38 @@ function startMetadataPolling() {
             localStorage.setItem('brummiesListeningStats', JSON.stringify(listeningStats));
           }
 
+          // Fehlende Stationsdaten per API nachladen
+          const missingIds = favorites.filter(id => !favoriteStationsData[id]);
+          if (missingIds.length > 0) {
+            statusEl.textContent = '⏳ Lade Senderdaten...';
+            Promise.all(missingIds.map(id =>
+              fetch(`https://de1.api.radio-browser.info/json/stations/byuuid/${id}`)
+                .then(r => r.json()).then(d => d[0] || null).catch(() => null)
+            )).then(results => {
+              results.forEach(s => {
+                if (!s) return;
+                favoriteStationsData[s.stationuuid] = {
+                  id: s.stationuuid, name: s.name,
+                  streamUrl: s.url_resolved || s.url,
+                  genre: s.tags ? s.tags.split(',')[0].trim() : 'unknown',
+                  country: s.country || 'Unknown',
+                  bitrate: s.bitrate || 0, votes: s.votes || 0,
+                  logoText: s.name.substring(0, 2).toUpperCase(),
+                  favicon: s.favicon || null,
+                  latitude: parseFloat(s.geo_lat) || null,
+                  longitude: parseFloat(s.geo_long) || null,
+                  distance: null
+                };
+              });
+              localStorage.setItem('brummiesFavoritesData', JSON.stringify(favoriteStationsData));
+              renderStations();
+              statusEl.textContent = `✅ ${favorites.length} Favorit(en) geladen!`;
+              statusEl.style.color = '#27ae60';
+              setTimeout(() => { statusEl.textContent = ''; }, 4000);
+            });
+            return; // Status wird async gesetzt
+          }
+
           renderStations();
           statusEl.textContent = '✅ Einstellungen geladen!';
           statusEl.style.color = '#27ae60';
