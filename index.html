@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#0b0b0f" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="images/icon-192.png" />
-  <title>Brummies Rock Radio</title>
+  <title>Brummi's Rock Radio</title>
   <link rel="stylesheet" href="style.css">
   <!-- Favicon für Browser-Tab -->
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
@@ -25,7 +25,7 @@
     <div class="header-left">
       <img id="headerLogo" src="images/logo.png" alt="Brummy">
       <div class="header-text">
-        <h1>Brummies Rock Radio</h1>
+        <h1>Brummi's Rock Radio</h1>
         <div class="subtitle">by ZaboChris · MP3 Streams</div>
       </div>
     </div>
@@ -52,22 +52,29 @@
     <div id="whatsNewModal">
       <div id="whatsNewModalHeader">
         <h2>Neuigkeiten</h2>
-        <p class="wnv">Version 1.3.0</p>
+        <p class="wnv">Version 1.3.1</p>
       </div>
       <div id="whatsNewModalBody">
         <ul>
           <li>
-            <span class="wn-icon">⌨️</span>
+            <span class="wn-icon">🎸</span>
             <div>
-              <strong>Tastaturkürzel</strong>
-              Leertaste Play/Pause · ← → Sender wechseln · ↑ ↓ Lautstärke · M Stummschalten · F Favorit. Vollständige Übersicht in den Einstellungen.
+              <strong>Neuer Name: Brummi's Rock Radio</strong>
+              Die App heißt ab sofort offiziell <em>Brummi's Rock Radio</em> – gleicher Spirit, frischeres Label.
             </div>
           </li>
           <li>
-            <span class="wn-icon">🔴</span>
+            <span class="wn-icon">🎛️</span>
             <div>
-              <strong>Stream-Aufnahme</strong>
-              Aufnahme-Button links neben dem Lauftext. Zwei Modi: Daueraufzeichnung oder automatischer Split bei Titelwechsel – jeder Song als eigene Datei. Speicherordner frei wählbar (Chrome/Edge).
+              <strong>Radiostil-Ansicht</strong>
+              Senderliste als klassische Frequenzskala mit Drehregler – einfach den Knopf drehen und Sender wechseln. Umschalten über die Ansicht-Buttons rechts in der Statusleiste.
+            </div>
+          </li>
+          <li>
+            <span class="wn-icon">🌍</span>
+            <div>
+              <strong>Weltkugel-Ansicht</strong>
+              Sender auf einem interaktiven 3D-Globus entdecken. Vollbild-Modus mit Live-Infos und Filterleiste. Punkte anklicken für Senderliste, Zoom und freie Rotation.
             </div>
           </li>
         </ul>
@@ -270,7 +277,7 @@
       <!-- ABOUT -->
       <div class="settings-section">
         <h3><i data-lucide="info"></i> Über diese App</h3>
-        <p><strong>Brummies Rock Radio</strong></p>
+        <p><strong>Brummi's Rock Radio</strong></p>
         <p>Version: 1.3.0</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
@@ -315,10 +322,23 @@
 
   <div class="filter-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
     <div class="filter-group">
-      <label for="countryFilter">Land</label>
-      <select id="countryFilter">
-        <option value="">Alle Länder</option>
-      </select>
+      <label>Land</label>
+      <div id="countryFilterWrapper" class="country-filter-wrapper">
+        <div id="countrySelected" class="country-selected">
+          <span id="countryPlaceholder" class="country-placeholder">Alle Länder</span>
+        </div>
+        <div id="countryDropdown" class="country-dropdown" hidden>
+          <div class="country-quickrow">
+            <button type="button" data-country="Germany">🇩🇪 DE</button>
+            <button type="button" data-country="Austria">🇦🇹 AT</button>
+            <button type="button" data-country="Switzerland">🇨🇭 CH</button>
+            <button type="button" data-country="United Kingdom">🇬🇧 UK</button>
+            <button type="button" data-country="The United States Of America">🇺🇸 US</button>
+          </div>
+          <input id="countrySearch" type="text" placeholder="Land suchen…" autocomplete="off">
+          <div id="countryList" class="country-list"></div>
+        </div>
+      </div>
     </div>
 
     <div class="filter-group">
@@ -363,10 +383,88 @@
   <div class="status-bar">
     <span id="stationCount">0 Sender</span>
     <button id="loadMoreBtn" class="secondary" style="margin:0; padding:6px 12px; font-size:11px;">+20</button>
+    <div class="view-toggle" role="group" aria-label="Ansicht wählen">
+      <button id="viewListBtn"  class="view-btn active" title="Listenansicht"><i data-lucide="list"></i></button>
+      <button id="viewTunerBtn" class="view-btn"        title="Radiostil"><i data-lucide="radio"></i></button>
+      <button id="viewGlobeBtn" class="view-btn"        title="Weltkugel"><i data-lucide="globe"></i></button>
+    </div>
   </div>
 
   <div id="stationsList">
     <div class="loading">Klicke "Suchen" um zu starten...</div>
+  </div>
+
+  <!-- GLOBE VIEW -->
+  <div id="globeView" hidden>
+    <div id="globeContainer"></div>
+
+    <!-- Fullscreen: top-left – Now Playing -->
+    <div id="gfsNP" hidden>
+      <img id="gfsLogo" class="gfs-logo" src="" alt="" hidden>
+      <div class="gfs-info">
+        <div id="gfsStationName">— kein Sender —</div>
+        <div id="gfsTitleText">—</div>
+      </div>
+      <button id="gfsFavBtn" class="gfs-ctrl-btn gfs-fav-btn" title="Zu Favoriten hinzufügen" disabled><i data-lucide="star"></i></button>
+      <button id="gfsPlayBtn" class="gfs-ctrl-btn" title="Play / Pause"><i data-lucide="play"></i></button>
+    </div>
+
+    <!-- Fullscreen: top-right – Filter -->
+    <div id="gfsFilters" hidden>
+      <img src="./images/icon-192.png" class="gfs-brand-logo" alt="Brummi's Rock Radio" title="Brummi's Rock Radio">
+      <select id="gfsGenre" title="Hauptgenre"></select>
+      <select id="gfsSubgenre" title="Untergenre"></select>
+      <label class="gfs-https-label" title="Nur sichere Streams">
+        <input type="checkbox" id="gfsHttps">
+        <i data-lucide="lock" style="width:12px;height:12px;flex-shrink:0;"></i>
+        HTTPS
+      </label>
+    </div>
+
+    <div id="globeControls">
+      <button id="globeExpandBtn" title="Vollbild"><i data-lucide="expand"></i></button>
+      <button id="globeLocBtn"    title="Eigene Position"><i data-lucide="locate"></i></button>
+      <button id="globeZoomInBtn" title="Zoom +"><i data-lucide="zoom-in"></i></button>
+      <button id="globeZoomOutBtn"title="Zoom −"><i data-lucide="zoom-out"></i></button>
+      <button id="globeFitBtn"    title="Weltkugel zentrieren"><i data-lucide="maximize-2"></i></button>
+    </div>
+    <div id="globePopup" hidden>
+      <div id="globePopupHeader">
+        <span id="globePopupTitle"></span>
+        <button id="globePopupClose" title="Schließen">×</button>
+      </div>
+      <div id="globePopupList"></div>
+    </div>
+    <div id="globeNoData" hidden>Keine Sender mit Positionsdaten gefunden.</div>
+  </div>
+
+  <!-- TUNER VIEW -->
+  <div id="tunerView" hidden>
+
+    <!-- Display window -->
+    <div id="tunerDisplay">
+      <div id="tunerStationName">— Sender wählen —</div>
+      <div id="tunerStationMeta"></div>
+      <div id="tunerScaleMode"></div>
+    </div>
+
+    <!-- Frequency scale -->
+    <div id="tunerScaleWrap">
+      <div id="tunerNeedle"></div>
+      <div id="tunerTrack">
+        <div id="tunerTicks"></div>
+      </div>
+    </div>
+
+    <!-- Knob -->
+    <div id="tunerKnobArea">
+      <div id="tunerKnob">
+        <div class="knob-ring"></div>
+        <div class="knob-marker"></div>
+      </div>
+      <div id="tunerKnobHint">Drehen zum Abstimmen</div>
+    </div>
+
   </div>
 </section>
 
@@ -403,7 +501,10 @@
       <div id="nowPlayingText">Warte auf Stream-Metadaten...</div>
     </div>
 
-    <!-- Right: Google search -->
+    <!-- Right: Favorite + Google search -->
+    <button id="npFavBtn" class="secondary" disabled title="Zu Favoriten hinzufügen">
+      <i data-lucide="star" width="14" height="14"></i>
+    </button>
     <button id="searchNowPlayingBtn" class="secondary" disabled title="Im Browser suchen">
       <i data-lucide="search" width="14" height="14"></i>
     </button>
@@ -721,6 +822,38 @@
   </main>
 
 <audio id="radioAudio" preload="none"></audio>
+
+  <!-- ── Legal Info Button (fixed bottom-right) ──────────────────────────── -->
+  <button id="legalBtn" title="Rechtliche Hinweise">ⓘ</button>
+
+  <!-- ── Legal Info Modal ────────────────────────────────────────────────── -->
+  <div id="legalOverlay" hidden>
+    <div id="legalModal">
+      <div id="legalModalHeader">
+        <h2>Rechtliche Hinweise</h2>
+        <button id="legalCloseBtn"><i data-lucide="x"></i></button>
+      </div>
+      <div id="legalModalBody">
+        <h3>📡 Senderdaten – Radio Browser</h3>
+        <p>Die Senderdaten stammen vom Community-Projekt <strong>radio-browser.info</strong>, einem kostenlosen, werbefinanzierten Verzeichnis unter der <strong>CC0-Lizenz</strong>. Brummi's Rock Radio nutzt die öffentliche API ohne Authentifizierung und erhebt keinerlei Gebühren.</p>
+
+        <h3>🎵 Audiostreams</h3>
+        <p>Alle Audiostreams werden direkt von den jeweiligen Rundfunkveranstaltern bereitgestellt. Diese App stellt lediglich eine Direktverbindung her. Die Nutzungsrechte an Inhalten, Musik und Sendungen liegen ausschließlich bei den jeweiligen Sendern und Rechteinhabern.</p>
+
+        <h3>🔴 Stream-Aufnahme</h3>
+        <p>Die Aufnahmefunktion ist ausschließlich für den <strong>privaten Gebrauch</strong> bestimmt. Das Aufnehmen und Weiterverteilen von Streams kann je nach Land und Sender urheberrechtlichen Einschränkungen unterliegen. Bitte beachte die jeweiligen Nutzungsbedingungen des Senders.</p>
+
+        <h3>🔒 Datenschutz &amp; Datenerhebung</h3>
+        <p>Diese App speichert <strong>keine persönlichen Daten</strong> auf externen Servern. Einstellungen, Favoriten und Filter werden ausschließlich lokal im Browser gespeichert (localStorage). Es werden keine Cookies, kein Tracking und keine Analysen eingesetzt.</p>
+
+        <h3>⚖️ Haftungsausschluss</h3>
+        <p>Brummi's Rock Radio ist ein privates Hobby-Projekt ohne kommerzielle Absicht. Für die Verfügbarkeit, Inhalte oder Rechtmäßigkeit der verlinkten Streams wird keine Haftung übernommen.</p>
+      </div>
+      <div id="legalModalFooter">
+        <button id="legalCloseBtnFooter"><i data-lucide="check"></i> Verstanden</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

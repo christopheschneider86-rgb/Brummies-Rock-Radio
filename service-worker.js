@@ -1,4 +1,4 @@
-// ─── Brummies Rock Radio – Service Worker ────────────────────────────────────
+// ─── Brummi's Rock Radio – Service Worker ────────────────────────────────────
 // v3 – Compatibility fixes:
 //   • AbortSignal.timeout() replaced with manual AbortController (works on all
 //     browsers incl. older iOS Safari and Android Chrome < 103)
@@ -8,7 +8,7 @@
 //   • Push notifications ready
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'brummies-radio-v5';
+const CACHE_NAME = 'brummies-radio-v15';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -135,7 +135,7 @@ self.addEventListener('sync', event => {
 self.addEventListener('push', event => {
   const data = event.data ? event.data.json() : {};
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Brummies Rock Radio', {
+    self.registration.showNotification(data.title || 'Brummi's Rock Radio', {
       body:      data.body || 'Neue Benachrichtigung',
       icon:      './images/icon-192.png',
       badge:     './images/icon-192.png',

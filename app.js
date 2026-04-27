@@ -457,10 +457,8 @@
         genreSelect.options[0].textContent = texts['opt-all-genres'];
       }
       
-      const countryFilter = document.getElementById('countryFilter');
-      if (countryFilter && countryFilter.options[0]) {
-        countryFilter.options[0].textContent = texts['opt-all-countries'];
-      }
+      const cpEl = document.getElementById('countryPlaceholder');
+      if (cpEl && texts['opt-all-countries']) cpEl.textContent = texts['opt-all-countries'];
       
       const locationMode = document.getElementById('locationMode');
       if (locationMode) {
@@ -709,9 +707,8 @@
       }
       
       const countryFilter = document.getElementById('countryFilter');
-      if (countryFilter && countryFilter.options[0]) {
-        countryFilter.options[0].textContent = currentLang === 'de' ? 'Alle Länder' : 'All Countries';
-      }
+      const cpEl2 = document.getElementById('countryPlaceholder');
+      if (cpEl2) cpEl2.textContent = currentLang === 'de' ? 'Alle Länder' : 'All Countries';
       
       const locationMode = document.getElementById('locationMode');
       if (locationMode) {
@@ -842,7 +839,112 @@
     const listeningStatsEl = document.getElementById("listeningStats");
     const genreSelect = document.getElementById("genreSelect");
     const subgenreSelect = document.getElementById("subgenreSelect");
-    const countryFilter = document.getElementById("countryFilter");
+    // ── Country multi-select state ────────────────────────────────────────────
+    let selectedCountries = new Set();
+
+    const countryFilterWrapper = document.getElementById('countryFilterWrapper');
+    const countrySelectedEl    = document.getElementById('countrySelected');
+    const countryPlaceholder   = document.getElementById('countryPlaceholder');
+    const countryDropdown      = document.getElementById('countryDropdown');
+    const countrySearchEl      = document.getElementById('countrySearch');
+    const countryListEl        = document.getElementById('countryList');
+
+    // Legacy alias so old code that checks countryFilter still compiles
+    // (we replace all .value usages below, but the variable is reassigned)
+    const countryFilter = { get value() { return selectedCountries.size === 1 ? [...selectedCountries][0] : ''; } };
+
+    function renderCountryTags() {
+      // Remove old tags (keep placeholder span)
+      countrySelectedEl.querySelectorAll('.country-tag').forEach(t => t.remove());
+      if (selectedCountries.size === 0) {
+        countryPlaceholder.style.display = '';
+      } else {
+        countryPlaceholder.style.display = 'none';
+        selectedCountries.forEach(c => {
+          const tag = document.createElement('span');
+          tag.className = 'country-tag';
+          tag.textContent = c;
+          const rm = document.createElement('button');
+          rm.className = 'country-tag-remove';
+          rm.innerHTML = '×';
+          rm.title = 'Entfernen';
+          rm.addEventListener('click', e => {
+            e.stopPropagation();
+            selectedCountries.delete(c);
+            renderCountryTags();
+            syncCountryCheckboxes();
+            syncQuickButtons();
+            sortAndRenderStations();
+          });
+          tag.appendChild(rm);
+          countrySelectedEl.appendChild(tag);
+        });
+      }
+    }
+
+    function syncCountryCheckboxes() {
+      countryListEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.checked = selectedCountries.has(cb.value);
+      });
+    }
+
+    function syncQuickButtons() {
+      // Map display label → actual country name stored in data
+      document.querySelectorAll('.country-quickrow button').forEach(btn => {
+        btn.classList.toggle('active', selectedCountries.has(btn.dataset.country));
+      });
+    }
+
+    function toggleCountry(name) {
+      if (selectedCountries.has(name)) selectedCountries.delete(name);
+      else selectedCountries.add(name);
+      renderCountryTags();
+      syncCountryCheckboxes();
+      syncQuickButtons();
+      sortAndRenderStations();
+    }
+
+    function getSelectedCountries() { return [...selectedCountries]; }
+
+    function setSelectedCountries(arr) {
+      selectedCountries = new Set(arr || []);
+      renderCountryTags();
+      syncCountryCheckboxes();
+      syncQuickButtons();
+    }
+
+    // Open / close dropdown
+    countrySelectedEl.addEventListener('click', () => {
+      const isOpen = !countryDropdown.hidden;
+      countryDropdown.hidden = isOpen;
+      countryFilterWrapper.classList.toggle('open', !isOpen);
+      if (!isOpen) { countrySearchEl.value = ''; filterCountryList(''); countrySearchEl.focus(); }
+    });
+
+    document.addEventListener('click', e => {
+      if (!countryFilterWrapper.contains(e.target)) {
+        countryDropdown.hidden = true;
+        countryFilterWrapper.classList.remove('open');
+      }
+    });
+
+    // Quick-select buttons
+    document.querySelectorAll('.country-quickrow button').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleCountry(btn.dataset.country);
+      });
+    });
+
+    // Search filter inside dropdown
+    countrySearchEl.addEventListener('input', () => filterCountryList(countrySearchEl.value));
+
+    function filterCountryList(query) {
+      const q = query.toLowerCase();
+      countryListEl.querySelectorAll('label').forEach(label => {
+        label.style.display = label.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
     const locationMode = document.getElementById("locationMode");
     const locationStatus = document.getElementById("locationStatus");
     const shuffleToggle = document.getElementById("shuffleToggle");
@@ -1061,19 +1163,24 @@
     }
 
     function updateCountryFilter(countries) {
-      const selected = countryFilter.value;
-      countryFilter.innerHTML = '<option value="">Alle Länder</option>';
-      
+      countryListEl.innerHTML = '';
       countries.forEach(country => {
-        const option = document.createElement("option");
-        option.value = country;
-        option.textContent = country;
-        countryFilter.appendChild(option);
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = country;
+        cb.checked = selectedCountries.has(country);
+        cb.addEventListener('change', () => {
+          if (cb.checked) selectedCountries.add(country);
+          else selectedCountries.delete(country);
+          renderCountryTags();
+          syncQuickButtons();
+          sortAndRenderStations();
+        });
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(country));
+        countryListEl.appendChild(label);
       });
-      
-      if (countries.includes(selected)) {
-        countryFilter.value = selected;
-      }
     }
 
     // --- SORTIERUNG ---
@@ -1104,9 +1211,8 @@
     function sortAndRenderStations() {
       let list = allStations.slice();
       
-      const country = countryFilter.value;
-      if (country) {
-        list = list.filter(s => s.country === country);
+      if (selectedCountries.size > 0) {
+        list = list.filter(s => selectedCountries.has(s.country));
       }
       
       list.sort((a, b) => {
@@ -1234,6 +1340,8 @@
       });
       
       loadMoreBtn.style.display = displayedStations.length < sourceStations.length ? "block" : "none";
+      if (window._tunerRefresh) window._tunerRefresh();
+      if (window._globeRefresh) window._globeRefresh();
     }
 
     function toggleFavorite(id) {
@@ -1249,6 +1357,8 @@
       localStorage.setItem("brummiesFavorites", JSON.stringify(favorites));
       localStorage.setItem("brummiesFavoritesData", JSON.stringify(favoriteStationsData));
       renderStations();
+      if (window._updateNpFavBtns)   window._updateNpFavBtns();
+      if (window._globePopupRefresh) window._globePopupRefresh();
     }
 
     // --- METADATA FETCHING ---
@@ -1404,6 +1514,8 @@ function startMetadataPolling() {
         
         // Media Session aktualisieren mit neuem Song
         updateMediaSession();
+        // Vollbild-NP live aktualisieren
+        if (window._globeFullscreenNPUpdate) window._globeFullscreenNPUpdate();
       }
     }
 
@@ -2279,6 +2391,7 @@ function startMetadataPolling() {
 
   currentStation = station;
   currentStationIndex = index;
+  if (window._updateNpFavBtns) window._updateNpFavBtns();
   currentMetadata = '';
   reconnectAttempts = 0;
 
@@ -2796,7 +2909,7 @@ function startMetadataPolling() {
       }
     });
 
-    countryFilter.addEventListener("change", sortAndRenderStations);
+    // countryFilter change is now handled inline per checkbox/tag (no separate listener needed)
 
     showFavoritesBtn.addEventListener("click", () => {
       showOnlyFavorites = !showOnlyFavorites;
@@ -2821,7 +2934,7 @@ function startMetadataPolling() {
       genreSelect.value = "rock";
       subgenreSelect.value = "";
       searchInput.value = "";
-      countryFilter.value = "";
+      setSelectedCountries([]);
       showOnlyFavorites = false;
       showFavoritesBtn.classList.remove("active");
       showFavoritesBtn.textContent = "⭐ Favoriten";
@@ -3130,6 +3243,647 @@ function startMetadataPolling() {
       });
     })();
 
+    // ── Tuner / Dial View ─────────────────────────────────────────────────────
+    (function initTunerView() {
+      const tunerViewEl    = document.getElementById('tunerView');
+      const stationsListEl2 = document.getElementById('stationsList');
+      const loadMoreBtn2   = document.getElementById('loadMoreBtn');
+      const viewListBtn    = document.getElementById('viewListBtn');
+      const viewTunerBtn   = document.getElementById('viewTunerBtn');
+      const tunerTicksEl   = document.getElementById('tunerTicks');
+      const tunerNameEl    = document.getElementById('tunerStationName');
+      const tunerMetaEl    = document.getElementById('tunerStationMeta');
+      const tunerModeEl    = document.getElementById('tunerScaleMode');
+      const tunerKnobEl    = document.getElementById('tunerKnob');
+
+      if (!tunerViewEl || !tunerKnobEl) return;
+
+      const TICK_W         = 72;   // px per tick
+      const DEG_PER_TICK   = 18;   // knob degrees per station step
+      const PX_PER_STATION = 30;   // horizontal pixels to drag per station step
+      let tunerActive      = false;
+      let tunerIndex       = 0;
+      let knobDeg          = 0;    // visual rotation of knob
+      let isDragging       = false;
+      let dragStartX       = 0;
+      let dragStartIdx     = 0;    // station index at drag start
+      let dragStartDeg     = 0;
+
+      // ── Scale label per sort mode ───────────────────────────────────────────
+      const SCALE_LABELS = {
+        distance: 'Entfernung',
+        votes:    'Zuhörer',
+        bitrate:  'Bitrate',
+        name:     'Alphabetisch',
+        favorites:'Favoriten',
+      };
+
+      function tickLabel(st) {
+        const sort = currentSort.find(s => s !== 'favorites') || currentSort[0] || 'name';
+        switch (sort) {
+          case 'distance': return st.distance != null ? Math.round(st.distance) + ' km' : '—';
+          case 'votes':    return st.votes > 999 ? (st.votes / 1000).toFixed(1) + 'k' : String(st.votes);
+          case 'bitrate':  return st.bitrate ? st.bitrate + 'k' : '?';
+          default:         return st.name.charAt(0).toUpperCase();
+        }
+      }
+
+      // ── Build / refresh scale ───────────────────────────────────────────────
+      function buildScale() {
+        tunerTicksEl.innerHTML = '';
+        const stations = displayedStations;
+        if (!stations.length) return;
+
+        const sort = currentSort.find(s => s !== 'favorites') || currentSort[0] || 'name';
+        if (tunerModeEl) tunerModeEl.textContent = SCALE_LABELS[sort] || '';
+
+        stations.forEach((st, i) => {
+          const tick = document.createElement('div');
+          const dist = Math.abs(i - tunerIndex);
+          tick.className = 'tuner-tick' + (i === tunerIndex ? ' active' : dist === 1 ? ' near' : '');
+
+          const mark  = document.createElement('div');
+          mark.className = 'tuner-tick-mark';
+
+          const label = document.createElement('div');
+          label.className = 'tuner-tick-label';
+          label.textContent = tickLabel(st);
+
+          tick.appendChild(mark);
+          tick.appendChild(label);
+          tick.addEventListener('click', () => commitStation(i));
+          tunerTicksEl.appendChild(tick);
+        });
+
+        positionScale(false);
+        updateDisplay();
+      }
+
+      function positionScale(animate) {
+        if (!animate) tunerTicksEl.style.transition = 'none';
+        const wrapW  = tunerTicksEl.parentElement.offsetWidth;
+        const offset = Math.round(wrapW / 2 - tunerIndex * TICK_W - TICK_W / 2);
+        tunerTicksEl.style.transform = `translateX(${offset}px)`;
+        if (!animate) {
+          // Force reflow then re-enable transition
+          void tunerTicksEl.offsetWidth;
+          tunerTicksEl.style.transition = '';
+        }
+
+        tunerTicksEl.querySelectorAll('.tuner-tick').forEach((t, i) => {
+          const dist = Math.abs(i - tunerIndex);
+          t.className = 'tuner-tick' + (i === tunerIndex ? ' active' : dist === 1 ? ' near' : '');
+        });
+      }
+
+      function updateDisplay() {
+        const st = displayedStations[tunerIndex];
+        if (!st) { tunerNameEl.textContent = '— Sender wählen —'; tunerMetaEl.textContent = ''; return; }
+        tunerNameEl.textContent = st.name;
+        tunerMetaEl.textContent = [st.genre, st.country, st.bitrate ? st.bitrate + ' kbps' : ''].filter(Boolean).join(' · ');
+      }
+
+      // ── Noise burst ─────────────────────────────────────────────────────────
+      function playNoise() {
+        if (!audioContext) return;
+        try {
+          const sr   = audioContext.sampleRate;
+          const dur  = 0.18;
+          const buf  = audioContext.createBuffer(1, sr * dur, sr);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.25;
+
+          const src = audioContext.createBufferSource();
+          src.buffer = buf;
+
+          const bpf = audioContext.createBiquadFilter();
+          bpf.type = 'bandpass';
+          bpf.frequency.value = 2200;
+          bpf.Q.value = 0.6;
+
+          const env = audioContext.createGain();
+          const t0  = audioContext.currentTime;
+          env.gain.setValueAtTime(0, t0);
+          env.gain.linearRampToValueAtTime(0.45, t0 + 0.04);
+          env.gain.linearRampToValueAtTime(0, t0 + dur);
+
+          src.connect(bpf);
+          bpf.connect(env);
+          env.connect(audioContext.destination);
+          src.start();
+        } catch (_) {}
+      }
+
+      // ── Navigate to index (preview while dragging) ──────────────────────────
+      let noiseDebounce = null;
+      function previewStation(idx) {
+        const stations = displayedStations;
+        if (!stations.length) return;
+        idx = Math.max(0, Math.min(stations.length - 1, idx));
+        if (idx === tunerIndex) return;
+        tunerIndex = idx;
+        positionScale(true);
+        updateDisplay();
+        clearTimeout(noiseDebounce);
+        noiseDebounce = setTimeout(playNoise, 30);
+      }
+
+      // ── Commit: actually play station ───────────────────────────────────────
+      function commitStation(idx) {
+        const stations = displayedStations;
+        if (!stations.length) return;
+        idx = Math.max(0, Math.min(stations.length - 1, idx));
+        tunerIndex = idx;
+        knobDeg    = idx * DEG_PER_TICK;
+        tunerKnobEl.style.transform = `rotate(${knobDeg}deg)`;
+        positionScale(true);
+        updateDisplay();
+        const st = stations[idx];
+        if (st) selectStation(st, idx);
+      }
+
+      // ── Knob drag (angular – incremental accumulation, no 180° wrap jump) ────
+      let dragLastAngle  = 0;   // angle at the PREVIOUS frame
+      let dragTotalDelta = 0;   // accumulated rotation since dragStart
+
+      function pointerAngle(e) {
+        const rect = tunerKnobEl.getBoundingClientRect();
+        const cx   = rect.left + rect.width  / 2;
+        const cy   = rect.top  + rect.height / 2;
+        const p    = e.touches ? e.touches[0] : e;
+        return Math.atan2(p.clientY - cy, p.clientX - cx) * (180 / Math.PI);
+      }
+
+      function dragStart(e) {
+        isDragging      = true;
+        dragLastAngle   = pointerAngle(e);
+        dragTotalDelta  = 0;
+        dragStartDeg    = knobDeg;
+        dragStartIdx    = tunerIndex;
+        e.preventDefault();
+      }
+
+      function dragMove(e) {
+        if (!isDragging) return;
+        const angle = pointerAngle(e);
+        // Frame-to-frame increment – small, so [-180,+180] normalisation is safe
+        let inc = angle - dragLastAngle;
+        if (inc >  180) inc -= 360;   // crossed ±180° boundary clockwise
+        if (inc < -180) inc += 360;   // crossed ±180° boundary counter-clockwise
+        dragLastAngle   = angle;
+        dragTotalDelta += inc;
+
+        knobDeg = dragStartDeg + dragTotalDelta;
+        tunerKnobEl.style.transform = `rotate(${knobDeg}deg)`;
+        const steps  = dragTotalDelta / DEG_PER_TICK;
+        const newIdx = Math.max(0, Math.min(
+          displayedStations.length - 1,
+          Math.round(dragStartIdx + steps)
+        ));
+        previewStation(newIdx);
+        e.preventDefault();
+      }
+
+      function dragEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        commitStation(tunerIndex);
+      }
+
+      tunerKnobEl.addEventListener('mousedown',  dragStart);
+      document.addEventListener('mousemove',     dragMove);
+      document.addEventListener('mouseup',       dragEnd);
+      tunerKnobEl.addEventListener('touchstart', dragStart, { passive: false });
+      document.addEventListener('touchmove',     dragMove,  { passive: false });
+      document.addEventListener('touchend',      dragEnd);
+
+      // ── View toggle ──────────────────────────────────────────────────────────
+      function showTuner() {
+        tunerActive = true;
+        if (window._globeHide) window._globeHide();
+        tunerViewEl.hidden    = false;
+        stationsListEl2.style.display = 'none';
+        if (loadMoreBtn2) loadMoreBtn2.style.display = 'none';
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        viewTunerBtn.classList.add('active');
+        buildScale();
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function showList() {
+        tunerActive = false;
+        if (window._globeHide) window._globeHide();
+        tunerViewEl.hidden    = true;
+        stationsListEl2.style.display = '';
+        if (loadMoreBtn2) loadMoreBtn2.style.display = '';
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        viewListBtn.classList.add('active');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      viewListBtn.addEventListener('click',  showList);
+      viewTunerBtn.addEventListener('click', showTuner);
+
+      // Rebuild when station list changes
+      window._tunerRefresh = function() {
+        tunerIndex = Math.min(tunerIndex, Math.max(0, displayedStations.length - 1));
+        if (tunerActive) buildScale();
+      };
+    })();
+
+    // ── Globe View ────────────────────────────────────────────────────────────
+    (function initGlobeView() {
+      const globeViewEl    = document.getElementById('globeView');
+      const globeContainer = document.getElementById('globeContainer');
+      const globeNoData    = document.getElementById('globeNoData');
+      const viewGlobeBtn   = document.getElementById('viewGlobeBtn');
+      const stationsList3  = document.getElementById('stationsList');
+      const loadMoreBtn3   = document.getElementById('loadMoreBtn');
+
+      if (!globeViewEl || !viewGlobeBtn) return;
+
+      let globe           = null;
+      let globeReady      = false;
+      let currentAlt      = 2.2;
+      let popupCluster    = null;
+
+      // ── Grid-based clustering ─────────────────────────────────────────────
+      function gridSize(alt) {
+        if (alt > 2.8) return 18;
+        if (alt > 1.8) return 9;
+        if (alt > 1.0) return 4;
+        if (alt > 0.5) return 1.8;
+        return 0.6;
+      }
+
+      function cluster(stations, gSize) {
+        const grid = {};
+        stations.forEach(st => {
+          const key = `${Math.floor(st.latitude / gSize)}_${Math.floor(st.longitude / gSize)}`;
+          if (!grid[key]) grid[key] = [];
+          grid[key].push(st);
+        });
+        return Object.values(grid).map(arr => {
+          const byVotes = [...arr].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+          return {
+            stations: byVotes,
+            lat: arr.reduce((s, x) => s + x.latitude,  0) / arr.length,
+            lng: arr.reduce((s, x) => s + x.longitude, 0) / arr.length,
+            count: arr.length,
+            top: byVotes[0],
+          };
+        });
+      }
+
+      // ── Stations with valid coords ────────────────────────────────────────
+      function geoStations() {
+        return allStations.filter(s =>
+          s.latitude  != null && isFinite(s.latitude)  && s.latitude  !== 0 &&
+          s.longitude != null && isFinite(s.longitude) && s.longitude !== 0
+        );
+      }
+
+      // ── Update globe markers ──────────────────────────────────────────────
+      function refreshMarkers() {
+        if (!globe) return;
+        const stations = geoStations();
+        if (allStations.length === 0) {
+          globeNoData.textContent = 'Bitte zuerst Suche starten.';
+          globeNoData.hidden = false;
+          globe.pointsData([]);
+          return;
+        }
+        if (stations.length === 0) {
+          globeNoData.textContent = 'Keine Sender mit Positionsdaten gefunden.';
+          globeNoData.hidden = false;
+          globe.pointsData([]);
+          return;
+        }
+        globeNoData.hidden = true;
+
+        const clusters   = cluster(stations, gridSize(currentAlt));
+        const accent     = cachedAccentColor || '#e8402a';
+        const clusterCol = '#f97316';
+
+        globe
+          .pointsData(clusters)
+          .pointRadius(d => d.count > 1 ? Math.min(1.6 + Math.log2(d.count) * 0.7, 4.5) : 1.4)
+          .pointColor(d => d.count > 1 ? clusterCol : accent);
+      }
+
+      // ── Popup ─────────────────────────────────────────────────────────────
+      function renderPopup() {
+        const d       = popupCluster;
+        if (!d) return;
+        const popup   = document.getElementById('globePopup');
+        const titleEl = document.getElementById('globePopupTitle');
+        const listEl  = document.getElementById('globePopupList');
+        titleEl.textContent = d.count === 1
+          ? d.top.name
+          : `${d.count} Sender in diesem Gebiet`;
+        listEl.innerHTML = '';
+
+        // Sort: favourites first (by votes), then rest (by votes)
+        const sorted = [...d.stations].sort((a, b) => {
+          const aF = favorites.includes(a.id) ? 0 : 1;
+          const bF = favorites.includes(b.id) ? 0 : 1;
+          if (aF !== bF) return aF - bF;
+          return (b.votes || 0) - (a.votes || 0);
+        });
+
+        sorted.slice(0, 12).forEach(st => {
+          const row = document.createElement('div');
+          row.className = 'globe-popup-item';
+
+          const votes = st.votes > 999 ? (st.votes / 1000).toFixed(1) + 'k' : (st.votes || 0);
+          const isFav = favorites.includes(st.id);
+
+          row.innerHTML = `
+            <div class="gpi-body">
+              <span class="gpi-name">${st.name}</span>
+              <span class="gpi-meta">${[st.country, st.bitrate ? st.bitrate + ' kbps' : '', votes + ' ▲'].filter(Boolean).join(' · ')}</span>
+            </div>
+            <button class="gpi-fav${isFav ? ' is-fav' : ''}" title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
+              <i data-lucide="star"></i>
+            </button>`;
+
+          // Select station on row click (but not on fav button)
+          row.addEventListener('click', e => {
+            if (e.target.closest('.gpi-fav')) return;
+            const idx = displayedStations.findIndex(s => s.id === st.id);
+            selectStation(st, idx >= 0 ? idx : 0);
+          });
+
+          // Favourite toggle
+          const favBtn = row.querySelector('.gpi-fav');
+          favBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            toggleFavorite(st.id);
+            renderPopup(); // re-render with updated sort
+          });
+
+          listEl.appendChild(row);
+        });
+
+        if (window.lucide) lucide.createIcons({ nodes: [listEl] });
+        popup.hidden = false;
+      }
+
+      function showPopup(d) {
+        popupCluster = d;
+        renderPopup();
+      }
+
+      // Re-render open popup when favourites change (called from toggleFavorite via window hook)
+      window._globePopupRefresh = renderPopup;
+
+      // ── Load globe.gl from CDN ────────────────────────────────────────────
+      function loadScript(src) {
+        return new Promise((res, rej) => {
+          if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
+          const s = Object.assign(document.createElement('script'), { src });
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+
+      async function initGlobe() {
+        if (globeReady) { refreshMarkers(); return; }
+        try {
+          await loadScript('https://cdn.jsdelivr.net/npm/globe.gl@2/dist/globe.gl.min.js');
+        } catch {
+          globeContainer.innerHTML = '<div style="color:var(--color-text-muted);padding:20px;text-align:center">❌ Globus konnte nicht geladen werden (Internetverbindung prüfen)</div>';
+          return;
+        }
+
+        const accent = cachedAccentColor || '#e8402a';
+        // Use offsetWidth for both axes – aspect-ratio:1/1 guarantees square layout
+        const initSz = globeContainer.offsetWidth || 380;
+        globe = Globe()(globeContainer)
+          .width(initSz)
+          .height(initSz)
+          .backgroundColor('rgba(0,0,0,0)')
+          .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+          .atmosphereColor(accent)
+          .atmosphereAltitude(0.18)
+          .pointLat(d => d.lat)
+          .pointLng(d => d.lng)
+          .pointAltitude(0.01)
+          .pointsMerge(false)
+          .onPointClick(showPopup)
+          .onZoom(({ altitude }) => {
+            currentAlt = altitude;
+            refreshMarkers();
+          });
+
+        globeReady = true;
+        refreshMarkers();
+
+        // Hook so applyTheme / applyCustomTheme can push new accent colour live
+        window._globeThemeUpdate = function() {
+          if (!globe) return;
+          const accent = cachedAccentColor || '#e8402a';
+          globe.atmosphereColor(accent);
+          refreshMarkers();   // re-applies pointColor with new accent
+        };
+
+        // Start centered on Europe/DACH
+        const start = userLocation
+          ? { lat: userLocation.lat, lng: userLocation.lon, altitude: currentAlt }
+          : { lat: 48, lng: 12, altitude: currentAlt };
+        globe.pointOfView(start);
+      }
+
+      // ── Controls ──────────────────────────────────────────────────────────
+      document.getElementById('globeLocBtn').addEventListener('click', () => {
+        if (!globe) return;
+        if (userLocation) {
+          globe.pointOfView({ lat: userLocation.lat, lng: userLocation.lon, altitude: 1.2 }, 800);
+        }
+        // else: button is disabled via CSS opacity – handled in _globeShow
+      });
+
+      document.getElementById('globeZoomInBtn').addEventListener('click', () => {
+        if (!globe) return;
+        const pov = globe.pointOfView();
+        const alt = Math.max(0.18, pov.altitude * 0.55);
+        globe.pointOfView({ ...pov, altitude: alt }, 400);
+        currentAlt = alt;
+        refreshMarkers();
+      });
+
+      document.getElementById('globeZoomOutBtn').addEventListener('click', () => {
+        if (!globe) return;
+        const pov = globe.pointOfView();
+        const alt = Math.min(4.5, pov.altitude / 0.55);
+        globe.pointOfView({ ...pov, altitude: alt }, 400);
+        currentAlt = alt;
+        refreshMarkers();
+      });
+
+      document.getElementById('globeFitBtn').addEventListener('click', () => {
+        if (!globe) return;
+        currentAlt = 2.2;
+        globe.pointOfView({ lat: 20, lng: 10, altitude: 2.2 }, 900);
+        refreshMarkers();
+      });
+
+      document.getElementById('globePopupClose').addEventListener('click', () => {
+        document.getElementById('globePopup').hidden = true;
+      });
+
+      // ── Fullscreen ────────────────────────────────────────────────────────
+      let globeIsFullscreen = false;
+      const gfsNP          = document.getElementById('gfsNP');
+      const gfsFiltersEl   = document.getElementById('gfsFilters');
+      const gfsPlayBtn     = document.getElementById('gfsPlayBtn');
+      const gfsLogoEl      = document.getElementById('gfsLogo');
+      const gfsStationName = document.getElementById('gfsStationName');
+      const gfsTitleText   = document.getElementById('gfsTitleText');
+      const gfsGenre       = document.getElementById('gfsGenre');
+      const gfsSubgenre    = document.getElementById('gfsSubgenre');
+      const gfsHttps       = document.getElementById('gfsHttps');
+      const globeExpandBtn = document.getElementById('globeExpandBtn');
+
+      function syncGfsGenreOptions() {
+        const src = document.getElementById('genreSelect');
+        gfsGenre.innerHTML = src.innerHTML;
+        gfsGenre.value = src.value;
+      }
+      function syncGfsSubgenreOptions() {
+        const src = document.getElementById('subgenreSelect');
+        gfsSubgenre.innerHTML = src.innerHTML;
+        gfsSubgenre.value = src.value;
+      }
+      function syncGfsNP() {
+        if (!globeIsFullscreen) return;
+        // Station name (line 1)
+        gfsStationName.textContent = currentStation ? currentStation.name : '— kein Sender —';
+        // Track title (line 2) – strip station name prefix if stream echoes it
+        const npText = document.getElementById('nowPlayingText');
+        let titleText = npText ? npText.textContent : '—';
+        if (currentStation && currentStation.name && titleText.startsWith(currentStation.name)) {
+          titleText = titleText.slice(currentStation.name.length)
+            .replace(/^\s*[-–—]\s*/, '').trim() || '—';
+        }
+        gfsTitleText.textContent = titleText;
+        // Station logo
+        if (currentStation && currentStation.favicon) {
+          gfsLogoEl.src = currentStation.favicon;
+          gfsLogoEl.hidden = false;
+          gfsLogoEl.onerror = () => { gfsLogoEl.hidden = true; };
+        } else {
+          gfsLogoEl.hidden = true;
+        }
+        // Play/pause icon – use audioEl which is in scope
+        gfsPlayBtn.innerHTML = audioEl.paused
+          ? '<i data-lucide="play"></i>'
+          : '<i data-lucide="pause"></i>';
+        if (window.lucide) lucide.createIcons({ nodes: [gfsPlayBtn] });
+      }
+      window._globeFullscreenNPUpdate = syncGfsNP;
+
+      function resizeGlobe() {
+        if (!globe) return;
+        requestAnimationFrame(() => {
+          const w = globeContainer.offsetWidth;
+          const h = globeContainer.offsetHeight || w;
+          globe.width(w).height(h);
+        });
+      }
+
+      function enterGlobeFullscreen() {
+        globeIsFullscreen = true;
+        globeViewEl.classList.add('fs');
+        gfsNP.hidden       = false;
+        gfsFiltersEl.hidden = false;
+        syncGfsGenreOptions();
+        syncGfsSubgenreOptions();
+        gfsHttps.checked = document.getElementById('httpsOnlyToggle').checked;
+        syncGfsNP();
+        resizeGlobe();
+        // Change expand icon to shrink
+        globeExpandBtn.innerHTML = '<i data-lucide="shrink"></i>';
+        globeExpandBtn.title = 'Vollbild beenden';
+        globeExpandBtn.classList.add('fs-active');
+        if (window.lucide) lucide.createIcons({ nodes: [globeExpandBtn] });
+        // ESC to exit
+        document.addEventListener('keydown', onFsEsc);
+      }
+
+      function exitGlobeFullscreen() {
+        globeIsFullscreen = false;
+        globeViewEl.classList.remove('fs');
+        gfsNP.hidden       = true;
+        gfsFiltersEl.hidden = true;
+        resizeGlobe();
+        globeExpandBtn.innerHTML = '<i data-lucide="expand"></i>';
+        globeExpandBtn.title = 'Vollbild';
+        globeExpandBtn.classList.remove('fs-active');
+        if (window.lucide) lucide.createIcons({ nodes: [globeExpandBtn] });
+        document.removeEventListener('keydown', onFsEsc);
+      }
+
+      function onFsEsc(e) { if (e.key === 'Escape') exitGlobeFullscreen(); }
+
+      globeExpandBtn.addEventListener('click', () => {
+        globeIsFullscreen ? exitGlobeFullscreen() : enterGlobeFullscreen();
+      });
+
+      // Proxy play/pause in fullscreen
+      gfsPlayBtn.addEventListener('click', () => {
+        document.getElementById('playBtn').click();
+        setTimeout(syncGfsNP, 80);
+      });
+
+      // Fullscreen filters → update main + re-search
+      gfsGenre.addEventListener('change', () => {
+        const main = document.getElementById('genreSelect');
+        main.value = gfsGenre.value;
+        main.dispatchEvent(new Event('change'));
+        document.getElementById('searchBtn').click();
+        requestAnimationFrame(syncGfsSubgenreOptions);
+      });
+      gfsSubgenre.addEventListener('change', () => {
+        const main = document.getElementById('subgenreSelect');
+        main.value = gfsSubgenre.value;
+        main.dispatchEvent(new Event('change'));
+        document.getElementById('searchBtn').click();
+      });
+      gfsHttps.addEventListener('change', () => {
+        const cb = document.getElementById('httpsOnlyToggle');
+        cb.checked = gfsHttps.checked;
+        cb.dispatchEvent(new Event('change'));
+      });
+
+      // ── View toggle ───────────────────────────────────────────────────────
+      async function showGlobe() {
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        viewGlobeBtn.classList.add('active');
+        stationsList3.style.display  = 'none';
+        if (loadMoreBtn3) loadMoreBtn3.style.display = 'none';
+        const tunerView = document.getElementById('tunerView');
+        if (tunerView) tunerView.hidden = true;
+        globeViewEl.hidden = false;
+        document.getElementById('globeLocBtn').style.opacity     = userLocation ? '1' : '0.35';
+        document.getElementById('globeLocBtn').style.pointerEvents = userLocation ? '' : 'none';
+        if (window.lucide) lucide.createIcons({ nodes: [globeViewEl] });
+        await initGlobe();
+      }
+
+      window._globeHide = function() {
+        if (globeIsFullscreen) exitGlobeFullscreen();
+        globeViewEl.hidden = true;
+        document.getElementById('globePopup').hidden = true;
+      };
+
+      window._globeRefresh = function() {
+        if (!globeViewEl.hidden) refreshMarkers();
+      };
+
+      viewGlobeBtn.addEventListener('click', showGlobe);
+    })();
+
     // ── Recording module ──────────────────────────────────────────────────────
     (function initRecording() {
       const recBtn              = document.getElementById('recBtn');
@@ -3387,6 +4141,8 @@ function startMetadataPolling() {
         cachedBgColor     = s.getPropertyValue('--color-bg-primary').trim();
         cachedAccentColor = s.getPropertyValue('--color-accent').trim();
         updateThemeCursor();
+        // Propagate new accent to the live globe instance (atmosphere + point colours)
+        if (window._globeThemeUpdate) window._globeThemeUpdate();
       });
     }
 
@@ -3719,7 +4475,8 @@ function startMetadataPolling() {
         eqValues: JSON.parse(localStorage.getItem('brummiesEqValues') || 'null') || getEqValues(),
         language: localStorage.getItem('brummiesLanguage'),
         history: JSON.parse(localStorage.getItem('brummiesHistory') || '[]'),
-        listeningStats: JSON.parse(localStorage.getItem('brummiesListeningStats') || '{}')
+        listeningStats: JSON.parse(localStorage.getItem('brummiesListeningStats') || '{}'),
+        countryFilter: getSelectedCountries()
       };
       const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -3767,6 +4524,9 @@ function startMetadataPolling() {
           if (config.listeningStats && typeof config.listeningStats === 'object') {
             listeningStats = config.listeningStats;
             localStorage.setItem('brummiesListeningStats', JSON.stringify(listeningStats));
+          }
+          if (Array.isArray(config.countryFilter)) {
+            setSelectedCountries(config.countryFilter);
           }
 
           // Fehlende Stationsdaten per API nachladen
@@ -3827,7 +4587,7 @@ function startMetadataPolling() {
     // ==================== END CONFIG EXPORT / IMPORT ====================
 
     // ==================== WHAT'S NEW ====================
-    const CURRENT_VERSION = '1.3.0';
+    const CURRENT_VERSION = '1.3.1';
     const seenVersion = localStorage.getItem('brummiesSeenVersion');
     if (seenVersion !== CURRENT_VERSION) {
       const overlay = document.getElementById('whatsNewOverlay');
@@ -4482,5 +5242,79 @@ if (document.readyState === 'loading') {
       ticking = true;
     }
   }, { passive: true });
+})();
+
+// ── NP Favourite Button ───────────────────────────────────────────────────────
+(function initNpFavBtn() {
+  const npFavBtn  = document.getElementById('npFavBtn');
+  const gfsFavBtn = document.getElementById('gfsFavBtn');
+  const npBlock   = document.getElementById('nowPlayingBlock');
+  const gfsNPEl   = document.getElementById('gfsNP');
+
+  function updateNpFavBtns() {
+    const isFav = !!(currentStation && favorites.includes(currentStation.id));
+    [npFavBtn, gfsFavBtn].forEach(btn => {
+      if (!btn) return;
+      btn.classList.toggle('is-fav', isFav);
+      btn.disabled = !currentStation;
+      btn.title = isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen';
+      if (window.lucide) lucide.createIcons({ nodes: [btn] });
+    });
+  }
+  window._updateNpFavBtns = updateNpFavBtns;
+
+  function doFavToggle(btn) {
+    if (!currentStation) return;
+    toggleFavorite(currentStation.id);
+    // Pop animation
+    if (btn) {
+      btn.classList.remove('fav-pop');
+      requestAnimationFrame(() => {
+        btn.classList.add('fav-pop');
+        btn.addEventListener('animationend', () => btn.classList.remove('fav-pop'), { once: true });
+      });
+    }
+  }
+
+  if (npFavBtn)  npFavBtn.addEventListener('click',  () => doFavToggle(npFavBtn));
+  if (gfsFavBtn) gfsFavBtn.addEventListener('click', () => doFavToggle(gfsFavBtn));
+
+  // Double-tap for touch – independent last-tap per container
+  function addDoubleTap(el, btn) {
+    if (!el) return;
+    let lastTap = 0;
+    el.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - lastTap < 320) {
+        e.preventDefault();
+        doFavToggle(btn);
+      }
+      lastTap = now;
+    }, { passive: false });
+  }
+  addDoubleTap(npBlock,  npFavBtn);
+  addDoubleTap(gfsNPEl,  gfsFavBtn);
+})();
+
+// ── Legal Info Modal ──────────────────────────────────────────────────────────
+(function initLegalModal() {
+  const legalBtn         = document.getElementById('legalBtn');
+  const legalOverlay     = document.getElementById('legalOverlay');
+  const legalCloseBtn    = document.getElementById('legalCloseBtn');
+  const legalCloseBtnFtr = document.getElementById('legalCloseBtnFooter');
+  if (!legalBtn || !legalOverlay) return;
+
+  function openLegal()  { legalOverlay.hidden = false; }
+  function closeLegal() { legalOverlay.hidden = true;  }
+
+  legalBtn.addEventListener('click', openLegal);
+  legalCloseBtn.addEventListener('click', closeLegal);
+  legalCloseBtnFtr.addEventListener('click', closeLegal);
+  // Click backdrop to close
+  legalOverlay.addEventListener('click', e => { if (e.target === legalOverlay) closeLegal(); });
+  // ESC to close
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !legalOverlay.hidden) closeLegal(); });
+
+  if (window.lucide) lucide.createIcons({ nodes: [legalOverlay] });
 })();
 
