@@ -29,11 +29,6 @@
         <div class="subtitle">by ZaboChris · MP3 Streams</div>
       </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <button id="settingsBtn" title="Einstellungen"><i data-lucide="settings"></i></button>
-      <button id="installBtn" class="secondary" style="display: none; margin: 0; padding: 6px 12px; font-size: 11px;"><i data-lucide="download"></i> App</button>
-      <span id="pwaStatus" style="font-size: 10px; opacity: 0.7;"></span>
-    </div>
   </header>
 
   <!-- SETTINGS PANEL -->
@@ -272,6 +267,18 @@
             <tr><td><kbd>Esc</kbd></td><td>Einstellungen schließen</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- PWA / APP INSTALLATION -->
+      <div class="settings-section">
+        <h3><i data-lucide="smartphone"></i> App &amp; PWA</h3>
+        <p style="font-size:12px; margin-bottom:10px;">Installiere Brummi's Rock Radio als App auf deinem Gerät – kein App Store nötig.</p>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button id="installBtn" class="secondary" style="display:none; flex:1; min-width:120px;">
+            <i data-lucide="download"></i> App installieren
+          </button>
+          <span id="pwaStatus" style="font-size:12px; opacity:0.75;"></span>
+        </div>
       </div>
 
       <!-- ABOUT -->
@@ -828,6 +835,7 @@
 <audio id="radioAudio" preload="none"></audio>
 
   <!-- ── Legal Info Button (fixed bottom-right) ──────────────────────────── -->
+  <button id="settingsBtn" title="Einstellungen"><i data-lucide="settings"></i></button>
   <button id="legalBtn" title="Rechtliche Hinweise">ⓘ</button>
 
   <!-- ── Legal Info Modal ────────────────────────────────────────────────── -->

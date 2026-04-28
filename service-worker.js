@@ -8,7 +8,7 @@
 //   • Push notifications ready
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'brummies-radio-v16';
+const CACHE_NAME = 'brummies-radio-v19';
 const STATIC_ASSETS = [
   './',
   './index.html',

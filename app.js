@@ -2029,9 +2029,35 @@ function startMetadataPolling() {
       });
     }
 
+    // ── Stream detach/attach helpers ─────────────────────────────────────────
+    // Live HTTP streams have stale buffers after pause — on mobile, calling
+    // play() on a paused stream often fails silently. Releasing src on pause
+    // (a) terminates the HTTP connection (saves cellular data) and
+    // (b) forces a fresh connection on resume so play actually starts.
+    let streamDetached = false;
+    function releaseStream() {
+      try {
+        streamDetached = true;
+        audioEl.pause();
+        audioEl.removeAttribute('src');
+        audioEl.load();           // releases the underlying HTTP socket
+      } catch (e) {
+        console.warn('releaseStream:', e);
+      }
+    }
+    function attachStream() {
+      if (!currentStation) return false;
+      streamDetached = false;
+      audioEl.src = currentStation.streamUrl;
+      try { audioEl.load(); } catch (e) {}
+      return true;
+    }
+    // Expose so other modules (rec, mediaSession) can check
+    window._isStreamDetached = () => streamDetached;
+
     playBtn.addEventListener("click", () => {
       if (!currentStation) return;
-      
+
       if (audioEl.paused) {
         if (audioContext && audioContext.state === 'suspended') {
           audioContext.resume().then(() => {
@@ -2040,7 +2066,13 @@ function startMetadataPolling() {
         } else if (audioContextReady && !visualizerActive) {
           startVisualizer();
         }
-        
+
+        // Re-attach the stream if it was released on the previous pause.
+        // This is the key fix for "play does not work after pause" on mobile.
+        if (!audioEl.src || streamDetached) {
+          attachStream();
+        }
+
         audioEl.play()
           .then(() => {
             setIcon(playBtn, "pause");
@@ -2049,11 +2081,22 @@ function startMetadataPolling() {
           })
           .catch(err => {
             console.error("Play error:", err);
-            stationInfoEl.textContent = "❌ Fehler";
-            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            // Mobile recovery: re-attach once and retry
+            if (!streamDetached) {
+              attachStream();
+              audioEl.play().catch(err2 => {
+                console.error("Play retry failed:", err2);
+                stationInfoEl.textContent = "❌ Fehler";
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+              });
+            } else {
+              stationInfoEl.textContent = "❌ Fehler";
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            }
           });
       } else {
-        audioEl.pause();
+        // Detach src to release HTTP connection (saves data on mobile)
+        releaseStream();
         setIcon(playBtn, "play");
         if (window.lucide) lucide.createIcons();
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
@@ -2394,6 +2437,7 @@ function startMetadataPolling() {
   if (window._updateNpFavBtns) window._updateNpFavBtns();
   currentMetadata = '';
   reconnectAttempts = 0;
+  streamDetached = false;          // station change is an intentional re-attach
 
   stationNameEl.textContent = station.name;
   stationNameEl.setAttribute('data-fullname', station.name);
@@ -2488,20 +2532,25 @@ function startMetadataPolling() {
         // iOS-compatible Media Session handlers
         navigator.mediaSession.setActionHandler('play', () => {
           try {
-            // iOS: Check if audio element has a source and is ready
-            if (!audioEl || !audioEl.src) {
-              console.warn('Media Session play: No audio source');
-              return;
-            }
-            
+            if (!audioEl) return;
+
             if (!audioEl.paused) {
               console.log('Media Session play: Already playing');
               return;
             }
-            
+
+            // Re-attach stream if released on pause
+            if ((!audioEl.src || streamDetached) && currentStation) {
+              attachStream();
+            }
+            if (!audioEl.src) {
+              console.warn('Media Session play: No audio source');
+              return;
+            }
+
             // iOS requires immediate state update
             navigator.mediaSession.playbackState = 'playing';
-            
+
             // Start playback
             const playPromise = audioEl.play();
             if (playPromise !== undefined) {
@@ -2525,16 +2574,17 @@ function startMetadataPolling() {
         navigator.mediaSession.setActionHandler('pause', () => {
           try {
             if (!audioEl) return;
-            
+
             if (audioEl.paused) {
               console.log('Media Session pause: Already paused');
               return;
             }
-            
+
             // iOS requires immediate state update
             navigator.mediaSession.playbackState = 'paused';
-            
-            audioEl.pause();
+
+            // Release stream connection (saves data, ensures clean resume on mobile)
+            releaseStream();
             if (playBtn) setIcon(playBtn, "play");
             console.log('Media Session pause: Success');
           } catch (err) {
@@ -2641,6 +2691,9 @@ function startMetadataPolling() {
     });
 
     audioEl.addEventListener("error", () => {
+      // Ignore errors caused by an intentional stream release
+      if (streamDetached) return;
+
       stationInfoEl.textContent = "❌ Stream-Fehler";
       setIcon(playBtn, "play");
       coverEl.classList.remove("playing");
@@ -2648,12 +2701,12 @@ function startMetadataPolling() {
       stopMetadataPolling();
       stopDataTracking(); // Stop data tracking
       nowPlayingTextEl.textContent = "Verbindungsfehler";
-      
+
       // iOS: Sync Media Session state
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
       }
-      
+
       // Attempt reconnect for mobile
       attemptReconnect();
     });
@@ -2679,6 +2732,7 @@ function startMetadataPolling() {
     // Stalling Detection - kritisch für Mobile
     audioEl.addEventListener("stalled", () => {
       console.log("Audio stalled");
+      if (streamDetached) return;
       // External audio (CarPlay/Bluetooth): 'stalled' fires during normal session transitions.
       // Do NOT reconnect - this causes rhythmic interruptions.
       if (!isExternalAudio()) {
@@ -2706,6 +2760,7 @@ function startMetadataPolling() {
     
     // Reconnect Logic
     function attemptReconnect() {
+      if (streamDetached) return;       // user paused intentionally
       if (!currentStation || reconnectAttempts >= maxReconnectAttempts) {
         if (reconnectAttempts >= maxReconnectAttempts) {
           stationInfoEl.textContent = "❌ Verbindung fehlgeschlagen";
