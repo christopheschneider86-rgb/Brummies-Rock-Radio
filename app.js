@@ -3736,6 +3736,7 @@ function startMetadataPolling() {
       let globeIsFullscreen = false;
       const gfsNP          = document.getElementById('gfsNP');
       const gfsFiltersEl   = document.getElementById('gfsFilters');
+      const gfsBrandEl     = document.getElementById('gfsBrand');
       const gfsPlayBtn     = document.getElementById('gfsPlayBtn');
       const gfsLogoEl      = document.getElementById('gfsLogo');
       const gfsStationName = document.getElementById('gfsStationName');
@@ -3744,6 +3745,78 @@ function startMetadataPolling() {
       const gfsSubgenre    = document.getElementById('gfsSubgenre');
       const gfsHttps       = document.getElementById('gfsHttps');
       const globeExpandBtn = document.getElementById('globeExpandBtn');
+
+      // ── Draggable panels ──────────────────────────────────────────────────
+      function makeDraggable(el) {
+        let startX, startY, origLeft, origTop;
+
+        function getParentRect() {
+          return el.parentElement.getBoundingClientRect();
+        }
+
+        function pointerDown(e) {
+          // Ignore clicks on buttons/selects/inputs inside the panel
+          if (e.target !== el && (
+            e.target.closest('button, select, input, label')
+          )) return;
+
+          e.preventDefault();
+          const touch = e.touches ? e.touches[0] : e;
+          startX = touch.clientX;
+          startY = touch.clientY;
+
+          // Convert right-anchored position to left-anchored so we can
+          // freely move the element during drag
+          const rect = el.getBoundingClientRect();
+          const pr   = getParentRect();
+          origLeft = rect.left - pr.left;
+          origTop  = rect.top  - pr.top;
+          el.style.left  = origLeft + 'px';
+          el.style.right = 'auto';
+          el.style.top   = origTop  + 'px';
+
+          el.classList.add('is-dragging');
+          document.addEventListener('mousemove', pointerMove);
+          document.addEventListener('mouseup',   pointerUp);
+          document.addEventListener('touchmove', pointerMove, { passive: false });
+          document.addEventListener('touchend',  pointerUp);
+        }
+
+        function pointerMove(e) {
+          e.preventDefault();
+          const touch = e.touches ? e.touches[0] : e;
+          const dx = touch.clientX - startX;
+          const dy = touch.clientY - startY;
+
+          const pr = getParentRect();
+          const elW = el.offsetWidth;
+          const elH = el.offsetHeight;
+
+          let newLeft = origLeft + dx;
+          let newTop  = origTop  + dy;
+
+          // Constrain inside parent
+          newLeft = Math.max(0, Math.min(pr.width  - elW, newLeft));
+          newTop  = Math.max(0, Math.min(pr.height - elH, newTop));
+
+          el.style.left = newLeft + 'px';
+          el.style.top  = newTop  + 'px';
+        }
+
+        function pointerUp() {
+          el.classList.remove('is-dragging');
+          document.removeEventListener('mousemove', pointerMove);
+          document.removeEventListener('mouseup',   pointerUp);
+          document.removeEventListener('touchmove', pointerMove);
+          document.removeEventListener('touchend',  pointerUp);
+        }
+
+        el.addEventListener('mousedown',  pointerDown);
+        el.addEventListener('touchstart', pointerDown, { passive: false });
+      }
+
+      makeDraggable(gfsNP);
+      makeDraggable(gfsFiltersEl);
 
       function syncGfsGenreOptions() {
         const src = document.getElementById('genreSelect');
@@ -3795,8 +3868,9 @@ function startMetadataPolling() {
       function enterGlobeFullscreen() {
         globeIsFullscreen = true;
         globeViewEl.classList.add('fs');
-        gfsNP.hidden       = false;
+        gfsNP.hidden        = false;
         gfsFiltersEl.hidden = false;
+        gfsBrandEl.hidden   = false;
         syncGfsGenreOptions();
         syncGfsSubgenreOptions();
         gfsHttps.checked = document.getElementById('httpsOnlyToggle').checked;
@@ -3814,8 +3888,14 @@ function startMetadataPolling() {
       function exitGlobeFullscreen() {
         globeIsFullscreen = false;
         globeViewEl.classList.remove('fs');
-        gfsNP.hidden       = true;
+        gfsNP.hidden        = true;
         gfsFiltersEl.hidden = true;
+        gfsBrandEl.hidden   = true;
+        // Reset any dragged positions so panels start fresh next time
+        ['left','top','right'].forEach(p => {
+          gfsNP.style[p]        = '';
+          gfsFiltersEl.style[p] = '';
+        });
         resizeGlobe();
         globeExpandBtn.innerHTML = '<i data-lucide="expand"></i>';
         globeExpandBtn.title = 'Vollbild';

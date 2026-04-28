@@ -1406,14 +1406,24 @@ small {
   height: 100%;
 }
 
-/* Mini app-brand inside filter bar */
-.gfs-brand-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+/* Standalone brand logo – center-top of fullscreen globe */
+#gfsBrand {
+  display: none;
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 26;
+  pointer-events: none;
+}
+#globeView.fs #gfsBrand { display: block; }
+#gfsBrand img {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
   object-fit: cover;
-  flex-shrink: 0;
-  opacity: 0.9;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+  display: block;
 }
 
 /* Now-Playing bar – top left (hidden by default, only .fs shows it) */
@@ -1422,7 +1432,8 @@ small {
   position: absolute;
   top: 12px;
   left: 12px;
-  max-width: min(480px, calc(60vw - 16px));
+  width: min(360px, calc(50vw - 80px));
+  max-width: min(360px, calc(50vw - 80px));
   background: rgba(8,8,26,0.88);
   border: 1px solid rgba(255,255,255,0.22);
   border-radius: 12px;
@@ -1434,7 +1445,11 @@ small {
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
+#gfsNP.is-dragging { cursor: grabbing; }
 #globeView.fs #gfsNP { display: flex; }
 
 .gfs-logo {
@@ -1491,6 +1506,11 @@ small {
 }
 .gfs-ctrl-btn:hover { background: rgba(var(--color-accent-rgb,232,64,42),0.80); border-color: var(--color-accent); transform: scale(1.08); }
 .gfs-ctrl-btn svg { width: 24px; height: 24px; stroke-width: 2; }
+#gfsNP .gfs-ctrl-btn,
+#gfsFilters button,
+#gfsFilters select,
+#gfsFilters input,
+#gfsFilters label { cursor: pointer; }
 
 /* Filter bar – top right (hidden by default) */
 #gfsFilters {
@@ -1508,7 +1528,11 @@ small {
   padding: 7px 10px;
   z-index: 25;
   pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
+#gfsFilters.is-dragging { cursor: grabbing; }
 #globeView.fs #gfsFilters { display: flex; }
 
 #gfsFilters select {
@@ -2723,7 +2747,7 @@ kbd {
   z-index: 800;
   width: 26px;
   height: 26px;
-  border-radius: 50%;
+  border-radius: 7px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   color: var(--color-text-muted, #888);
