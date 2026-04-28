@@ -432,12 +432,30 @@
       </label>
     </div>
 
+    <!-- Globe style popup (hidden by default, toggled via .open class) -->
+    <div id="globeBrightnessPanel">
+      <!-- Texture presets -->
+      <div class="gbp-presets">
+        <button class="gbp-preset active" data-texture="night"  title="Nacht">🌙 Nacht</button>
+        <button class="gbp-preset"        data-texture="day"    title="Tag">☀️ Tag</button>
+        <button class="gbp-preset"        data-texture="marble" title="Blue Marble">🌍 Marble</button>
+        <button class="gbp-preset"        data-texture="topo"   title="Topographie">🗺 Topo</button>
+      </div>
+      <!-- Brightness slider -->
+      <div class="gbp-slider-row">
+        <i data-lucide="moon" style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
+        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5">
+        <i data-lucide="sun"  style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
+      </div>
+    </div>
+
     <div id="globeControls">
-      <button id="globeExpandBtn" title="Vollbild"><i data-lucide="expand"></i></button>
-      <button id="globeLocBtn"    title="Eigene Position"><i data-lucide="locate"></i></button>
-      <button id="globeZoomInBtn" title="Zoom +"><i data-lucide="zoom-in"></i></button>
-      <button id="globeZoomOutBtn"title="Zoom −"><i data-lucide="zoom-out"></i></button>
-      <button id="globeFitBtn"    title="Weltkugel zentrieren"><i data-lucide="maximize-2"></i></button>
+      <button id="globeExpandBtn"    title="Vollbild"><i data-lucide="expand"></i></button>
+      <button id="globeLocBtn"       title="Eigene Position"><i data-lucide="locate"></i></button>
+      <button id="globeZoomInBtn"    title="Zoom +"><i data-lucide="zoom-in"></i></button>
+      <button id="globeZoomOutBtn"   title="Zoom −"><i data-lucide="zoom-out"></i></button>
+      <button id="globeFitBtn"       title="Weltkugel zentrieren"><i data-lucide="maximize-2"></i></button>
+      <button id="globeBrightnessBtn" title="Helligkeit / Tageszeit"><i data-lucide="sun-medium"></i></button>
     </div>
     <div id="globePopup" hidden>
       <div id="globePopupHeader">

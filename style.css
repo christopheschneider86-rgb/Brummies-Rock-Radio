@@ -1273,6 +1273,98 @@ small {
 
 #globeControls button:disabled { opacity: 0.35; cursor: default; transform: none; }
 
+/* ── Globe brightness popup ──────────────────────────────────────────────── */
+/* ── Globe style panel ──────────────────────────────────────────────────── */
+#globeBrightnessPanel {
+  display: none;             /* hidden by default; .open shows it */
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 22;
+  background: rgba(8,8,28,0.92);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 12px 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  pointer-events: auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  min-width: 230px;
+}
+#globeBrightnessPanel.open { display: flex; }
+
+/* Texture preset buttons */
+.gbp-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.gbp-preset {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 11px;
+  padding: 6px 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+.gbp-preset:hover  { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.4); }
+.gbp-preset.active { background: var(--color-accent,#e8402a); border-color: var(--color-accent,#e8402a); color: #fff; }
+
+/* Brightness slider row */
+.gbp-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.65);
+}
+
+#globeBrightnessSlider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right,
+    rgba(10,15,60,0.95) 0%,
+    rgba(255,160,50,0.6) 55%,
+    rgba(255,235,160,0.95) 100%);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+#globeBrightnessSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--color-accent, #e8402a);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+#globeBrightnessSlider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--color-accent, #e8402a);
+  cursor: pointer;
+}
+
+/* Sun button active state */
+#globeBrightnessBtn.active {
+  background: var(--color-accent, #e8402a);
+  border-color: var(--color-accent, #e8402a);
+}
+
 /* Active state for fullscreen toggle button */
 #globeExpandBtn.fs-active {
   background: var(--color-accent, #e8402a);

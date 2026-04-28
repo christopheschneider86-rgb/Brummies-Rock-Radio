@@ -3560,6 +3560,9 @@ function startMetadataPolling() {
       let globe           = null;
       let globeReady      = false;
       let currentAlt      = 2.2;
+
+      const GLOBE_MIN_ALT = 0.5;    // max zoom-in  (country level – not too close)
+      const GLOBE_MAX_ALT = 3.0;    // max zoom-out (full globe + margin)
       let popupCluster    = null;
 
       // ── Grid-based clustering ─────────────────────────────────────────────
@@ -3714,6 +3717,7 @@ function startMetadataPolling() {
         const accent = cachedAccentColor || '#e8402a';
         // Use offsetWidth for both axes – aspect-ratio:1/1 guarantees square layout
         const initSz = globeContainer.offsetWidth || 380;
+
         globe = Globe()(globeContainer)
           .width(initSz)
           .height(initSz)
@@ -3727,7 +3731,13 @@ function startMetadataPolling() {
           .pointsMerge(false)
           .onPointClick(showPopup)
           .onZoom(({ altitude }) => {
-            currentAlt = altitude;
+            // Clamp pinch/scroll zoom within sensible limits
+            const clamped = Math.min(GLOBE_MAX_ALT, Math.max(GLOBE_MIN_ALT, altitude));
+            if (Math.abs(clamped - altitude) > 0.001) {
+              const pov = globe.pointOfView();
+              globe.pointOfView({ ...pov, altitude: clamped });
+            }
+            currentAlt = clamped;
             refreshMarkers();
           });
 
@@ -3761,7 +3771,7 @@ function startMetadataPolling() {
       document.getElementById('globeZoomInBtn').addEventListener('click', () => {
         if (!globe) return;
         const pov = globe.pointOfView();
-        const alt = Math.max(0.18, pov.altitude * 0.55);
+        const alt = Math.max(GLOBE_MIN_ALT, pov.altitude * 0.55);
         globe.pointOfView({ ...pov, altitude: alt }, 400);
         currentAlt = alt;
         refreshMarkers();
@@ -3770,7 +3780,7 @@ function startMetadataPolling() {
       document.getElementById('globeZoomOutBtn').addEventListener('click', () => {
         if (!globe) return;
         const pov = globe.pointOfView();
-        const alt = Math.min(4.5, pov.altitude / 0.55);
+        const alt = Math.min(GLOBE_MAX_ALT, pov.altitude / 0.55);
         globe.pointOfView({ ...pov, altitude: alt }, 400);
         currentAlt = alt;
         refreshMarkers();
@@ -3785,6 +3795,66 @@ function startMetadataPolling() {
 
       document.getElementById('globePopupClose').addEventListener('click', () => {
         document.getElementById('globePopup').hidden = true;
+      });
+
+      // ── Globe style panel (brightness + texture presets) ─────────────────
+      const globeBrightnessBtn    = document.getElementById('globeBrightnessBtn');
+      const globeBrightnessPanel  = document.getElementById('globeBrightnessPanel');
+      const globeBrightnessSlider = document.getElementById('globeBrightnessSlider');
+
+      const GLOBE_TEXTURES = {
+        night:  'https://unpkg.com/three-globe/example/img/earth-night.jpg',
+        day:    'https://unpkg.com/three-globe/example/img/earth-day.jpg',
+        marble: 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+        topo:   'https://unpkg.com/three-globe/example/img/earth-topology.png',
+      };
+      let currentTexture = 'night';
+      // Night is dark; day/marble/topo look better at full brightness by default
+      const TEXTURE_DEFAULT_BRIGHTNESS = { night: 100, day: 100, marble: 100, topo: 110 };
+
+      function applyGlobeBrightness(val) {
+        globeContainer.style.filter = `brightness(${val}%)`;
+      }
+
+      // Preset buttons
+      globeBrightnessPanel.querySelectorAll('.gbp-preset').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const tex = btn.dataset.texture;
+          if (!globe) return;
+          currentTexture = tex;
+          globe.globeImageUrl(GLOBE_TEXTURES[tex]);
+          // Set brightness default for the chosen texture
+          const def = TEXTURE_DEFAULT_BRIGHTNESS[tex] ?? 100;
+          globeBrightnessSlider.value = def;
+          applyGlobeBrightness(def);
+          // Update active state
+          globeBrightnessPanel.querySelectorAll('.gbp-preset')
+            .forEach(b => b.classList.toggle('active', b === btn));
+        });
+      });
+
+      globeBrightnessSlider.addEventListener('input', () => {
+        applyGlobeBrightness(Number(globeBrightnessSlider.value));
+      });
+
+      // Toggle panel open/close
+      globeBrightnessBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const opening = !globeBrightnessPanel.classList.contains('open');
+        globeBrightnessPanel.classList.toggle('open', opening);
+        globeBrightnessBtn.classList.toggle('active', opening);
+        if (opening && window.lucide) lucide.createIcons({ nodes: [globeBrightnessPanel] });
+      });
+
+      // Close panel when clicking anywhere else in the globe
+      globeViewEl.addEventListener('click', e => {
+        if (globeBrightnessPanel.classList.contains('open') &&
+            !globeBrightnessPanel.contains(e.target) &&
+            e.target !== globeBrightnessBtn) {
+          globeBrightnessPanel.classList.remove('open');
+          globeBrightnessBtn.classList.remove('active');
+        }
       });
 
       // ── Fullscreen ────────────────────────────────────────────────────────
