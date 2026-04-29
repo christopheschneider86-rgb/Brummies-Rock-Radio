@@ -47,7 +47,7 @@
     <div id="whatsNewModal">
       <div id="whatsNewModalHeader">
         <h2>Neuigkeiten</h2>
-        <p class="wnv">Version 1.3.1</p>
+        <p class="wnv">Version 1.4.0</p>
       </div>
       <div id="whatsNewModalBody">
         <ul>
@@ -269,6 +269,18 @@
         </table>
       </div>
 
+      <!-- PLAYBACK -->
+      <div class="settings-section">
+        <h3><i data-lucide="radio"></i> Wiedergabe</h3>
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px 0;">
+          <input type="checkbox" id="autoSkipDeadToggle" checked style="width:18px; height:18px; accent-color: var(--color-accent);">
+          <div>
+            <div style="font-size:13px; font-weight:600;">Defekte Sender automatisch überspringen</div>
+            <div style="font-size:11px; opacity:0.7; margin-top:2px;">Wenn ein Stream nicht startet oder die Verbindung abbricht, wird automatisch der nächste Sender geladen.</div>
+          </div>
+        </label>
+      </div>
+
       <!-- PWA / APP INSTALLATION -->
       <div class="settings-section">
         <h3><i data-lucide="smartphone"></i> App &amp; PWA</h3>
@@ -285,7 +297,7 @@
       <div class="settings-section">
         <h3><i data-lucide="info"></i> Über diese App</h3>
         <p><strong>Brummi's Rock Radio</strong></p>
-        <p>Version: 1.3.0</p>
+        <p>Version: 1.4.0</p>
         <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
         <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
         <button id="checkUpdateBtn" class="secondary" style="width:100%; margin-top:12px;">

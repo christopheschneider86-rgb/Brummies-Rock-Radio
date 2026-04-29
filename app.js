@@ -969,6 +969,58 @@
     let heartbeatInterval = null;
     let lastPlaybackTime = 0;
 
+    // --- DEAD STATION TRACKING ---
+    // Stations that have failed to play this session.
+    // Used by skipToNextWorking() to avoid retrying broken streams.
+    const deadStations = new Set();
+    let playStartTimeout = null;        // detects "stream never starts"
+    let autoSkipDead = (localStorage.getItem('brummies_autoSkipDead') !== '0');  // default ON
+
+    function clearPlayStartTimeout() {
+      if (playStartTimeout) { clearTimeout(playStartTimeout); playStartTimeout = null; }
+    }
+
+    function markStationDeadAndSkip(reason) {
+      if (!currentStation) return;
+      console.warn(`[Dead Station] ${currentStation.name}: ${reason}`);
+      deadStations.add(currentStation.id);
+      if (autoSkipDead) {
+        skipToNextWorking();
+      } else {
+        stationInfoEl.textContent = '❌ Sender nicht erreichbar';
+      }
+    }
+
+    function skipToNextWorking() {
+      if (!displayedStations || displayedStations.length === 0) {
+        stationInfoEl.textContent = '❌ Keine Sender verfügbar';
+        return;
+      }
+      const startIdx = (currentStationIndex >= 0 ? currentStationIndex + 1 : 0);
+      // Try up to one full pass through the list
+      for (let i = 0; i < displayedStations.length; i++) {
+        const idx = (startIdx + i) % displayedStations.length;
+        const candidate = displayedStations[idx];
+        if (!candidate || !candidate.streamUrl) continue;
+        if (deadStations.has(candidate.id)) continue;
+        if (currentStation && candidate.id === currentStation.id) continue;
+        console.log('[Auto-skip] Trying next working station:', candidate.name);
+        stationInfoEl.textContent = `⏭ Wechsle zu: ${candidate.name}`;
+        selectStation(candidate, idx);
+        return;
+      }
+      // Nothing left
+      stationInfoEl.textContent = '❌ Keine erreichbaren Sender mehr';
+      console.warn('[Auto-skip] All stations exhausted');
+    }
+
+    // Expose so settings UI can toggle
+    window._setAutoSkipDead = (enabled) => {
+      autoSkipDead = !!enabled;
+      localStorage.setItem('brummies_autoSkipDead', enabled ? '1' : '0');
+    };
+    window._getAutoSkipDead = () => autoSkipDead;
+
     // --- SUBGENRE UPDATE ---
     genreSelect.addEventListener("change", () => {
       const genre = genreSelect.value;
@@ -1128,12 +1180,25 @@
         
         allStations.length = 0;
         const countries = new Set();
-        
+        // Reset dead-stations cache on each new search — old "dead" entries
+        // may have come back online or aren't in the new result set anyway.
+        deadStations.clear();
+
         data.forEach(station => {
+          const url = station.url_resolved || station.url || '';
+
+          // Skip playlist files – they cannot be played directly as <audio src>.
+          // (.pls / .m3u / .m3u8 / .asx need parsing, ~70% of these never resolve well.)
+          if (/\.(pls|m3u8?|asx|xspf)(\?|$)/i.test(url)) return;
+
+          // Skip stations with no usable URL or whose last health check failed
+          if (!url) return;
+          if (station.lastcheckok !== undefined && station.lastcheckok === 0) return;
+
           const st = {
             id: station.stationuuid,
             name: station.name,
-            streamUrl: station.url_resolved || station.url,
+            streamUrl: url,
             genre: station.tags ? station.tags.split(',')[0].trim() : 'unknown',
             country: station.country || 'Unknown',
             bitrate: station.bitrate || 0,
@@ -1145,7 +1210,7 @@
             longitude: parseFloat(station.geo_long) || null,
             distance: null
           };
-          
+
           if (st.country) countries.add(st.country);
           allStations.push(st);
         });
@@ -2430,6 +2495,7 @@ function startMetadataPolling() {
     
   endListeningSession();
   stopMetadataPolling();
+  clearPlayStartTimeout();        // cancel watchdog from previous station
   if (window._recStopOnStationChange) window._recStopOnStationChange();
 
   currentStation = station;
@@ -2488,11 +2554,22 @@ function startMetadataPolling() {
       if (audioContextReady && !visualizerActive) startVisualizer();
 
       updateMediaSession();
+
+      // Start play-start watchdog: if the stream doesn't actually deliver
+      // audio data within 10s (no 'playing' event fired), treat it as dead.
+      clearPlayStartTimeout();
+      playStartTimeout = setTimeout(() => {
+        // 'playing' fires only when actual audio frames arrive.
+        // readyState >=3 means HAVE_FUTURE_DATA → stream is delivering.
+        if (audioEl.readyState < 3 || audioEl.currentTime === 0) {
+          markStationDeadAndSkip('play-start timeout (10s, no audio data)');
+        }
+      }, 10000);
     }).catch(err => {
       console.error('Stream error:', err);
-      stationInfoEl.textContent = '❌ Fehler';
       coverEl.classList.remove('playing');
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+      markStationDeadAndSkip('play() promise rejected: ' + (err && err.message));
     });
   });
       
@@ -2672,7 +2749,8 @@ function startMetadataPolling() {
       endListeningSession();
       stopMetadataPolling();
       stopDataTracking(); // Stop data tracking
-      
+      clearPlayStartTimeout();   // user paused → don't trigger auto-skip
+
       // iOS: Sync Media Session state
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
@@ -2680,10 +2758,13 @@ function startMetadataPolling() {
     });
 
     audioEl.addEventListener("playing", () => {
+      // Stream is actually delivering audio frames → cancel dead-stream watchdog
+      clearPlayStartTimeout();
+
       if (currentStation) {
         stationInfoEl.textContent = `🎶 ${currentStation.genre} · ${currentStation.bitrate}kbps`;
       }
-      
+
       // iOS: Sync Media Session state
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
@@ -2763,8 +2844,9 @@ function startMetadataPolling() {
       if (streamDetached) return;       // user paused intentionally
       if (!currentStation || reconnectAttempts >= maxReconnectAttempts) {
         if (reconnectAttempts >= maxReconnectAttempts) {
-          stationInfoEl.textContent = "❌ Verbindung fehlgeschlagen";
           console.log("Max reconnect attempts reached");
+          // Stream is dead → mark and either skip or stop
+          markStationDeadAndSkip('reconnect exhausted (' + maxReconnectAttempts + ' tries)');
         }
         return;
       }
@@ -3064,10 +3146,17 @@ function startMetadataPolling() {
         data.forEach(station => {
           const id = station.stationuuid;
           if (existingIds.has(id)) return;
+
+          const url = station.url_resolved || station.url || '';
+          // Filter playlist files + last-check-failed stations
+          if (!url) return;
+          if (/\.(pls|m3u8?|asx|xspf)(\?|$)/i.test(url)) return;
+          if (station.lastcheckok !== undefined && station.lastcheckok === 0) return;
+
           allStations.push({
             id,
             name:       station.name,
-            streamUrl:  station.url_resolved || station.url,
+            streamUrl:  url,
             genre:      station.tags ? station.tags.split(',')[0].trim() : 'unknown',
             country:    station.country || 'Unknown',
             bitrate:    station.bitrate || 0,
@@ -3192,6 +3281,15 @@ function startMetadataPolling() {
     settingsBtn.addEventListener('click', openSettings);
     closeSettings.addEventListener('click', closeSettingsPanel);
     settingsOverlay.addEventListener('click', closeSettingsPanel);
+
+    // Auto-skip dead-stations toggle
+    const autoSkipToggle = document.getElementById('autoSkipDeadToggle');
+    if (autoSkipToggle) {
+      autoSkipToggle.checked = window._getAutoSkipDead ? window._getAutoSkipDead() : true;
+      autoSkipToggle.addEventListener('change', () => {
+        if (window._setAutoSkipDead) window._setAutoSkipDead(autoSkipToggle.checked);
+      });
+    }
 
     // Close on ESC key
     // ── Keyboard shortcuts ────────────────────────────────────────────────────
@@ -4792,7 +4890,7 @@ function startMetadataPolling() {
     // ==================== END CONFIG EXPORT / IMPORT ====================
 
     // ==================== WHAT'S NEW ====================
-    const CURRENT_VERSION = '1.3.1';
+    const CURRENT_VERSION = '1.4.0';
     const seenVersion = localStorage.getItem('brummiesSeenVersion');
     if (seenVersion !== CURRENT_VERSION) {
       const overlay = document.getElementById('whatsNewOverlay');
