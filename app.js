@@ -1007,6 +1007,8 @@
         console.log('[Auto-skip] Trying next working station:', candidate.name);
         stationInfoEl.textContent = `⏭ Wechsle zu: ${candidate.name}`;
         selectStation(candidate, idx);
+        // Drive the tuner knob visually if tuner view is active
+        if (window._tunerGoTo) window._tunerGoTo(idx);
         return;
       }
       // Nothing left
@@ -3609,6 +3611,17 @@ function startMetadataPolling() {
       tunerKnobEl.addEventListener('touchstart', dragStart, { passive: false });
       document.addEventListener('touchmove',     dragMove,  { passive: false });
       document.addEventListener('touchend',      dragEnd);
+
+      // Expose so auto-skip can drive the knob + scale visually
+      window._tunerGoTo = function(idx) {
+        if (!tunerActive) return;
+        idx = Math.max(0, Math.min(displayedStations.length - 1, idx));
+        tunerIndex = idx;
+        knobDeg    = idx * DEG_PER_TICK;
+        tunerKnobEl.style.transform = `rotate(${knobDeg}deg)`;
+        positionScale(true);
+        updateDisplay();
+      };
 
       // ── View toggle ──────────────────────────────────────────────────────────
       function showTuner() {

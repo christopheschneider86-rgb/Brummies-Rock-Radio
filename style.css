@@ -1778,48 +1778,153 @@ small {
 #tunerScaleWrap::after  { right: 0; background: linear-gradient(to left,  var(--color-bg-secondary), transparent); }
 
 /* Knob */
+/* ── Tuner knob ──────────────────────────────────────────────────────────── */
 #tunerKnobArea {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-top: 16px;
   padding-bottom: 8px;
 }
 
+/* Static outer bezel with tick marks */
+#tunerKnobBezel {
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 6px 30px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 12 tick marks around the bezel */
+.bezel-tick {
+  position: absolute;
+  width: 2px;
+  height: 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 1px;
+  top: 6px;
+  left: 50%;
+  transform-origin: 50% 68px;
+  transform: translateX(-50%) rotate(calc(var(--i) * 30deg));
+}
+/* Cardinal ticks (12, 3, 6, 9 o'clock) slightly brighter */
+.bezel-tick:nth-child(1),
+.bezel-tick:nth-child(4),
+.bezel-tick:nth-child(7),
+.bezel-tick:nth-child(10) {
+  height: 12px;
+  background: rgba(255,255,255,0.45);
+}
+
+/* The rotating knob */
 #tunerKnob {
   width: 114px;
   height: 114px;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.05);
   position: relative;
   cursor: grab;
   touch-action: none;
-  background-image:
-    repeating-conic-gradient(rgba(255,255,255,0.03) 0deg 6deg, transparent 6deg 12deg),
-    radial-gradient(circle at 35% 30%, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+
+  /* Knurled edge: fine repeating lines simulate grip ridges */
+  background:
+    repeating-conic-gradient(
+      rgba(255,255,255,0.055) 0deg 4.5deg,
+      transparent 4.5deg 9deg
+    ),
+    /* Metallic radial sheen */
+    radial-gradient(
+      ellipse at 38% 32%,
+      rgba(255,255,255,0.18) 0%,
+      rgba(255,255,255,0.05) 40%,
+      transparent 70%
+    ),
+    /* Base body */
+    radial-gradient(
+      circle at 50% 50%,
+      #2a2a3a 0%,
+      #16161f 60%,
+      #0d0d14 100%
+    );
+
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,0.10),          /* outer rim */
+    0 0 0 3px rgba(0,0,0,0.6),                 /* shadow gap */
+    0 4px 20px rgba(0,0,0,0.8),                /* drop shadow */
+    inset 0 2px 4px rgba(255,255,255,0.08),    /* top highlight */
+    inset 0 -2px 4px rgba(0,0,0,0.5);          /* bottom shadow */
+
+  transition: box-shadow 0.2s;
 }
 
-#tunerKnob:active { cursor: grabbing; }
+#tunerKnob:active {
+  cursor: grabbing;
+  box-shadow:
+    0 0 0 2px var(--color-accent),
+    0 0 0 4px rgba(0,0,0,0.5),
+    0 0 16px rgba(var(--color-accent-rgb, 232,64,42), 0.4),
+    0 2px 10px rgba(0,0,0,0.9),
+    inset 0 2px 4px rgba(255,255,255,0.06),
+    inset 0 -2px 4px rgba(0,0,0,0.5);
+}
 
-.knob-ring {
+/* Glossy highlight overlay (top-left shine) */
+.knob-shine {
   position: absolute;
-  inset: 8px;
+  top: 12%;
+  left: 18%;
+  width: 38%;
+  height: 32%;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.07);
+  background: radial-gradient(ellipse, rgba(255,255,255,0.14) 0%, transparent 70%);
+  pointer-events: none;
 }
 
-.knob-marker {
+/* Inner concentric ring */
+.knob-inner-ring {
   position: absolute;
-  top: 10px;
+  inset: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+/* Indicator line (like a real knob pointer) */
+.knob-marker-line {
+  position: absolute;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
+  width: 3px;
+  height: 22px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--color-accent) 0%, rgba(255,255,255,0.7) 100%);
+  box-shadow: 0 0 8px var(--color-accent), 0 0 3px rgba(255,255,255,0.6);
+  pointer-events: none;
+}
+
+/* Small centre cap */
+.knob-center-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 6px var(--color-accent);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(100,100,120,0.8) 100%);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  pointer-events: none;
 }
 
 #tunerKnobHint { font-size: 11px; color: var(--color-text-muted, #888); }

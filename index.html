@@ -499,9 +499,28 @@
 
     <!-- Knob -->
     <div id="tunerKnobArea">
-      <div id="tunerKnob">
-        <div class="knob-ring"></div>
-        <div class="knob-marker"></div>
+      <!-- Static outer bezel (does NOT rotate) -->
+      <div id="tunerKnobBezel">
+        <!-- 12 tick marks rendered via CSS + JS, or pure CSS with nth-child -->
+        <div class="bezel-tick" style="--i:0"></div>
+        <div class="bezel-tick" style="--i:1"></div>
+        <div class="bezel-tick" style="--i:2"></div>
+        <div class="bezel-tick" style="--i:3"></div>
+        <div class="bezel-tick" style="--i:4"></div>
+        <div class="bezel-tick" style="--i:5"></div>
+        <div class="bezel-tick" style="--i:6"></div>
+        <div class="bezel-tick" style="--i:7"></div>
+        <div class="bezel-tick" style="--i:8"></div>
+        <div class="bezel-tick" style="--i:9"></div>
+        <div class="bezel-tick" style="--i:10"></div>
+        <div class="bezel-tick" style="--i:11"></div>
+        <!-- The rotating knob lives inside the bezel -->
+        <div id="tunerKnob">
+          <div class="knob-shine"></div>
+          <div class="knob-inner-ring"></div>
+          <div class="knob-marker-line"></div>
+          <div class="knob-center-dot"></div>
+        </div>
       </div>
       <div id="tunerKnobHint">Drehen zum Abstimmen</div>
     </div>
