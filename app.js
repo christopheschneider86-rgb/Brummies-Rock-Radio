@@ -57,12 +57,15 @@
     };
     
     const subgenreMap = {
-      "rock": ["classic rock", "hard rock", "soft rock", "alternative", "indie", "progressive", "punk"],
-      "metal": ["heavy metal", "death metal", "black metal", "thrash metal", "metalcore", "power metal"],
-      "pop": ["pop rock", "synth pop", "indie pop", "electropop", "dance pop"],
-      "classic": ["classical", "baroque", "romantic", "opera"],
-      "jazz": ["smooth jazz", "bebop", "swing", "fusion", "free jazz"]
+      "rock":       ["classic rock", "hard rock", "soft rock", "alternative", "indie", "progressive", "punk"],
+      "metal":      ["heavy metal", "death metal", "black metal", "thrash metal", "metalcore", "power metal", "doom metal"],
+      "pop":        ["pop rock", "synth pop", "indie pop", "electropop", "dance pop", "k-pop", "r&b"],
+      "classic":    ["classical", "baroque", "romantic", "opera", "chamber", "symphony", "choral"],
+      "electronic": ["techno", "house", "trance", "drum and bass", "ambient", "dubstep", "electro"],
+      "jazz":       ["smooth jazz", "bebop", "swing", "fusion", "free jazz", "blues", "soul"]
     };
+    // Maximum number of sub-genre slots (fixed across all band-button genres)
+    const MAX_SUB_BTNS = Math.max(...Object.values(subgenreMap).map(a => a.length));
     
     const eqPresets = {
       flat: [0, 0, 0, 0, 0],
@@ -691,12 +694,14 @@
            <option value="metal">Metal</option>
            <option value="pop">Pop</option>
            <option value="classic">Classic</option>
+           <option value="electronic">Electronic</option>
            <option value="jazz">Jazz</option>` :
           `<option value="">All Genres</option>
            <option value="rock">Rock</option>
            <option value="metal">Metal</option>
            <option value="pop">Pop</option>
            <option value="classic">Classic</option>
+           <option value="electronic">Electronic</option>
            <option value="jazz">Jazz</option>`;
         genreSelect.value = selectedValue;
       }
@@ -1571,6 +1576,7 @@ function startMetadataPolling() {
         // Notify recording module of track change (for auto-split mode)
         if (window._recOnTrackChange) window._recOnTrackChange(oldMetadata);
         nowPlayingTextEl.textContent = text;
+        if (window._retroSyncNP) window._retroSyncNP(text);
         copyNowPlayingBtn.disabled = false;
         
         // Animation neu starten
@@ -1920,6 +1926,7 @@ function startMetadataPolling() {
         source  = audioContext.createMediaElementSource(audioEl);
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
+        window._analyser = analyser;   // expose for retro visualizer
 
         const eqFrequencies = [80, 400, 1000, 3500, 10000];
         filters = eqFrequencies.map(freq => {
@@ -2556,6 +2563,7 @@ function startMetadataPolling() {
       if (audioContextReady && !visualizerActive) startVisualizer();
 
       updateMediaSession();
+      if (window._retroStationChanged) window._retroStationChanged();
 
       // Start play-start watchdog: if the stream doesn't actually deliver
       // audio data within 10s (no 'playing' event fired), treat it as dead.
@@ -3654,6 +3662,444 @@ function startMetadataPolling() {
       window._tunerRefresh = function() {
         tunerIndex = Math.min(tunerIndex, Math.max(0, displayedStations.length - 1));
         if (tunerActive) buildScale();
+        if (retroActive) { buildRetroScale(); syncRetroDisplay(); }
+      };
+
+      // ══════════════════════════════════════════════════════════════════════
+      // RETRO RADIO FULLSCREEN
+      // ══════════════════════════════════════════════════════════════════════
+      const retroRadioEl      = document.getElementById('retroRadio');
+      const retroExpandBtn    = document.getElementById('retroExpandBtn');
+      const retroExitBtn      = document.getElementById('retroExitBtn');
+      const retroTicksEl      = document.getElementById('retroTicks');
+      const retroTrackEl      = document.getElementById('retroTrack');
+      const retroNameEl       = document.getElementById('retroStationName');
+      const retroMetaEl       = document.getElementById('retroStationMeta');
+      const retroNowPlayEl    = document.getElementById('retroNowPlaying');
+      const retroTuneKnobEl   = document.getElementById('retroTuneKnob');
+      const retroVolKnobEl    = document.getElementById('retroVolKnob');
+      const retroPlayBtn      = document.getElementById('retroPlayBtn');
+      const retroPrevBtn      = document.getElementById('retroPrevBtn');
+      const retroNextBtn      = document.getElementById('retroNextBtn');
+      const retroHttpsBtn     = document.getElementById('retroHttpsBtn');
+      const retroHttpsStateEl = document.getElementById('retroHttpsState');
+      const retroStationIconEl= document.getElementById('retroStationIcon');
+      const retroSubBandsEl   = document.getElementById('retroSubBands');
+      const retroVisCvs       = document.getElementById('retroVisualizer');
+      const retroEqBtnsEl     = document.getElementById('retroEqBtns');
+      const bandBtns          = document.querySelectorAll('.band-btn');
+
+      if (!retroRadioEl) return; // safety
+
+      let retroActive    = false;
+      let retroKnobDeg   = 0;   // mirrors knobDeg
+      let retroVolDeg    = 0;   // volume knob angle (-135..+135)
+      let retroVisRAF    = null;
+
+      // ── Retro scale (mirrors main scale but in retroTicks) ────────────────
+      function buildRetroScale() {
+        retroTicksEl.innerHTML = '';
+        const stations = displayedStations;
+        if (!stations.length) return;
+        stations.forEach((st, i) => {
+          const tick = document.createElement('div');
+          const dist = Math.abs(i - tunerIndex);
+          tick.className = 'tuner-tick' + (i === tunerIndex ? ' active' : dist === 1 ? ' near' : '');
+          const mark  = document.createElement('div');
+          mark.className = 'tuner-tick-mark';
+          const label = document.createElement('div');
+          label.className = 'tuner-tick-label';
+          label.textContent = tickLabel(st);
+          tick.appendChild(mark); tick.appendChild(label);
+          tick.addEventListener('click', () => commitStation(i));
+          retroTicksEl.appendChild(tick);
+        });
+        positionRetroScale(false);
+      }
+
+      function positionRetroScale(animate) {
+        if (!animate) retroTicksEl.style.transition = 'none';
+        const wrapW  = retroTrackEl.offsetWidth;
+        const offset = Math.round(wrapW / 2 - tunerIndex * TICK_W - TICK_W / 2);
+        retroTicksEl.style.transform = `translateX(${offset}px)`;
+        if (!animate) { void retroTicksEl.offsetWidth; retroTicksEl.style.transition = ''; }
+        retroTicksEl.querySelectorAll('.tuner-tick').forEach((t, i) => {
+          const dist = Math.abs(i - tunerIndex);
+          t.className = 'tuner-tick' + (i === tunerIndex ? ' active' : dist === 1 ? ' near' : '');
+        });
+      }
+
+      // Keep retro scale in sync whenever main scale moves
+      const _origPositionScale = positionScale;
+      // Monkey-patch positionScale so retro follows automatically
+      const _patchedPositionScale = function(animate) {
+        _origPositionScale(animate);
+        if (retroActive) positionRetroScale(animate);
+      };
+      // Swap reference
+      window._retroSyncScale = () => { if (retroActive) positionRetroScale(true); };
+
+      // ── Display sync ──────────────────────────────────────────────────────
+      function syncRetroDisplay() {
+        const st = displayedStations[tunerIndex];
+        retroNameEl.textContent   = st ? st.name : '— Sender wählen —';
+        retroMetaEl.textContent   = st ? [st.genre, st.country, st.bitrate ? st.bitrate + ' kbps' : ''].filter(Boolean).join(' · ') : '';
+        retroKnobDeg = tunerIndex * DEG_PER_TICK;
+        retroTuneKnobEl.style.transform = `rotate(${retroKnobDeg}deg)`;
+        // Station icon
+        if (retroStationIconEl) {
+          const favicon = st && st.favicon ? st.favicon : '';
+          retroStationIconEl.src = favicon;
+          retroStationIconEl.style.display = favicon ? 'block' : 'none';
+        }
+      }
+
+      // Sync Now-Playing metadata into retro display
+      window._retroSyncNP = function(text) {
+        if (retroNowPlayEl) retroNowPlayEl.textContent = text || '—';
+      };
+
+      // ── Tuning knob in retro panel ────────────────────────────────────────
+      let retroDragging     = false;
+      let retroDragLastAng  = 0;
+      let retroDragTotalDlt = 0;
+      let retroDragStartDeg = 0;
+      let retroDragStartIdx = 0;
+
+      function retroPointerAngle(e) {
+        const rect = retroTuneKnobEl.getBoundingClientRect();
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const p  = e.touches ? e.touches[0] : e;
+        return Math.atan2(p.clientY - cy, p.clientX - cx) * 180 / Math.PI;
+      }
+      function retroDragStart(e) {
+        retroDragging      = true;
+        retroDragLastAng   = retroPointerAngle(e);
+        retroDragTotalDlt  = 0;
+        retroDragStartDeg  = retroKnobDeg;
+        retroDragStartIdx  = tunerIndex;
+        e.preventDefault();
+      }
+      function retroDragMove(e) {
+        if (!retroDragging) return;
+        const ang = retroPointerAngle(e);
+        let inc = ang - retroDragLastAng;
+        if (inc >  180) inc -= 360;
+        if (inc < -180) inc += 360;
+        retroDragLastAng   = ang;
+        retroDragTotalDlt += inc;
+        retroKnobDeg = retroDragStartDeg + retroDragTotalDlt;
+        retroTuneKnobEl.style.transform = `rotate(${retroKnobDeg}deg)`;
+        // Also rotate main knob
+        knobDeg = retroKnobDeg;
+        tunerKnobEl.style.transform = `rotate(${knobDeg}deg)`;
+        const steps  = retroDragTotalDlt / DEG_PER_TICK;
+        const newIdx = Math.max(0, Math.min(displayedStations.length - 1, Math.round(retroDragStartIdx + steps)));
+        previewStation(newIdx);
+        positionRetroScale(true);
+        e.preventDefault();
+      }
+      function retroDragEnd() {
+        if (!retroDragging) return;
+        retroDragging = false;
+        commitStation(tunerIndex);
+        syncRetroDisplay();
+      }
+      retroTuneKnobEl.addEventListener('mousedown',  retroDragStart);
+      document.addEventListener('mousemove',  (e) => { if (retroDragging) retroDragMove(e); });
+      document.addEventListener('mouseup',    ()  => { if (retroDragging) retroDragEnd();   });
+      retroTuneKnobEl.addEventListener('touchstart', retroDragStart, { passive: false });
+      document.addEventListener('touchmove',  (e) => { if (retroDragging) retroDragMove(e); }, { passive: false });
+      document.addEventListener('touchend',   ()  => { if (retroDragging) retroDragEnd();   });
+
+      // ── Volume knob ───────────────────────────────────────────────────────
+      let volDragging    = false;
+      let volDragLastAng = 0;
+      let volDragTotal   = 0;
+      let volDragStartDeg= 0;
+      const VOL_RANGE    = 270; // degrees for 0..100%
+
+      function volPointerAngle(e) {
+        const rect = retroVolKnobEl.getBoundingClientRect();
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const p  = e.touches ? e.touches[0] : e;
+        return Math.atan2(p.clientY - cy, p.clientX - cx) * 180 / Math.PI;
+      }
+      function setVolFromDeg(deg) {
+        // Clamp to -135..+135
+        const clamped = Math.max(-135, Math.min(135, deg));
+        retroVolDeg = clamped;
+        retroVolKnobEl.style.transform = `rotate(${clamped}deg)`;
+        const vol = (clamped + 135) / VOL_RANGE;
+        const audioEl2 = document.getElementById('radioAudio');
+        if (audioEl2) audioEl2.volume = Math.round(vol * 100) / 100;
+      }
+      function volDragStart(e) {
+        volDragging     = true;
+        volDragLastAng  = volPointerAngle(e);
+        volDragTotal    = 0;
+        volDragStartDeg = retroVolDeg;
+        e.preventDefault();
+      }
+      function volDragMove(e) {
+        if (!volDragging) return;
+        const ang = volPointerAngle(e);
+        let inc = ang - volDragLastAng;
+        if (inc >  180) inc -= 360;
+        if (inc < -180) inc += 360;
+        volDragLastAng  = ang;
+        volDragTotal   += inc;
+        setVolFromDeg(volDragStartDeg + volDragTotal);
+        e.preventDefault();
+      }
+      function volDragEnd() { volDragging = false; }
+      retroVolKnobEl.addEventListener('mousedown',  volDragStart);
+      document.addEventListener('mousemove',  (e) => { if (volDragging) volDragMove(e); });
+      document.addEventListener('mouseup',    ()  => { if (volDragging) volDragEnd();   });
+      retroVolKnobEl.addEventListener('touchstart', volDragStart, { passive: false });
+      document.addEventListener('touchmove',  (e) => { if (volDragging) volDragMove(e); }, { passive: false });
+      document.addEventListener('touchend',   ()  => { if (volDragging) volDragEnd();   });
+
+      // ── Retro Visualizer – oscilloscope waveform ─────────────────────────
+      function startRetroVis() {
+        if (retroVisRAF) return;
+        const cvs = retroVisCvs;
+        const ctx = cvs.getContext('2d');
+        const W   = cvs.width;
+        const H   = cvs.height;
+        const mid = H / 2;
+
+        function draw() {
+          if (!retroActive) { retroVisRAF = null; return; }
+          retroVisRAF = requestAnimationFrame(draw);
+
+          // Phosphor trail effect: semi-transparent clear
+          ctx.fillStyle = 'rgba(5, 8, 0, 0.55)';
+          ctx.fillRect(0, 0, W, H);
+
+          ctx.lineWidth   = 1.8;
+          ctx.shadowBlur  = 5;
+          ctx.shadowColor = 'rgba(255,160,30,0.5)';
+
+          if (window._analyser) {
+            // ── Real audio: triggered oscilloscope ───────────────────────
+            const bufLen = window._analyser.fftSize;
+            const buf    = new Uint8Array(bufLen);
+            window._analyser.getByteTimeDomainData(buf);
+
+            // Find first rising zero-crossing for stable trigger
+            let trig = 0;
+            for (let i = 1; i < bufLen - W; i++) {
+              if (buf[i - 1] < 128 && buf[i] >= 128) { trig = i; break; }
+            }
+
+            ctx.strokeStyle = 'rgba(255,170,40,0.92)';
+            ctx.beginPath();
+            const step = (bufLen - trig) / W;
+            for (let x = 0; x < W; x++) {
+              const idx = Math.floor(trig + x * step);
+              const y   = ((buf[idx] / 255) * H);
+              x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+          } else {
+            // ── Idle: smooth animated sine wave ──────────────────────────
+            const t = Date.now() / 700;
+            ctx.strokeStyle = 'rgba(255,155,30,0.45)';
+            ctx.beginPath();
+            for (let x = 0; x < W; x++) {
+              const y = mid
+                + Math.sin(x * 0.055 + t)          * (H * 0.28)
+                + Math.sin(x * 0.021 + t * 0.6)    * (H * 0.10);
+              x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+        }
+        draw();
+      }
+      function stopRetroVis() {
+        cancelAnimationFrame(retroVisRAF);
+        retroVisRAF = null;
+        if (retroVisCvs) {
+          const ctx = retroVisCvs.getContext('2d');
+          ctx.fillStyle = '#050800';
+          ctx.fillRect(0, 0, retroVisCvs.width, retroVisCvs.height);
+        }
+      }
+
+      // ── HTTPS toggle pushbutton ───────────────────────────────────────────
+      function syncRetroHttpsBtn() {
+        const isOn = document.getElementById('httpsOnlyToggle').checked;
+        if (retroHttpsBtn) {
+          retroHttpsBtn.classList.toggle('on', isOn);
+          if (retroHttpsStateEl) retroHttpsStateEl.textContent = isOn ? 'ON' : 'OFF';
+        }
+      }
+      if (retroHttpsBtn) {
+        retroHttpsBtn.addEventListener('click', () => {
+          const main = document.getElementById('httpsOnlyToggle');
+          main.checked = !main.checked;
+          main.dispatchEvent(new Event('change'));
+          syncRetroHttpsBtn();
+        });
+      }
+
+      // ── Retro EQ preset buttons ───────────────────────────────────────────
+      if (retroEqBtnsEl) {
+        retroEqBtnsEl.querySelectorAll('.retro-eq-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            // Delegate to main EQ preset button
+            const mainBtn = document.querySelector(`#eqPresets [data-preset="${btn.dataset.preset}"]`);
+            if (mainBtn) mainBtn.click();
+            // Visual feedback
+            retroEqBtnsEl.querySelectorAll('.retro-eq-btn')
+              .forEach(b => b.classList.toggle('active', b === btn));
+          });
+        });
+      }
+
+      // ── Sub-genre band buttons (fixed MAX_SUB_BTNS slots) ────────────────
+      function buildSubBands() {
+        if (!retroSubBandsEl) return;
+        const src = document.getElementById('subgenreSelect');
+        const currentSub = src ? src.value : '';
+        retroSubBandsEl.innerHTML = '';
+        const opts = src ? Array.from(src.options).filter(o => o.value !== '') : [];
+        for (let i = 0; i < MAX_SUB_BTNS; i++) {
+          const btn = document.createElement('button');
+          const opt = opts[i];
+          if (opt) {
+            btn.className = 'sub-band-btn' + (opt.value === currentSub ? ' active' : '');
+            btn.textContent = opt.text.length > 9 ? opt.text.slice(0, 8) + '…' : opt.text;
+            btn.dataset.sub = opt.value;
+            btn.addEventListener('click', () => {
+              const mainSub = document.getElementById('subgenreSelect');
+              mainSub.value = opt.value;
+              mainSub.dispatchEvent(new Event('change'));
+              document.getElementById('searchBtn').click();
+              retroSubBandsEl.querySelectorAll('.sub-band-btn')
+                .forEach(b => b.classList.toggle('active', b === btn));
+            });
+          } else {
+            // Empty placeholder — occupies space but is not interactive
+            btn.className = 'sub-band-btn empty';
+            btn.disabled = true;
+            btn.setAttribute('aria-hidden', 'true');
+            btn.textContent = '';
+          }
+          retroSubBandsEl.appendChild(btn);
+        }
+      }
+
+      // ── Genre filter (band buttons only, no selects) ──────────────────────
+      function syncRetroGenreOptions() {
+        const src = document.getElementById('genreSelect');
+        if (!src) return;
+        bandBtns.forEach(b => b.classList.toggle('active', b.dataset.genre === src.value));
+        // Rebuild sub-bands based on new genre
+        requestAnimationFrame(() => {
+          buildSubBands();
+        });
+      }
+
+      // Band preset buttons
+      bandBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const genre = btn.dataset.genre;
+          const main = document.getElementById('genreSelect');
+          main.value = genre;
+          main.dispatchEvent(new Event('change'));
+          document.getElementById('searchBtn').click();
+          bandBtns.forEach(b => b.classList.toggle('active', b === btn));
+          // Rebuild sub-bands after genre change (after search updates options)
+          setTimeout(buildSubBands, 400);
+        });
+      });
+
+      // ── Transport buttons ─────────────────────────────────────────────────
+      const retroRecBtn = document.getElementById('retroRecBtn');
+
+      retroPlayBtn.addEventListener('click', () => {
+        document.getElementById('playBtn').click();
+        setTimeout(syncRetroPlayIcon, 80);
+      });
+      retroPrevBtn.addEventListener('click', () => { document.getElementById('prevBtn').click(); });
+      retroNextBtn.addEventListener('click', () => { document.getElementById('nextBtn').click(); });
+      if (retroRecBtn) {
+        retroRecBtn.addEventListener('click', () => {
+          const mainRecBtn = document.getElementById('recBtn');
+          if (mainRecBtn) mainRecBtn.click();
+          // Sync recording state after a tick
+          setTimeout(syncRetroRecIcon, 120);
+        });
+      }
+
+      function syncRetroRecIcon() {
+        if (!retroRecBtn) return;
+        const mainRecBtn = document.getElementById('recBtn');
+        const isRec = mainRecBtn && mainRecBtn.classList.contains('recording');
+        retroRecBtn.classList.toggle('recording', isRec);
+        if (window.lucide) lucide.createIcons({ nodes: [retroRecBtn] });
+      }
+
+      function syncRetroPlayIcon() {
+        const audioEl2 = document.getElementById('radioAudio');
+        const isPlaying = audioEl2 && !audioEl2.paused;
+        if (window.lucide && retroPlayBtn) {
+          retroPlayBtn.innerHTML = `<i data-lucide="${isPlaying ? 'pause' : 'play'}"></i>`;
+          lucide.createIcons({ nodes: [retroPlayBtn] });
+        }
+      }
+      // Keep play icon in sync via audio events
+      document.getElementById('radioAudio').addEventListener('play',  syncRetroPlayIcon);
+      document.getElementById('radioAudio').addEventListener('pause', syncRetroPlayIcon);
+
+      // ── Enter / Exit ──────────────────────────────────────────────────────
+      function enterRetro() {
+        retroActive = true;
+        retroRadioEl.hidden = false;
+        document.body.style.overflow = 'hidden';
+        syncRetroGenreOptions();
+        buildSubBands();
+        syncRetroHttpsBtn();
+        // Init volume knob to current volume
+        const audioEl2 = document.getElementById('radioAudio');
+        if (audioEl2) {
+          const vol = audioEl2.volume ?? 0.7;
+          retroVolDeg = vol * VOL_RANGE - 135;
+          retroVolKnobEl.style.transform = `rotate(${retroVolDeg}deg)`;
+        }
+        buildRetroScale();
+        syncRetroDisplay();
+        syncRetroPlayIcon();
+        startRetroVis();
+        if (window.lucide) lucide.createIcons({ nodes: [retroRadioEl] });
+        document.addEventListener('keydown', onRetroEsc);
+      }
+
+      function exitRetro() {
+        retroActive = false;
+        retroRadioEl.hidden = true;
+        document.body.style.overflow = '';
+        stopRetroVis();
+        document.removeEventListener('keydown', onRetroEsc);
+      }
+
+      function onRetroEsc(e) { if (e.key === 'Escape') exitRetro(); }
+
+      retroExpandBtn.addEventListener('click', enterRetro);
+      retroExitBtn.addEventListener('click',   exitRetro);
+
+      // Sync retro display whenever station changes
+      window._retroStationChanged = function() {
+        if (!retroActive) return;
+        syncRetroDisplay();
+        syncRetroPlayIcon();
+        positionRetroScale(true);
       };
     })();
 
