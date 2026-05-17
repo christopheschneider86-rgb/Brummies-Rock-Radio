@@ -1524,22 +1524,41 @@ small {
   position: absolute;
   top: 12px;
   left: 12px;
-  width: min(360px, calc(50vw - 80px));
-  max-width: min(360px, calc(50vw - 80px));
+  width: 200px;
   background: rgba(8,8,26,0.88);
   border: 1px solid rgba(255,255,255,0.22);
   border-radius: 12px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding: 10px 12px;
+  padding: 10px 12px 12px;
   z-index: 25;
   pointer-events: auto;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Info row: logo + text side by side */
+.gfs-np-info-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Button row: fav + rec + play evenly spread below info */
+.gfs-np-btns-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  border-top: 1px solid rgba(255,255,255,0.10);
+  padding-top: 8px;
+  margin-top: 2px;
 }
 #gfsNP.is-dragging { cursor: grabbing; }
 #globeView.fs #gfsNP { display: flex; }
@@ -1559,6 +1578,7 @@ small {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  overflow: hidden;
 }
 
 #gfsStationName {
@@ -1578,9 +1598,22 @@ small {
   text-overflow: ellipsis;
 }
 
+/* Fließtext – scrolls when text overflows the container */
+@keyframes gfsMarquee {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(0); }
+  85%  { transform: translateX(var(--marquee-dist, -60px)); }
+  100% { transform: translateX(var(--marquee-dist, -60px)); }
+}
+#gfsStationName.scrolling,
+#gfsTitleText.scrolling {
+  text-overflow: clip;
+  animation: gfsMarquee 4s ease-in-out infinite alternate;
+}
+
 .gfs-ctrl-btn {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   flex-shrink: 0;
   border-radius: 13px;
   background: rgba(8,8,28,0.90);
@@ -1598,6 +1631,23 @@ small {
 }
 .gfs-ctrl-btn:hover { background: rgba(var(--color-accent-rgb,232,64,42),0.80); border-color: var(--color-accent); transform: scale(1.08); }
 .gfs-ctrl-btn svg { width: 24px; height: 24px; stroke-width: 2; }
+
+/* Globe record button */
+.gfs-rec-btn .rec-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #e53e3e;
+  display: block;
+  box-shadow: 0 0 6px rgba(229,62,62,0.5);
+}
+.gfs-rec-btn.recording {
+  border-color: #e53e3e;
+  background: rgba(229,62,62,0.22);
+  animation: recPulse 1.2s ease-in-out infinite;
+}
+.gfs-rec-btn.recording .rec-dot { background: #ff6b6b; }
+.gfs-rec-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.gfs-rec-btn:disabled:hover { transform: none; background: rgba(8,8,28,0.90); border-color: rgba(255,255,255,0.40); }
 #gfsNP .gfs-ctrl-btn,
 #gfsFilters button,
 #gfsFilters select,
@@ -1640,6 +1690,25 @@ small {
 }
 
 #gfsFilters select option { background: #1a1a2e; color: #f0f0f0; }
+
+.gfs-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+#gfsSearch {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f0f0f0;
+  font-size: 12px;
+  width: 130px;
+}
+#gfsSearch::placeholder { color: rgba(255,255,255,0.35); }
 
 .gfs-https-label {
   display: flex;
@@ -1713,6 +1782,51 @@ small {
   background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 100%);
   border-bottom: 2px solid rgba(var(--color-accent-rgb,232,100,30),0.6);
   flex-shrink: 0;
+  position: relative; /* anchor for absolute-positioned search */
+}
+
+/* Amber LED-style search — absolutely centred in the top bar */
+.retro-search-wrap {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #0d0600;
+  border: 1px solid rgba(180,90,0,0.65);
+  border-radius: 6px;
+  padding: 5px 11px;
+  box-shadow:
+    inset 0 0 14px rgba(255,120,0,0.12),
+    0 0 8px rgba(255,140,0,0.18);
+  pointer-events: auto;
+}
+.retro-search-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--retro-amber, #ffaa22);
+  opacity: 0.75;
+}
+/* Specificity (1,1,1) beats global input[type="text"] rule (0,1,1) + !important */
+#retroRadio .retro-search-wrap .retro-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none;
+  color: var(--retro-amber, #ffaa22) !important;
+  font-size: 13px !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  letter-spacing: 0.05em;
+  width: 160px;
+  padding: 0 !important;
+  margin: 0 !important;
+  text-shadow: 0 0 6px rgba(255,140,0,0.55);
+  box-shadow: none !important;
+}
+#retroRadio .retro-search-wrap .retro-search-input::placeholder {
+  color: rgba(255,140,0,0.28) !important;
+  font-style: italic;
 }
 
 .retro-brand-plate {
@@ -3072,14 +3186,15 @@ small {
   button.secondary:hover:not(:disabled) { background: #374151; }
 }
 
-/* SETTINGS PANEL */
-/* ── Fixed bottom-right button stack: Settings above Legal ───────────────── */
+/* SETTINGS AND TOOLS PANELS */
+/* ── Fixed bottom-right button stack: Settings above Tools above Legal ───────────────── */
 /* Both share these base styles */
 #settingsBtn,
-#legalBtn {
+#toolsBtn,
+#legalBtn,
+#globalHomeBtn {
   position: fixed;
-  right: 16px;
-  z-index: 800;
+  z-index: 2147483640 !important;
   width: 36px;
   height: 36px;
   border-radius: 9px;
@@ -3098,44 +3213,74 @@ small {
   line-height: 1;
 }
 
-/* Legal button sits at bottom with safe-area clearance for iPhone home bar */
+/* Bottom-right button stack (bottom → top): legal, tools, home, settings */
+#settingsBtn,
+#toolsBtn,
+#legalBtn,
+#globalHomeBtn {
+  right: 16px;
+}
+
 #legalBtn {
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Settings button sits above legal button: height(36) + gap(10) */
-#settingsBtn {
+#toolsBtn {
   bottom: calc(62px + env(safe-area-inset-bottom, 0px));
 }
 
-#settingsBtn svg { width: 16px; height: 16px; }
+#settingsBtn {
+  bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+}
+
+#globalHomeBtn {
+  bottom: calc(154px + env(safe-area-inset-bottom, 0px));
+}
+
+#welcomeScreen:not(.hidden) ~ #globalHomeBtn {
+  display: none !important;
+}
+
+/* Hide the expand/collapse toggle inside Globe fullscreen — Home is the only exit */
+#globeView.fs #globeExpandBtn {
+  display: none !important;
+}
+
+#settingsBtn svg,
+#toolsBtn svg,
+#globalHomeBtn svg { width: 16px; height: 16px; }
 
 #settingsBtn:hover,
-#legalBtn:hover {
+#toolsBtn:hover,
+#legalBtn:hover,
+#globalHomeBtn:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
   background: var(--color-bg-tertiary);
 }
 
-#settingsPanel {
+#settingsPanel,
+#toolsPanel {
   position: fixed;
   top: 0;
   right: -100%;
   width: 100%;
   height: 100vh;
   background: #0b0b0f;
-  z-index: 99999;
+  z-index: 2147483647 !important;
   transition: right 0.3s ease-in-out;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-#settingsPanel.open {
+#settingsPanel.open,
+#toolsPanel.open {
   right: 0;
 }
 
 @media (min-width: 768px) {
-  #settingsPanel {
+  #settingsPanel,
+  #toolsPanel {
     width: 400px;
     border-left: 2px solid var(--color-accent);
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
@@ -3391,7 +3536,7 @@ kbd {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.75);
-  z-index: 100000;
+  z-index: 9999999;
   align-items: center;
   justify-content: center;
   padding: 16px;
@@ -3475,11 +3620,12 @@ kbd {
   width: 100%;
   height: 100vh;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 99998;
+  z-index: 2147483646 !important;
   opacity: 0;
   transition: opacity 0.3s;
 }
 
+/* Since tools and settings share the same overlay visual, we can use settingsOverlay for both or copy it. We will just use settingsOverlay for toolsPanel as well in JS. */
 #settingsOverlay.show {
   display: block;
   opacity: 1;
@@ -3761,7 +3907,7 @@ kbd {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.65);
-  z-index: 10002;
+  z-index: 2147483647 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3851,5 +3997,166 @@ kbd {
   cursor: pointer;
   transition: opacity 0.15s;
 }
-#legalCloseBtnFooter:hover { opacity: 0.85; }
 #legalCloseBtnFooter svg { width: 14px; height: 14px; }
+
+/* ── Welcome Screen ───────────────────────────────────────────────────────── */
+#welcomeScreen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#welcomeScreen.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+#welcomeKofi {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #d9534f;
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 22px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 2;
+}
+#welcomeKofi:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.5); }
+#welcomeKofi img { width: 22px; height: 22px; }
+#welcomeKofi::after { content: 'Support me'; }
+
+.kofi-link-btn {
+  display: inline-flex;
+  align-items: center;
+  background: #d9534f;
+  color: #fff !important;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.kofi-link-btn:hover { background: #c9302c; }
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+  padding: 20px;
+}
+
+.welcome-title {
+  font-size: 36px;
+  color: var(--color-accent, #ef4444);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary, #aaa);
+  margin-bottom: 30px;
+}
+
+#welcomeModel {
+  width: 100%;
+  height: 45vh;
+  min-height: 300px;
+  margin-bottom: 40px;
+  --poster-color: transparent;
+  outline: none;
+  cursor: grab;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+#welcomeModel.pulling {
+  cursor: grabbing;
+  transition: none;
+}
+
+#welcomeModel.snapping {
+  cursor: grab;
+  transition: transform 0.7s cubic-bezier(0.22, 1.8, 0.36, 1);
+}
+
+@keyframes headSquish {
+  0%   { transform: scale(1, 1); }
+  15%  { transform: scale(1.12, 0.88); }
+  30%  { transform: scale(0.92, 1.1); }
+  50%  { transform: scale(1.06, 0.95); }
+  70%  { transform: scale(0.97, 1.03); }
+  85%  { transform: scale(1.02, 0.99); }
+  100% { transform: scale(1, 1); }
+}
+
+@keyframes headWiggle {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(-8deg); }
+  40%  { transform: rotate(8deg); }
+  60%  { transform: rotate(-5deg); }
+  80%  { transform: rotate(4deg); }
+  100% { transform: rotate(0deg); }
+}
+
+#welcomeModel.squish {
+  animation: headSquish 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+#welcomeModel.wiggle {
+  animation: headWiggle 0.5s ease;
+}
+
+.welcome-buttons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.welcome-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--color-bg-secondary, #111827);
+  border: 2px solid var(--color-border, #333);
+  color: var(--color-text-primary, #fff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.welcome-btn:hover {
+  background: var(--color-bg-tertiary, #1f2937);
+  border-color: var(--color-accent, #ef4444);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.welcome-btn i {
+  width: 20px;
+  height: 20px;
+}

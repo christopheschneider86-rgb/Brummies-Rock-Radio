@@ -1969,8 +1969,9 @@ function startMetadataPolling() {
       }
     }
 
-    // Called from selectStation – probes CORS first, then decides whether
-    // to enable the Web Audio graph for this stream.
+    // Called from selectStation after playback has already started.
+    // Probes CORS in the background and upgrades to Web Audio (EQ/Visualizer)
+    // if the stream supports it. Does NOT block or replace the initial play().
     async function setupAudioForStation(station) {
       const url = station.streamUrl;
 
@@ -1983,18 +1984,34 @@ function startMetadataPolling() {
       // iOS / CarPlay: skip CORS probe, play bare
       if (isExternalAudio()) return;
 
-      // Probe CORS support for this stream
+      // Probe CORS support for this stream (runs in background, does not block play)
       const corsOK = await probeStreamCORS(url);
+
+      // Guard: station may have changed while the probe was running
+      if (currentStation !== station) return;
+
       if (corsOK) {
-        // Enable CORS on the audio element so createMediaElementSource works
-        audioEl.crossOrigin = 'anonymous';
-        // Must reload src after setting crossOrigin
-        audioEl.src = url;
+        // Wait until audio is actually delivering frames before reloading src with
+        // crossOrigin. Reloading src earlier aborts the pending play() promise,
+        // which triggers markStationDeadAndSkip unnecessarily.
+        // If already playing, resolve immediately to avoid unnecessary delay
+        if (!audioEl.paused) {
+          // Audio is already playing, proceed immediately
+        } else {
+          // Wait for playback to start or error
+          await new Promise(resolve => {
+              if (!audioEl.paused) { resolve(); return; }
+            audioEl.addEventListener('playing', resolve, { once: true });
+            audioEl.addEventListener('error',   resolve, { once: true });
+            setTimeout(resolve, 5000);
+          });
+        }
+        if (currentStation !== station) return;
+        if (audioEl.paused) return; // stream failed or user already paused
+
         initAudioContext();
       } else {
-        // No CORS – play without Web Audio graph
-        audioEl.removeAttribute('crossOrigin');
-        audioEl.src = url;
+        // No CORS – stream is already playing without Web Audio graph
         console.log('Stream has no CORS – EQ/Visualizer disabled for this station');
         showEQWarning(true);
       }
@@ -2539,49 +2556,80 @@ function startMetadataPolling() {
   // called again inside initAudioContext once the probe completes)
   if (window._recUpdateAvailability) window._recUpdateAvailability();
 
-  // Setup audio with CORS probe (sets audioEl.src internally)
-  setupAudioForStation(station).then(() => {
-    // If src was not set by setupAudioForStation (e.g. already CORS-ready),
-    // ensure it points to the current station
-    if (!audioEl.src || !audioEl.src.includes(station.streamUrl.split('?')[0])) {
-      audioEl.src = station.streamUrl;
-    }
+  // Start playing immediately – must happen synchronously within the user gesture
+  // so browsers don't block autoplay. The CORS probe runs in the background and
+  // upgrades the AudioContext/EQ afterwards without blocking playback.
+      audioEl.pause();               // laufende Play-Promise abbrechen
+      audioEl.removeAttribute("src"); // alten Stream komplett lösen
+      audioEl.removeAttribute("crossOrigin");
+      audioEl.load();                 // AbortError des alten Streams auslösen & abwarten
+      audioEl.crossOrigin = 'anonymous';
+  audioEl.src = station.streamUrl;
 
+  audioEl.play().then(() => {
+    setIcon(playBtn, "pause");
+    if (window.lucide) lucide.createIcons();
+    playBtn.disabled = false;
+    coverEl.classList.add('playing');
+
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+
+    startListeningSession(station);
+    startMetadataPolling();
+    startDataTracking();
+
+    if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+    if (audioContextReady && !visualizerActive) startVisualizer();
+
+    updateMediaSession();
+    if (window._retroStationChanged) window._retroStationChanged();
+
+    clearPlayStartTimeout();
+    playStartTimeout = setTimeout(() => {
+      if (audioEl.readyState < 3 || audioEl.currentTime === 0) {
+        markStationDeadAndSkip('play-start timeout (10s, no audio data)');
+      }
+    }, 10000);
+  }).catch(err => {
+    // AbortError means the src was reloaded – not a real stream failure. Ignore it.
+    if (err && err.name === 'AbortError') return;
+    
+    // CORS fallback: try without crossOrigin for streams that don't support it
+    console.log('CORS play failed, retrying without crossOrigin:', err && err.message);
+    audioEl.removeAttribute('crossOrigin');
+    audioEl.src = station.streamUrl;
+    
     audioEl.play().then(() => {
       setIcon(playBtn, "pause");
       if (window.lucide) lucide.createIcons();
       playBtn.disabled = false;
       coverEl.classList.add('playing');
-
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-
       startListeningSession(station);
       startMetadataPolling();
       startDataTracking();
-
       if (audioContext && audioContext.state === 'suspended') audioContext.resume();
-      if (audioContextReady && !visualizerActive) startVisualizer();
-
       updateMediaSession();
       if (window._retroStationChanged) window._retroStationChanged();
-
-      // Start play-start watchdog: if the stream doesn't actually deliver
-      // audio data within 10s (no 'playing' event fired), treat it as dead.
       clearPlayStartTimeout();
       playStartTimeout = setTimeout(() => {
-        // 'playing' fires only when actual audio frames arrive.
-        // readyState >=3 means HAVE_FUTURE_DATA → stream is delivering.
         if (audioEl.readyState < 3 || audioEl.currentTime === 0) {
           markStationDeadAndSkip('play-start timeout (10s, no audio data)');
         }
       }, 10000);
-    }).catch(err => {
-      console.error('Stream error:', err);
+      // Show EQ warning since this stream has no CORS
+      showEQWarning(true);
+    }).catch(err2 => {
+      if (err2 && err2.name === 'AbortError') return;
+      console.error('Stream error:', err2);
       coverEl.classList.remove('playing');
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-      markStationDeadAndSkip('play() promise rejected: ' + (err && err.message));
+      markStationDeadAndSkip('play() promise rejected: ' + (err2 && err2.message));
     });
   });
+
+  // CORS probe in background: upgrades to AudioContext/EQ if the stream allows it
+  setupAudioForStation(station);
       
       addHistoryEntry(fromShuffle ? "🔀 Shuffle zu" : "🎵 Wechsel zu", station);
       renderStations();
@@ -3039,15 +3087,24 @@ function startMetadataPolling() {
     });
 
     // --- EVENT LISTENERS ---
+    // Expose so retro/globe inputs can trigger the same search
+    window._triggerSearch = searchShoutcastStations;
+
     searchBtn.addEventListener("click", searchShoutcastStations);
-    
+
     searchInput.addEventListener("input", () => {
-      clearTimeout(searchInput.debounceTimer);
-      searchInput.debounceTimer = setTimeout(() => {
-        if (allStations.length > 0 || searchInput.value.length > 2) {
-          searchShoutcastStations();
-        }
+      const text = searchInput.value;
+      // Sync sibling inputs without re-triggering this handler
+      if (window._setRetroSearch) window._setRetroSearch(text, true);
+      if (window._setGlobeSearch) window._setGlobeSearch(text, true);
+      clearTimeout(searchInput._debounce);
+      searchInput._debounce = setTimeout(() => {
+        if (allStations.length > 0 || text.length > 2) searchShoutcastStations();
       }, 500);
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); searchShoutcastStations(); }
     });
 
     subgenreSelect.addEventListener("change", () => {
@@ -3276,6 +3333,10 @@ function startMetadataPolling() {
 
     // Open Settings
     function openSettings() {
+      // Close legal overlay if open
+      const legalOverlay = document.getElementById('legalOverlay');
+      if (legalOverlay && !legalOverlay.hidden) legalOverlay.hidden = true;
+      
       settingsPanel.classList.add('open');
       settingsOverlay.classList.add('show');
       document.body.style.overflow = 'hidden'; // Prevent background scroll
@@ -3290,7 +3351,31 @@ function startMetadataPolling() {
 
     settingsBtn.addEventListener('click', openSettings);
     closeSettings.addEventListener('click', closeSettingsPanel);
-    settingsOverlay.addEventListener('click', closeSettingsPanel);
+    settingsOverlay.addEventListener('click', () => {
+      closeSettingsPanel();
+      closeToolsPanel();
+    });
+
+    // ── Tools Panel (Sleep / Shuffle / Data) ──────────────────────────────────
+    const toolsBtn   = document.getElementById('toolsBtn');
+    const toolsPanel = document.getElementById('toolsPanel');
+    const closeTools = document.getElementById('closeTools');
+
+    function openToolsPanel() {
+      if (settingsPanel.classList.contains('open')) closeSettingsPanel();
+      if (toolsPanel) toolsPanel.classList.add('open');
+      settingsOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeToolsPanel() {
+      if (toolsPanel) toolsPanel.classList.remove('open');
+      settingsOverlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    if (toolsBtn) toolsBtn.addEventListener('click', openToolsPanel);
+    if (closeTools) closeTools.addEventListener('click', closeToolsPanel);
 
     // Auto-skip dead-stations toggle
     const autoSkipToggle = document.getElementById('autoSkipDeadToggle');
@@ -3638,8 +3723,6 @@ function startMetadataPolling() {
         tunerViewEl.hidden    = false;
         stationsListEl2.style.display = 'none';
         if (loadMoreBtn2) loadMoreBtn2.style.display = 'none';
-        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        viewTunerBtn.classList.add('active');
         buildScale();
         if (window.lucide) lucide.createIcons();
       }
@@ -3650,13 +3733,11 @@ function startMetadataPolling() {
         tunerViewEl.hidden    = true;
         stationsListEl2.style.display = '';
         if (loadMoreBtn2) loadMoreBtn2.style.display = '';
-        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        viewListBtn.classList.add('active');
         if (window.lucide) lucide.createIcons();
       }
 
-      viewListBtn.addEventListener('click',  showList);
-      viewTunerBtn.addEventListener('click', showTuner);
+      window._showList  = showList;
+      window._showTuner = showTuner;
 
       // Rebuild when station list changes
       window._tunerRefresh = function() {
@@ -3687,31 +3768,55 @@ function startMetadataPolling() {
       const retroSubBandsEl   = document.getElementById('retroSubBands');
       const retroVisCvs       = document.getElementById('retroVisualizer');
       const retroEqBtnsEl     = document.getElementById('retroEqBtns');
+      const retroSearchInput  = document.getElementById('retroSearchInput');
       const bandBtns          = document.querySelectorAll('.band-btn');
 
       if (!retroRadioEl) return; // safety
 
       let retroActive    = false;
-      let retroKnobDeg   = 0;   // mirrors knobDeg
-      let retroVolDeg    = 0;   // volume knob angle (-135..+135)
+      let retroKnobDeg   = 0;
+      let retroVolDeg    = 0;
       let retroVisRAF    = null;
+      let retroSearchText = '';
+
+      function getRetroStations() {
+        if (!retroSearchText) return displayedStations;
+        const q = retroSearchText.toLowerCase();
+        return displayedStations.filter(s =>
+          s.name.toLowerCase().includes(q) ||
+          (s.genre || '').toLowerCase().includes(q) ||
+          (s.country || '').toLowerCase().includes(q)
+        );
+      }
 
       // ── Retro scale (mirrors main scale but in retroTicks) ────────────────
       function buildRetroScale() {
         retroTicksEl.innerHTML = '';
-        const stations = displayedStations;
-        if (!stations.length) return;
+        const stations = getRetroStations();
+        if (!stations.length) {
+          if (retroSearchText) {
+            const msg = document.createElement('div');
+            msg.style.cssText = 'padding:8px 16px;color:var(--color-text-muted);font-size:12px;';
+            msg.textContent = 'Keine Treffer';
+            retroTicksEl.appendChild(msg);
+          }
+          return;
+        }
+        const retroActiveIdx = stations.indexOf(displayedStations[tunerIndex]);
         stations.forEach((st, i) => {
           const tick = document.createElement('div');
-          const dist = Math.abs(i - tunerIndex);
-          tick.className = 'tuner-tick' + (i === tunerIndex ? ' active' : dist === 1 ? ' near' : '');
+          const dist = Math.abs(i - retroActiveIdx);
+          tick.className = 'tuner-tick' + (i === retroActiveIdx ? ' active' : dist === 1 ? ' near' : '');
           const mark  = document.createElement('div');
           mark.className = 'tuner-tick-mark';
           const label = document.createElement('div');
           label.className = 'tuner-tick-label';
           label.textContent = tickLabel(st);
           tick.appendChild(mark); tick.appendChild(label);
-          tick.addEventListener('click', () => commitStation(i));
+          tick.addEventListener('click', () => {
+            const realIdx = displayedStations.indexOf(st);
+            commitStation(realIdx >= 0 ? realIdx : 0);
+          });
           retroTicksEl.appendChild(tick);
         });
         positionRetroScale(false);
@@ -4092,7 +4197,45 @@ function startMetadataPolling() {
       function onRetroEsc(e) { if (e.key === 'Escape') exitRetro(); }
 
       retroExpandBtn.addEventListener('click', enterRetro);
-      retroExitBtn.addEventListener('click',   exitRetro);
+
+      // Setter called by list/globe to sync without re-triggering API
+      window._setRetroSearch = function(text, skipRebuild) {
+        if (retroSearchText === text) return;
+        retroSearchText = text;
+        if (retroSearchInput && retroSearchInput.value !== text) retroSearchInput.value = text;
+        if (!skipRebuild) buildRetroScale();
+      };
+
+      if (retroSearchInput) {
+        retroSearchInput.addEventListener('input', () => {
+          const text = retroSearchInput.value;
+          retroSearchText = text;
+          buildRetroScale();
+          // Sync list input + globe
+          const si = document.getElementById('searchInput');
+          if (si && si.value !== text) si.value = text;
+          if (window._setGlobeSearch) window._setGlobeSearch(text, true);
+          // Debounce API search
+          clearTimeout(window._sharedSearchDebounce);
+          window._sharedSearchDebounce = setTimeout(() => {
+            if (window._triggerSearch && (allStations.length > 0 || text.length > 2)) {
+              window._triggerSearch();
+            }
+          }, 600);
+        });
+        retroSearchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && window._triggerSearch) window._triggerSearch();
+        });
+        // Clear search when retro closes
+        const _origExitRetro = exitRetro;
+        exitRetro = function() {
+          _origExitRetro();
+          retroSearchText = '';
+          retroSearchInput.value = '';
+        };
+      }
+
+      window._exitRetro = exitRetro;
 
       // Sync retro display whenever station changes
       window._retroStationChanged = function() {
@@ -4108,11 +4251,10 @@ function startMetadataPolling() {
       const globeViewEl    = document.getElementById('globeView');
       const globeContainer = document.getElementById('globeContainer');
       const globeNoData    = document.getElementById('globeNoData');
-      const viewGlobeBtn   = document.getElementById('viewGlobeBtn');
       const stationsList3  = document.getElementById('stationsList');
       const loadMoreBtn3   = document.getElementById('loadMoreBtn');
 
-      if (!globeViewEl || !viewGlobeBtn) return;
+      if (!globeViewEl) return;
 
       let globe           = null;
       let globeReady      = false;
@@ -4159,17 +4301,30 @@ function startMetadataPolling() {
       }
 
       // ── Update globe markers ──────────────────────────────────────────────
+      let globeSearchText = '';
+
       function refreshMarkers() {
         if (!globe) return;
-        const stations = geoStations();
+        let stations = geoStations();
         if (allStations.length === 0) {
           globeNoData.textContent = 'Bitte zuerst Suche starten.';
           globeNoData.hidden = false;
           globe.pointsData([]);
           return;
         }
+        // Apply text filter
+        if (globeSearchText) {
+          const q = globeSearchText.toLowerCase();
+          stations = stations.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            (s.genre || '').toLowerCase().includes(q) ||
+            (s.country || '').toLowerCase().includes(q)
+          );
+        }
         if (stations.length === 0) {
-          globeNoData.textContent = 'Keine Sender mit Positionsdaten gefunden.';
+          globeNoData.textContent = globeSearchText
+            ? `Kein Treffer für „${globeSearchText}"`
+            : 'Keine Sender mit Positionsdaten gefunden.';
           globeNoData.hidden = false;
           globe.pointsData([]);
           return;
@@ -4177,12 +4332,16 @@ function startMetadataPolling() {
         globeNoData.hidden = true;
 
         const clusters   = cluster(stations, gridSize(currentAlt));
-        const accent     = cachedAccentColor || '#e8402a';
+        const accent     = getComputedStyle(document.documentElement)
+                             .getPropertyValue('--color-accent').trim() || cachedAccentColor || '#e8402a';
         const clusterCol = '#f97316';
 
         globe
           .pointsData(clusters)
-          .pointRadius(d => d.count > 1 ? Math.min(1.6 + Math.log2(d.count) * 0.7, 4.5) : 1.4)
+          // Larger clusters: smaller radius (was up to 4.5 → now 3.2) to reduce overlap
+          .pointRadius(d => d.count > 1 ? Math.min(1.2 + Math.log2(d.count) * 0.55, 3.2) : 1.0)
+          // Larger clusters sit higher so they don't occlude small ones
+          .pointAltitude(d => d.count > 1 ? Math.min(0.01 + Math.log2(d.count) * 0.006, 0.06) : 0.005)
           .pointColor(d => d.count > 1 ? clusterCol : accent);
       }
 
@@ -4420,12 +4579,14 @@ function startMetadataPolling() {
       const gfsFiltersEl   = document.getElementById('gfsFilters');
       const gfsBrandEl     = document.getElementById('gfsBrand');
       const gfsPlayBtn     = document.getElementById('gfsPlayBtn');
+      const gfsRecBtn      = document.getElementById('gfsRecBtn');
       const gfsLogoEl      = document.getElementById('gfsLogo');
       const gfsStationName = document.getElementById('gfsStationName');
       const gfsTitleText   = document.getElementById('gfsTitleText');
       const gfsGenre       = document.getElementById('gfsGenre');
       const gfsSubgenre    = document.getElementById('gfsSubgenre');
       const gfsHttps       = document.getElementById('gfsHttps');
+      const gfsSearchInput = document.getElementById('gfsSearch');
       const globeExpandBtn = document.getElementById('globeExpandBtn');
 
       // ── Draggable panels ──────────────────────────────────────────────────
@@ -4589,7 +4750,16 @@ function startMetadataPolling() {
       function onFsEsc(e) { if (e.key === 'Escape') exitGlobeFullscreen(); }
 
       globeExpandBtn.addEventListener('click', () => {
-        globeIsFullscreen ? exitGlobeFullscreen() : enterGlobeFullscreen();
+        if (globeIsFullscreen) {
+          exitGlobeFullscreen();
+          globeViewEl.hidden = true;
+          if (stationsList3) stationsList3.style.display = '';
+          if (loadMoreBtn3)  loadMoreBtn3.style.display  = '';
+          const ws = document.getElementById('welcomeScreen');
+          if (ws) ws.classList.remove('hidden');
+        } else {
+          enterGlobeFullscreen();
+        }
       });
 
       // Proxy play/pause in fullscreen
@@ -4597,6 +4767,24 @@ function startMetadataPolling() {
         document.getElementById('playBtn').click();
         setTimeout(syncGfsNP, 80);
       });
+
+      // Proxy record button — delegates to main recBtn, mirrors its state
+      function syncGfsRecBtn() {
+        if (!gfsRecBtn) return;
+        const mainRec = document.getElementById('recBtn');
+        if (!mainRec) return;
+        gfsRecBtn.disabled = mainRec.disabled;
+        const isRecording = mainRec.classList.contains('recording');
+        gfsRecBtn.classList.toggle('recording', isRecording);
+      }
+      if (gfsRecBtn) {
+        gfsRecBtn.addEventListener('click', () => {
+          document.getElementById('recBtn')?.click();
+          setTimeout(syncGfsRecBtn, 80);
+        });
+      }
+      // Expose so _recUpdateAvailability can push updates
+      window._syncGfsRecBtn = syncGfsRecBtn;
 
       // Fullscreen filters → update main + re-search
       gfsGenre.addEventListener('change', () => {
@@ -4617,11 +4805,38 @@ function startMetadataPolling() {
         cb.checked = gfsHttps.checked;
         cb.dispatchEvent(new Event('change'));
       });
+      // Setter called by list/retro to sync without re-triggering API
+      window._setGlobeSearch = function(text, skipRefresh) {
+        if (globeSearchText === text) return;
+        globeSearchText = text;
+        if (gfsSearchInput && gfsSearchInput.value !== text) gfsSearchInput.value = text;
+        if (!skipRefresh) refreshMarkers();
+      };
+
+      if (gfsSearchInput) {
+        gfsSearchInput.addEventListener('input', () => {
+          const text = gfsSearchInput.value;
+          globeSearchText = text;
+          refreshMarkers();
+          // Sync list input + retro
+          const si = document.getElementById('searchInput');
+          if (si && si.value !== text) si.value = text;
+          if (window._setRetroSearch) window._setRetroSearch(text, true);
+          // Debounce API search
+          clearTimeout(window._sharedSearchDebounce);
+          window._sharedSearchDebounce = setTimeout(() => {
+            if (window._triggerSearch && (allStations.length > 0 || text.length > 2)) {
+              window._triggerSearch();
+            }
+          }, 600);
+        });
+        gfsSearchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && window._triggerSearch) window._triggerSearch();
+        });
+      }
 
       // ── View toggle ───────────────────────────────────────────────────────
       async function showGlobe() {
-        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        viewGlobeBtn.classList.add('active');
         stationsList3.style.display  = 'none';
         if (loadMoreBtn3) loadMoreBtn3.style.display = 'none';
         const tunerView = document.getElementById('tunerView');
@@ -4643,7 +4858,7 @@ function startMetadataPolling() {
         if (!globeViewEl.hidden) refreshMarkers();
       };
 
-      viewGlobeBtn.addEventListener('click', showGlobe);
+      window._showGlobe = showGlobe;
     })();
 
     // ── Recording module ──────────────────────────────────────────────────────
@@ -4859,13 +5074,16 @@ function startMetadataPolling() {
       window._recUpdateAvailability = function() {
         const hasStation = !!currentStation;
         const hasCors    = !!mediaRecDest;
-        recSection.style.display = hasStation ? 'block' : 'none';
-        recBtn.disabled = !hasStation || !hasCors;
-        if (hasStation && !hasCors) {
-          recNoteEl.textContent = '⚠️ Dieser Sender unterstützt keine Aufnahme (kein CORS)';
-        } else {
-          recNoteEl.textContent = '';
+        if (recSection) recSection.style.display = hasStation ? 'block' : 'none';
+        if (recBtn) recBtn.disabled = !hasStation || !hasCors;
+        if (recNoteEl) {
+          if (hasStation && !hasCors) {
+            recNoteEl.textContent = '⚠️ Dieser Sender unterstützt keine Aufnahme (kein CORS)';
+          } else {
+            recNoteEl.textContent = '';
+          }
         }
+        if (window._syncGfsRecBtn) window._syncGfsRecBtn();
       };
 
       // ── Stop recording on station change ─────────────────────────────────────
@@ -5426,18 +5644,7 @@ function startMetadataPolling() {
     }
     // ==================== END PWA UPDATE CHECK ====================
 
-    // Donate Button
-    donateBtn.addEventListener('click', () => {
-      const donationUrl = 'https://www.paypal.com/paypalme/ZaboChris';
-      
-      const message = currentLang === 'de' ?
-        'Vielen Dank für deine Unterstützung! 🙏\n\nMöchtest du zur Donation-Seite weitergeleitet werden?' :
-        'Thank you for your support! 🙏\n\nWould you like to be redirected to the donation page?';
-      
-      if (confirm(message)) {
-        window.open(donationUrl, '_blank');
-      }
-    });
+    // Ko-Fi link button – no JS handler needed, href handles navigation
 
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
@@ -5465,8 +5672,8 @@ let sleepState = {
 
 // Initialize Shuffle Timer
 function initShuffleTimer() {
-  const svg = document.querySelector('.circular-timer');
   const handle = document.getElementById('shuffleHandle');
+  const svg = handle ? handle.closest('svg') : null;
   const arc = document.getElementById('shuffleArc');
   const valueText = document.getElementById('shuffleValue');
   const ticksGroup = document.getElementById('shuffleTicks');
@@ -6066,7 +6273,17 @@ if (document.readyState === 'loading') {
   const legalCloseBtnFtr = document.getElementById('legalCloseBtnFooter');
   if (!legalBtn || !legalOverlay) return;
 
-  function openLegal()  { legalOverlay.hidden = false; }
+  function openLegal()  { 
+    // Close settings panel if open
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    if (settingsPanel && settingsPanel.classList.contains('open')) {
+      settingsPanel.classList.remove('open');
+      if (settingsOverlay) settingsOverlay.classList.remove('show');
+    }
+    
+    legalOverlay.hidden = false; 
+  }
   function closeLegal() { legalOverlay.hidden = true;  }
 
   legalBtn.addEventListener('click', openLegal);
@@ -6078,5 +6295,246 @@ if (document.readyState === 'loading') {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !legalOverlay.hidden) closeLegal(); });
 
   if (window.lucide) lucide.createIcons({ nodes: [legalOverlay] });
+})();
+
+// --- Welcome Screen Logic ---
+(function initWelcomeScreen() {
+  const welcomeScreen = document.getElementById('welcomeScreen');
+  const welcomeModel = document.getElementById('welcomeModel');
+  const btnList = document.getElementById('welcomeBtnList');
+  const btnGlobe = document.getElementById('welcomeBtnGlobe');
+  const btnRetro = document.getElementById('welcomeBtnRetro');
+  const globalHomeBtn = document.getElementById('globalHomeBtn');
+
+  if (!welcomeScreen) return;
+
+  // Initialize icons for these specific elements since they might not be caught globally immediately
+  if (window.lucide) {
+    try {
+      lucide.createIcons({ nodes: [welcomeScreen] });
+      if (globalHomeBtn) lucide.createIcons({ nodes: [globalHomeBtn] });
+    } catch (e) {
+      console.warn('Lucide icons error:', e);
+    }
+  }
+
+  let isNodding = false;
+
+  // ── Head tracking (mouse + touch → rotation) ────────────────────────────
+  function trackPointer(clientX, clientY) {
+    if (welcomeScreen.classList.contains('hidden') || isNodding || isPulling) return;
+    const x = (clientX / window.innerWidth)  * 2 - 1;
+    const y = (clientY / window.innerHeight) * 2 - 1;
+    welcomeModel.setAttribute('camera-orbit',
+      `${-(x * 30)}deg ${75 - (y * 20)}deg auto`);
+  }
+
+  // ── Boing sound via Web Audio ────────────────────────────────────────────
+  function playBoing() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      // Pitch envelope: high → low (spring snap)
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(420, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.35);
+      // Second harmonic for richness
+      const osc2  = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(840, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.3);
+      gain2.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc2.connect(gain2); gain2.connect(ctx.destination); osc2.start(); osc2.stop(ctx.currentTime + 0.35);
+
+      gain.gain.setValueAtTime(0.28, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 0.45);
+      setTimeout(() => ctx.close(), 600);
+    } catch (e) { /* AudioContext not available */ }
+  }
+
+  // ── Pull / snap-back mechanic ────────────────────────────────────────────
+  let isPulling   = false;
+  let pullStartX  = 0, pullStartY = 0;
+  let pullOffsetX = 0, pullOffsetY = 0;
+  const MAX_PULL  = 90; // px cap
+
+  function applyPullTransform(dx, dy) {
+    // Clamp and add subtle stretch in pull direction
+    const dist   = Math.sqrt(dx * dx + dy * dy);
+    const clamp  = Math.min(dist, MAX_PULL) / (dist || 1);
+    const tx = dx * clamp;
+    const ty = dy * clamp;
+    // Stretch perpendicular to pull direction
+    const stretch = 1 + (dist / MAX_PULL) * 0.12;
+    const squishY = 1 - (dist / MAX_PULL) * 0.08;
+    const angle   = Math.atan2(dy, dx) * 180 / Math.PI;
+    welcomeModel.style.transform =
+      `rotate(${angle}deg) scale(${stretch}, ${squishY}) rotate(${-angle}deg) translate(${tx}px, ${ty}px)`;
+  }
+
+  function onPullStart(clientX, clientY) {
+    isPulling  = true;
+    pullStartX = clientX;
+    pullStartY = clientY;
+    welcomeModel.classList.remove('snapping', 'squish', 'wiggle');
+    welcomeModel.classList.add('pulling');
+  }
+
+  function onPullMove(clientX, clientY) {
+    if (!isPulling) return;
+    pullOffsetX = clientX - pullStartX;
+    pullOffsetY = clientY - pullStartY;
+    applyPullTransform(pullOffsetX, pullOffsetY);
+  }
+
+  function onPullEnd() {
+    if (!isPulling) return;
+    isPulling = false;
+    const dist = Math.sqrt(pullOffsetX ** 2 + pullOffsetY ** 2);
+    welcomeModel.classList.remove('pulling');
+    welcomeModel.classList.add('snapping');
+    welcomeModel.style.transform = '';
+    if (dist > 12) playBoing();
+    welcomeModel.addEventListener('transitionend', () => {
+      welcomeModel.classList.remove('snapping');
+    }, { once: true });
+    pullOffsetX = pullOffsetY = 0;
+  }
+
+  // ── Tap / click → squish ─────────────────────────────────────────────────
+  let tapCount = 0, tapTimer = null;
+  function triggerHeadAnim() {
+    if (isPulling) return;
+    welcomeModel.classList.remove('squish', 'wiggle');
+    void welcomeModel.offsetWidth;
+    if (++tapCount >= 3) { tapCount = 0; welcomeModel.classList.add('wiggle'); }
+    else {
+      if (tapTimer) clearTimeout(tapTimer);
+      tapTimer = setTimeout(() => { tapCount = 0; }, 600);
+      welcomeModel.classList.add('squish');
+    }
+    welcomeModel.addEventListener('animationend', () => {
+      welcomeModel.classList.remove('squish', 'wiggle');
+    }, { once: true });
+  }
+
+  if (welcomeModel) {
+    // Mouse
+    document.addEventListener('mousemove', (e) => {
+      if (isPulling) onPullMove(e.clientX, e.clientY);
+      else trackPointer(e.clientX, e.clientY);
+    });
+    document.addEventListener('mouseup', onPullEnd);
+    welcomeModel.addEventListener('mousedown', (e) => {
+      onPullStart(e.clientX, e.clientY);
+    });
+
+    // Touch
+    welcomeModel.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      onPullStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length !== 1) return;
+      if (isPulling) onPullMove(e.touches[0].clientX, e.touches[0].clientY);
+      else trackPointer(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      // short tap (< 15px movement) → squish
+      const dist = Math.sqrt(pullOffsetX ** 2 + pullOffsetY ** 2);
+      onPullEnd();
+      if (dist < 15) triggerHeadAnim();
+    });
+
+    // Click on desktop (short drag = click → squish)
+    welcomeModel.addEventListener('click', (e) => {
+      const dist = Math.sqrt(pullOffsetX ** 2 + pullOffsetY ** 2);
+      if (dist < 15) triggerHeadAnim();
+    });
+  }
+
+  function hideWelcome(callback) {
+    if (welcomeModel) {
+      isNodding = true;
+      // Nod down
+      welcomeModel.setAttribute('camera-orbit', `0deg 95deg auto`);
+      setTimeout(() => {
+        // Nod up
+        welcomeModel.setAttribute('camera-orbit', `0deg 60deg auto`);
+        setTimeout(() => {
+          // Center and hide
+          welcomeModel.setAttribute('camera-orbit', `0deg 75deg auto`);
+          setTimeout(() => {
+            welcomeScreen.classList.add('hidden');
+            isNodding = false;
+            if (callback) callback();
+          }, 200);
+        }, 200);
+      }, 200);
+    } else {
+      welcomeScreen.classList.add('hidden');
+      if (callback) callback();
+    }
+  }
+
+  if (btnList) {
+    btnList.addEventListener('click', () => {
+      hideWelcome();
+    });
+  }
+
+  if (btnGlobe) {
+    btnGlobe.addEventListener('click', () => {
+      hideWelcome(() => {
+        const globeExpandBtn = document.getElementById('globeExpandBtn');
+        if (window._showGlobe) {
+          window._showGlobe().then(() => {
+            setTimeout(() => {
+              if (globeExpandBtn) globeExpandBtn.click();
+            }, 300);
+          });
+        }
+      });
+    });
+  }
+
+  if (btnRetro) {
+    btnRetro.addEventListener('click', () => {
+      hideWelcome(() => {
+        if (window._showTuner) window._showTuner();
+        const retroExpandBtn = document.getElementById('retroExpandBtn');
+        setTimeout(() => {
+          if (retroExpandBtn) retroExpandBtn.click();
+        }, 100);
+      });
+    });
+  }
+
+  if (globalHomeBtn) {
+    globalHomeBtn.addEventListener('click', () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(err => console.log(err));
+      }
+
+      // Close Retro fullscreen if open
+      const retroRadio = document.getElementById('retroRadio');
+      if (retroRadio && !retroRadio.hidden) {
+        if (window._exitRetro) window._exitRetro();
+      }
+
+      // Close Globe fullscreen if open
+      if (window._globeHide) window._globeHide();
+
+      // Restore list view so stationsList is visible next time
+      if (window._showList) window._showList();
+
+      welcomeScreen.classList.remove('hidden');
+    });
+  }
 })();
 
