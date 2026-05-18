@@ -4683,6 +4683,21 @@ function startMetadataPolling() {
             .replace(/^\s*[-–—]\s*/, '').trim() || '—';
         }
         gfsTitleText.textContent = titleText;
+
+        // Fließtext: activate marquee when text overflows
+        requestAnimationFrame(() => {
+          [gfsStationName, gfsTitleText].forEach(el => {
+            if (!el) return;
+            el.classList.remove('scrolling');
+            el.style.removeProperty('--marquee-dist');
+            if (el.scrollWidth > el.clientWidth) {
+              const dist = el.scrollWidth - el.clientWidth;
+              el.style.setProperty('--marquee-dist', `-${dist}px`);
+              el.classList.add('scrolling');
+            }
+          });
+        });
+
         // Station logo
         if (currentStation && currentStation.favicon) {
           gfsLogoEl.src = currentStation.favicon;
@@ -6535,6 +6550,33 @@ if (document.readyState === 'loading') {
 
       welcomeScreen.classList.remove('hidden');
     });
+  }
+
+  // ── Logo-Click → Welcome in all three modes ──────────────────────────────
+  function goToWelcome() {
+    const globalHomeBtn = document.getElementById('globalHomeBtn');
+    if (globalHomeBtn) globalHomeBtn.click();
+  }
+
+  // List header logo
+  const headerLogo = document.getElementById('headerLogo');
+  if (headerLogo) {
+    headerLogo.style.cursor = 'pointer';
+    headerLogo.addEventListener('click', goToWelcome);
+  }
+
+  // Retro cabinet logo (inside retro-brand-plate)
+  const retroLogo = document.querySelector('.retro-logo-icon');
+  if (retroLogo) {
+    retroLogo.style.cursor = 'pointer';
+    retroLogo.addEventListener('click', goToWelcome);
+  }
+
+  // Globe fullscreen brand logo
+  const gfsBrandImg = document.querySelector('#gfsBrand img');
+  if (gfsBrandImg) {
+    gfsBrandImg.style.cursor = 'pointer';
+    gfsBrandImg.addEventListener('click', goToWelcome);
   }
 })();
 
