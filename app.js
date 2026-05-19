@@ -4196,7 +4196,10 @@ function startMetadataPolling() {
 
       function onRetroEsc(e) { if (e.key === 'Escape') exitRetro(); }
 
-      retroExpandBtn.addEventListener('click', enterRetro);
+      retroExpandBtn.addEventListener('click', () => {
+        enterRetro();
+        document.body.classList.add('retro-active');
+      });
 
       // Setter called by list/globe to sync without re-triggering API
       window._setRetroSearch = function(text, skipRebuild) {
@@ -4235,7 +4238,10 @@ function startMetadataPolling() {
         };
       }
 
-      window._exitRetro = exitRetro;
+      window._exitRetro = function() {
+        exitRetro();
+        document.body.classList.remove('retro-active');
+      };
 
       // Sync retro display whenever station changes
       window._retroStationChanged = function() {
@@ -6550,6 +6556,30 @@ if (document.readyState === 'loading') {
 
       welcomeScreen.classList.remove('hidden');
     });
+  }
+
+  // ── FAB group toggle ─────────────────────────────────────────────────────
+  const fabGroup  = document.getElementById('fabGroup');
+  const fabToggle = document.getElementById('fabToggle');
+  if (fabGroup && fabToggle) {
+    fabToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fabGroup.classList.toggle('open');
+    });
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (fabGroup && !fabGroup.contains(e.target)) {
+        fabGroup.classList.remove('open');
+      }
+    });
+    // Close after any action button is clicked
+    fabGroup.querySelectorAll('.fab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setTimeout(() => fabGroup.classList.remove('open'), 150);
+      });
+    });
+    // Init Lucide for the new toggle button
+    if (window.lucide) lucide.createIcons({ nodes: [fabToggle] });
   }
 
   // ── Logo-Click → Welcome in all three modes ──────────────────────────────

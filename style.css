@@ -1506,7 +1506,11 @@ small {
   left: 50%;
   transform: translateX(-50%);
   z-index: 26;
-  pointer-events: none;
+  pointer-events: none; /* container transparent to clicks */
+}
+#gfsBrand img {
+  pointer-events: auto; /* img itself clickable */
+  cursor: pointer;
 }
 #globeView.fs #gfsBrand { display: block; }
 #gfsBrand img {
@@ -3189,12 +3193,43 @@ small {
 /* SETTINGS AND TOOLS PANELS */
 /* ── Fixed bottom-right button stack: Settings above Tools above Legal ───────────────── */
 /* Both share these base styles */
+/* ── FAB group ────────────────────────────────────────────────────────────── */
+#fabGroup {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  right: 16px;
+  z-index: 2147483640;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Toggle – always visible, red circle */
+#fabToggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-accent, #e8402a);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+#fabToggle svg { width: 18px; height: 18px; }
+#fabGroup.open #fabToggle { transform: rotate(90deg); }
+
+/* Action buttons – collapsed by default */
 #settingsBtn,
 #toolsBtn,
 #legalBtn,
 #globalHomeBtn {
-  position: fixed;
-  z-index: 2147483640 !important;
   width: 36px;
   height: 36px;
   border-radius: 9px;
@@ -3205,46 +3240,25 @@ small {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
   box-shadow: 0 2px 10px rgba(0,0,0,0.35);
   padding: 0;
   margin: 0;
   font-size: 15px;
   line-height: 1;
+  /* Collapsed */
+  opacity: 0;
+  transform: translateY(8px) scale(0.85);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.15s, color 0.15s;
 }
+/* Staggered open (column-reverse order: legal first, settings last) */
+#fabGroup.open #legalBtn      { opacity:1; transform:none; pointer-events:auto; transition-delay:  0ms; }
+#fabGroup.open #toolsBtn      { opacity:1; transform:none; pointer-events:auto; transition-delay: 45ms; }
+#fabGroup.open #globalHomeBtn { opacity:1; transform:none; pointer-events:auto; transition-delay: 90ms; }
+#fabGroup.open #settingsBtn   { opacity:1; transform:none; pointer-events:auto; transition-delay:135ms; }
 
-/* Bottom-right button stack (bottom → top): legal, tools, home, settings */
-#settingsBtn,
-#toolsBtn,
-#legalBtn,
-#globalHomeBtn {
-  right: 16px;
-}
-
-#legalBtn {
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-}
-
-#toolsBtn {
-  bottom: calc(62px + env(safe-area-inset-bottom, 0px));
-}
-
-#settingsBtn {
-  bottom: calc(108px + env(safe-area-inset-bottom, 0px));
-}
-
-#globalHomeBtn {
-  bottom: calc(154px + env(safe-area-inset-bottom, 0px));
-}
-
-#welcomeScreen:not(.hidden) ~ #globalHomeBtn {
-  display: none !important;
-}
-
-/* Hide the expand/collapse toggle inside Globe fullscreen — Home is the only exit */
-#globeView.fs #globeExpandBtn {
-  display: none !important;
-}
+/* Hide Globe fullscreen collapse button — Home via FAB */
+#globeView.fs #globeExpandBtn { display: none !important; }
 
 #settingsBtn svg,
 #toolsBtn svg,
@@ -4159,4 +4173,90 @@ kbd {
 .welcome-btn i {
   width: 20px;
   height: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE OPTIMISATIONS  ≤ 600px
+   Retro: speaker hidden, bands/sub-bands as grids, knobs shrunk
+   Globe: smaller controls & NP card, larger tap targets
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+
+  /* ── RETRO ───────────────────────────────────────────────────────────── */
+
+  /* Hide decorative speaker – reclaims ~22% width */
+  #retroRadio .retro-speaker { display: none; }
+
+  /* Tighter body padding; don't let body grow past its content */
+  .retro-body { padding: 8px 10px; gap: 0; overflow: hidden; }
+
+  /* Centre column: no side padding, don't stretch vertically */
+  .retro-center { padding: 0 8px 0 0; gap: 8px; flex: none; align-self: flex-start; }
+
+  /* Display glass: compact, no flex-grow, hide visualizer canvas */
+  .retro-display-glass { padding: 8px 12px; flex: none; max-height: 130px; overflow: hidden; }
+  #retroRadio #retroVisualizer { display: none; }
+  .retro-divider { margin: 3px 0; }
+
+  /* Band buttons: 3-col grid → 2 neat rows */
+  .retro-bands {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .band-btn { flex: none; min-width: 0; min-height: 36px; font-size: 9px; padding: 4px 4px; }
+
+  /* Sub-band buttons: 3-col grid (better readability than 4) */
+  .retro-sub-bands {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+  }
+  .sub-band-btn { min-height: 28px; font-size: 8px; padding: 2px 4px; min-width: 0; }
+
+  /* Knobs column: smaller, align to top so gap stays tidy */
+  .retro-knobs-col { gap: 8px; padding-left: 8px; justify-content: flex-start; }
+  .retro-knob-bezel       { width: 80px; height: 80px; }
+  .retro-knob-bezel.small { width: 60px; height: 60px; }
+  .retro-knob-bezel  .bezel-tick       { transform-origin: 50% 38px; }
+  .retro-knob-bezel.small .bezel-tick  { transform-origin: 50% 28px; }
+  .retro-knob            { width: 60px; height: 60px; }
+  .retro-knob.small      { width: 44px; height: 44px; }
+  .retro-knob-group span { font-size: 8px; letter-spacing: 1.5px; }
+
+  /* Bottom player bar */
+  #retroRadio .retro-bottom { padding: 8px 10px 10px; }
+  #retroPlayBtn { width: 60px !important; height: 60px !important; border-radius: 50% !important; }
+
+  /* Frequency scale: smaller font */
+  .retro-scale-end { font-size: 9px; }
+
+  /* Search bar: don't overflow the top bar */
+  .retro-search-input { width: 110px; }
+
+  /* ── GLOBE ───────────────────────────────────────────────────────────── */
+
+  /* Bottom controls: smaller buttons + tighter gap so they fit at 300px */
+  #globeControls { gap: 5px; }
+  #globeControls button {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  #globeControls button svg { width: 20px; height: 20px; }
+
+  /* NP card: narrower so it doesn't dominate the globe view */
+  #gfsNP { width: 170px; padding: 8px 10px 10px; }
+  .gfs-ctrl-btn { width: 40px; height: 40px; border-radius: 10px; }
+  .gfs-ctrl-btn svg { width: 18px; height: 18px; }
+  .gfs-rec-btn .rec-dot { width: 11px; height: 11px; }
+  .gfs-logo { width: 34px; height: 34px; }
+  #gfsStationName { font-size: 11px; }
+  #gfsTitleText   { font-size: 10px; }
+
+  /* Filter bar: tighter, smaller selects */
+  #gfsFilters { gap: 5px; padding: 6px 8px; top: 8px; right: 8px; }
+  #gfsFilters select { font-size: 11px; padding: 4px 6px; height: 32px; }
+  #gfsFilters input[type="range"] { width: 60px; }
 }

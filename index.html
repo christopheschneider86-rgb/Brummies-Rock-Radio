@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="images/icon-192.png" />
   <title>Brummi's Rock Radio</title>
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="stylesheet" href="style.css?v=15">
   <!-- Favicon für Browser-Tab -->
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
 
@@ -942,10 +942,14 @@
 <audio id="radioAudio" preload="none"></audio>
 
   <!-- ── Global Buttons (Settings, Legal, Home) ──────────────────────────── -->
-  <button id="settingsBtn" title="Einstellungen"><i data-lucide="settings"></i></button>
-  <button id="globalHomeBtn" title="Zurück zum Start (Welcome)"><i data-lucide="home"></i></button>
-  <button id="toolsBtn" title="Timer &amp; Daten"><i data-lucide="clock"></i></button>
-  <button id="legalBtn" title="Rechtliche Hinweise">ⓘ</button>
+  <!-- FAB group – always visible, collapses to toggle button -->
+  <div id="fabGroup">
+    <button id="fabToggle" title="Menü"><i data-lucide="more-vertical"></i></button>
+    <button id="legalBtn"      class="fab-btn" title="Rechtliche Hinweise">ⓘ</button>
+    <button id="toolsBtn"      class="fab-btn" title="Timer &amp; Daten"><i data-lucide="clock"></i></button>
+    <button id="globalHomeBtn" class="fab-btn" title="Zurück zum Start"><i data-lucide="home"></i></button>
+    <button id="settingsBtn"   class="fab-btn" title="Einstellungen"><i data-lucide="settings"></i></button>
+  </div>
 
   <!-- ── Info Modal ───────────────────────────────────────────────────────── -->
   <div id="legalOverlay" hidden>
@@ -976,7 +980,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=18"></script>
 
   <!-- Vercel Web Analytics – only active when deployed on Vercel -->
   <script defer src="/_vercel/insights/script.js"></script>
