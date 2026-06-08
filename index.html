@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="images/icon-192.png" />
   <title>Brummi's Rock Radio</title>
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=41">
   <!-- Favicon für Browser-Tab -->
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
 
@@ -23,7 +23,9 @@
 </head>
 <body>
   <!-- WELCOME SCREEN -->
-  <div id="welcomeScreen">
+    <!-- ╔══ SKIN: welcome ══╗ -->
+  <div class="skin skin-welcome" id="skin-welcome">
+<div id="welcomeScreen">
     <a id="welcomeKofi" href="https://ko-fi.com/christopheschneider" target="_blank" rel="noopener" title="Support auf Ko-Fi">
       <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="Ko-Fi">
     </a>
@@ -31,12 +33,17 @@
       <h1 class="welcome-title">Brummi's Rock Radio</h1>
       <p class="welcome-subtitle">All forzlang kummas ogschissn!</p>
       
-      <model-viewer id="welcomeModel" src="images/head.glb" alt="3D Head Model"
-                    disable-zoom disable-pan
-                    camera-controls
-                    environment-image="neutral" exposure="1" shadow-intensity="1"
-                    camera-orbit="0deg 75deg auto"
-                    interaction-prompt="none"></model-viewer>
+      <!-- model-viewer: pointer-events:none so it doesn't block button clicks.
+           Overlay div captures drag/touch for the pull mechanic instead. -->
+      <div class="welcome-model-wrap">
+        <model-viewer id="welcomeModel" src="images/head.glb" alt="3D Head Model"
+                      disable-zoom disable-pan
+                      environment-image="neutral" exposure="1" shadow-intensity="1"
+                      camera-orbit="0deg 75deg auto"
+                      interaction-prompt="none"
+                      style="pointer-events:none;"></model-viewer>
+        <div id="welcomeModelOverlay"></div>
+      </div>
 
       <div class="welcome-buttons">
         <button id="welcomeBtnList" class="welcome-btn">
@@ -48,10 +55,16 @@
         <button id="welcomeBtnRetro" class="welcome-btn">
           <i data-lucide="radio"></i> Retro
         </button>
+        <button id="welcomeBtnDJ" class="welcome-btn">
+          <i data-lucide="disc-3"></i> DJ Booth
+        </button>
       </div>
     </div>
   </div>
+  </div><!-- /skin-welcome -->
 
+  <!-- ╔══ SKIN: list ══╗ -->
+  <div class="skin" id="skin-list">
   <header id="mainHeader">
     <div class="header-left">
       <img id="headerLogo" src="images/logo.png" alt="Brummy">
@@ -61,357 +74,8 @@
       </div>
     </div>
   </header>
-
-  <!-- SETTINGS PANEL -->
-  <div id="updateBanner">
-    <span>Update verfügbar!</span>
-    <button id="updateReloadBtn">Jetzt neu laden</button>
-  </div>
-
-  <div id="settingsOverlay"></div>
-
-  <!-- KEYBOARD SHORTCUT TOAST -->
-  <div id="kbToast"></div>
-
-  <!-- WHAT'S NEW MODAL -->
-  <div id="whatsNewOverlay">
-    <div id="whatsNewModal">
-      <div id="whatsNewModalHeader">
-        <h2>Neuigkeiten</h2>
-        <p class="wnv">Version 1.4.2</p>
-      </div>
-      <div id="whatsNewModalBody">
-        <ul>
-          <li>
-            <span class="wn-icon">🎸</span>
-            <div>
-                <strong>Was issn des fär a Gwerch?</strong>
-                Ka Sorch, <em>Brummi</em> is für alle do!
-              </div>
-            </li>
-            <li>
-              <span class="wn-icon">🎛️</span>
-              <div>
-                <strong>Stil-Ansicht</strong>
-                Liste, Globe oder Retro, was passt zu <em>Dir</em>? Weitere folgen... Stay tuned!
-              </div>
-            </li>
-            <li>
-              <span class="wn-icon">🌍</span>
-              <div>
-                <strong>Rock regiert die Welt!</strong>
-                Is mir fei woaschd wos du sogst <em>Nervsag</em>, a Ruh is!
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div id="whatsNewModalFooter">
-        <button id="whatsNewCloseBtn"><i data-lucide="check"></i> Alles klar!</button>
-      </div>
-    </div>
-  </div>
-  <div id="settingsPanel">
-    <div class="settings-header">
-      <h2><i data-lucide="settings"></i> Einstellungen</h2>
-      <button id="closeSettings"><i data-lucide="x"></i></button>
-    </div>
-    
-    <div class="settings-content">
-      
-      <!-- WIEDERGABE -->
-      <div class="settings-section">
-        <h3><i data-lucide="radio"></i> Wiedergabe</h3>
-        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px 0;">
-          <input type="checkbox" id="autoSkipDeadToggle" checked style="width:18px; height:18px; accent-color: var(--color-accent);">
-          <div>
-            <div style="font-size:13px; font-weight:600;">Defekte Sender automatisch überspringen</div>
-            <div style="font-size:11px; opacity:0.7; margin-top:2px;">Wenn ein Stream nicht startet oder die Verbindung abbricht, wird automatisch der nächste Sender geladen.</div>
-          </div>
-        </label>
-      </div>
-
-      <!-- RECORDING -->
-      <div class="settings-section" id="recSettingsSection">
-        <h3><i data-lucide="circle-dot"></i> Aufnahme</h3>
-        <div id="recFolderRow">
-          <p style="font-size:12px; margin-bottom:10px;">Wähle einen Ordner, in dem aufgenommene Tracks gespeichert werden. Nur in Chrome und Edge verfügbar – andere Browser speichern in Downloads.</p>
-          <button id="recChangeFolderBtn" class="secondary" style="width:100%; margin-bottom: 12px;">
-            <i data-lucide="folder-open"></i> Speicherordner wählen
-          </button>
-          <p id="recFolderName" style="font-size:11px; color:var(--color-text-muted); margin-bottom: 12px;"></p>
-        </div>
-        <p id="recFolderUnsupported" style="font-size:12px; color:var(--color-text-muted); display:none; margin-bottom: 12px;">Ordnerauswahl wird von diesem Browser nicht unterstützt. Aufnahmen gehen in den Download-Ordner.</p>
-        
-        <label id="recAutoSplitLabel" style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px 0; border-top: 1px solid var(--color-bg-tertiary);">
-          <input type="checkbox" id="recAutoSplit" style="width:18px; height:18px; accent-color: var(--color-accent);">
-          <div>
-            <div style="font-size:13px; font-weight:600;">Bei Titelwechsel neuen Track starten</div>
-            <div style="font-size:11px; opacity:0.7; margin-top:2px;">Trennt die Aufnahme automatisch in einzelne Dateien, sobald ein neues Lied beginnt.</div>
-          </div>
-        </label>
-        <div id="recNote" style="font-size:11px; opacity:0.7; color:var(--color-accent); margin-top:4px;"></div>
-      </div>
-
-      <!-- SPRACHE -->
-      <div class="settings-section">
-        <h3 id="lang-settings-language"><i data-lucide="globe"></i> Sprache / Language</h3>
-        <div class="settings-option">
-          <select id="languageSelect">
-            <option value="de">DE - Deutsch</option>
-            <option value="en">EN - English</option>
-            <option value="fr">FR - Français</option>
-            <option value="es">ES - Español</option>
-            <option value="it">IT - Italiano</option>
-          </select>
-        </div>
-        <p id="lang-translation-status" style="margin:4px 0; font-size:11px; opacity:0.7;"></p>
-        <p><small id="lang-language-info">Die Sprache wird automatisch erkannt basierend auf deinem Browser.</small></p>
-      </div>
-
-      <!-- THEME -->
-      <div class="settings-section">
-        <h3><i data-lucide="palette"></i> Theme</h3>
-        <div class="theme-options">
-          <div class="theme-option active" data-theme="brummie">
-            <div class="theme-preview" style="background: #0b0b0f;">
-              <div class="theme-preview-color" style="background: var(--color-bg-secondary);"></div>
-              <div class="theme-preview-color" style="background: #ef4444;"></div>
-              <div class="theme-preview-color" style="background: var(--color-bg-tertiary);"></div>
-            </div>
-            <div class="theme-option-name"><i data-lucide="radio"></i> Brummie</div>
-          </div>
-          <div class="theme-option" data-theme="sumsum">
-            <div class="theme-preview" style="background: #2d2538;">
-              <div class="theme-preview-color" style="background: #b19cd9;"></div>
-              <div class="theme-preview-color" style="background: #c9a876;"></div>
-              <div class="theme-preview-color" style="background: #5a7a5c;"></div>
-            </div>
-            <div class="theme-option-name"><i data-lucide="music-2"></i> Sumsum</div>
-          </div>
-          <div class="theme-option" data-theme="glaubnix">
-            <div class="theme-preview" style="background: #1a1a1a;">
-              <div class="theme-preview-color" style="background: #e74c3c;"></div>
-              <div class="theme-preview-color" style="background: #ffd700;"></div>
-              <div class="theme-preview-color" style="background: #27ae60;"></div>
-            </div>
-            <div class="theme-option-name"><i data-lucide="music"></i> Glaubnix</div>
-          </div>
-          <div class="theme-option" data-theme="setre">
-            <div class="theme-preview" style="background: #1a1f21;">
-              <div class="theme-preview-color" style="background: #ff8c00;"></div>
-              <div class="theme-preview-color" style="background: #0a7b83;"></div>
-              <div class="theme-preview-color" style="background: #d4a574;"></div>
-            </div>
-            <div class="theme-option-name"><i data-lucide="sunrise"></i> Setre</div>
-          </div>
-        </div>
-        <p><small id="lang-theme-info">Wähle ein Theme das zu deinem Musikgeschmack passt.</small></p>
-
-        <!-- CUSTOM THEME CREATOR -->
-        <button class="custom-theme-toggle" id="customThemeToggle">
-          <i data-lucide="palette"></i> 🎨 Custom Theme Creator – Eigene Farben wählen
-        </button>
-
-        <div id="customThemeCreator">
-          <div style="font-size:11px; opacity:0.6; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.4px;">Vorschau</div>
-          <div class="custom-theme-preview-bar">
-            <div id="prev-bg-primary"></div>
-            <div id="prev-bg-secondary"></div>
-            <div id="prev-accent"></div>
-            <div id="prev-bg-tertiary"></div>
-            <div id="prev-text"></div>
-          </div>
-          <div class="color-picker-grid">
-            <div class="color-picker-item"><label>Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-primary" value="#0b0b0f"><input type="text" id="ct-bg-primary" value="#0B0B0F" maxlength="7"></div></div>
-            <div class="color-picker-item"><label>Karten / Panels</label><div class="color-picker-row"><input type="color" id="cp-bg-secondary" value="#111827"><input type="text" id="ct-bg-secondary" value="#111827" maxlength="7"></div></div>
-            <div class="color-picker-item"><label>Akzentfarbe</label><div class="color-picker-row"><input type="color" id="cp-accent" value="#ef4444"><input type="text" id="ct-accent" value="#EF4444" maxlength="7"></div></div>
-            <div class="color-picker-item"><label>Elemente / Border</label><div class="color-picker-row"><input type="color" id="cp-bg-tertiary" value="#1f2937"><input type="text" id="ct-bg-tertiary" value="#1F2937" maxlength="7"></div></div>
-            <div class="color-picker-item"><label>Textfarbe</label><div class="color-picker-row"><input type="color" id="cp-text" value="#f5f5f5"><input type="text" id="ct-text" value="#F5F5F5" maxlength="7"></div></div>
-            <div class="color-picker-item"><label>Input-Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-input" value="#020617"><input type="text" id="ct-bg-input" value="#020617" maxlength="7"></div></div>
-          </div>
-          <div class="custom-theme-actions">
-            <button id="applyCustomTheme"><i data-lucide="check"></i> Anwenden</button>
-            <button class="secondary" id="resetCustomTheme"><i data-lucide="rotate-ccw"></i> Reset</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- CONFIG DATEI -->
-      <div class="settings-section">
-        <h3><i data-lucide="file-down"></i> Import / Export</h3>
-        <p style="font-size: 12px; margin-bottom: 12px;">Exportiere deine Favoriten, Theme, EQ-Einstellungen und Verlauf als Datei – und lade sie auf einem anderen Gerät wieder ein.</p>
-        <button id="configExportBtn" class="secondary" style="width: 100%; margin-bottom: 8px;">
-          <i data-lucide="download"></i> Einstellungen exportieren
-        </button>
-        <button id="configImportBtn" class="secondary" style="width: 100%;">
-          <i data-lucide="upload"></i> Einstellungen importieren
-        </button>
-        <input type="file" id="configFileInput" accept=".json" style="display: none;">
-        <p id="configImportStatus" style="font-size: 11px; margin-top: 8px; min-height: 16px;"></p>
-      </div>
-
-      <!-- PWA / APP INSTALLATION -->
-      <div class="settings-section">
-        <h3><i data-lucide="smartphone"></i> App &amp; PWA</h3>
-        <p style="font-size:12px; margin-bottom:10px;">Installiere Brummi's Rock Radio als App auf deinem Gerät – kein App Store nötig.</p>
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <button id="installBtn" class="secondary" style="display:none; flex:1; min-width:120px;">
-            <i data-lucide="download"></i> App installieren
-          </button>
-          <span id="pwaStatus" style="font-size:12px; opacity:0.75;"></span>
-        </div>
-      </div>
-
-      <!-- KEYBOARD SHORTCUTS -->
-      <div class="settings-section">
-        <h3><i data-lucide="keyboard"></i> Tastaturkürzel</h3>
-        <table class="shortcuts-table">
-          <tbody>
-            <tr><td><kbd>Space</kbd></td><td>Play / Pause</td></tr>
-            <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Vorheriger / Nächster Sender</td></tr>
-            <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Lautstärke +5 % / −5 %</td></tr>
-            <tr><td><kbd>M</kbd></td><td>Stummschalten / An</td></tr>
-            <tr><td><kbd>F</kbd></td><td>Favorit toggeln</td></tr>
-            <tr><td><kbd>Esc</kbd></td><td>Einstellungen schließen</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- ABOUT & DONATION -->
-      <div class="settings-section">
-        <h3><i data-lucide="info"></i> Über diese App</h3>
-        <p><strong>Brummi's Rock Radio</strong></p>
-        <p>Version: 1.4.2</p>
-        <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
-        <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
-        <button id="checkUpdateBtn" class="secondary" style="width:100%; margin-top:12px;">
-          <i data-lucide="refresh-cw"></i> Nach Updates suchen
-        </button>
-        <p id="checkUpdateStatus" style="font-size:11px; margin-top:6px; min-height:14px;"></p>
-        
-        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-bg-tertiary);">
-          <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--color-text-primary);"><i data-lucide="heart"></i> Unterstützung</h4>
-          <p style="font-size: 12px; margin-bottom: 12px;">Diese App ist kostenlos und Open Source. Wenn sie dir gefällt, freue ich mich über eine kleine Unterstützung!</p>
-          <a id="donateBtn" href="https://ko-fi.com/christopheschneider" target="_blank" rel="noopener" class="kofi-link-btn">
-            <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="Ko-Fi" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">Support auf Ko-Fi
-          </a>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div id="toolsPanel">
-    <div class="settings-header">
-      <h2><i data-lucide="clock"></i> Timer &amp; Daten</h2>
-      <button id="closeTools"><i data-lucide="x"></i></button>
-    </div>
-    
-    <div class="settings-content">
-      <!-- SLEEP TIMER -->
-      <div class="settings-section">
-        <h3><i data-lucide="clock"></i> Sleep Timer</h3>
-        <!-- Mode Toggle -->
-        <div class="sleep-mode-toggle" style="display: flex; gap: 8px; margin-bottom: 16px; justify-content: center;">
-          <button type="button" class="sleep-mode-btn active" data-mode="countdown">
-            <i data-lucide="timer"></i> Timer
-          </button>
-          <button type="button" class="sleep-mode-btn" data-mode="endtime">
-            <i data-lucide="clock"></i> Uhrzeit
-          </button>
-        </div>
-        
-        <!-- Countdown Timer -->
-        <div id="sleepCountdown" class="sleep-control active">
-          <div class="timer-container" style="display:flex; justify-content:center;">
-            <svg class="circular-timer" viewBox="0 0 200 185" width="200" height="185">
-              <path d="M 43.43,156.57 A 80,80 0 1,1 156.57,156.57" fill="none" stroke="var(--color-bg-tertiary)" stroke-width="12" stroke-linecap="round"/>
-              <path id="sleepArc" d="" fill="none" stroke="var(--color-accent)" stroke-width="12" stroke-linecap="round" opacity="0.9"/>
-              <g id="sleepTicks"></g>
-              <circle id="sleepHandle" cx="43.43" cy="156.57" r="10" fill="var(--color-accent)" cursor="pointer" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
-              <text x="100" y="88" text-anchor="middle" font-size="36" font-weight="bold" fill="var(--color-text-primary)" id="sleepValue">0</text>
-              <text x="100" y="106" text-anchor="middle" font-size="12" fill="var(--color-text-secondary)">Minuten</text>
-            </svg>
-          </div>
-        </div>
-        
-        <!-- End Time Clock -->
-        <div id="sleepEndtime" class="sleep-control" style="display: none;">
-          <div class="timer-container" style="display:flex; justify-content:center;">
-            <svg class="circular-clock" viewBox="0 0 200 200" width="200" height="200">
-              <circle cx="100" cy="100" r="80" fill="none" stroke="var(--color-bg-tertiary)" stroke-width="2"/>
-              <g id="hourMarkers"></g>
-              <line id="hourHand" x1="100" y1="100" x2="100" y2="50" stroke="var(--color-accent)" stroke-width="6" stroke-linecap="round"/>
-              <circle cx="100" cy="100" r="8" fill="var(--color-accent)"/>
-              <text x="100" y="160" text-anchor="middle" font-size="16" font-weight="bold" fill="var(--color-text-primary)" id="endTimeDisplay">--:--</text>
-            </svg>
-          </div>
-        </div>
-        
-        <div style="margin-top: 16px; text-align: center;">
-          <button id="sleepToggle" class="secondary" title="Timer starten" style="min-width:48px;">
-            <i data-lucide="play"></i>
-          </button>
-          <div id="sleepStatus" style="margin-top: 8px; font-size: 12px; color: var(--color-text-muted);"></div>
-        </div>
-      </div>
-
-      <!-- AUTO-SHUFFLE -->
-      <div class="settings-section">
-        <h3><i data-lucide="shuffle"></i> Auto-Shuffle</h3>
-        <p style="font-size:12px; margin-bottom:12px;">Springt nach Ablauf der Zeit automatisch zum nächsten Sender.</p>
-        <div class="timer-container" style="display:flex; justify-content:center;">
-          <svg class="circular-timer" viewBox="0 0 200 185" width="200" height="185">
-            <path d="M 43.43,156.57 A 80,80 0 1,1 156.57,156.57" fill="none" stroke="var(--color-bg-tertiary)" stroke-width="12" stroke-linecap="round"/>
-            <path id="shuffleArc" d="" fill="none" stroke="var(--color-accent)" stroke-width="12" stroke-linecap="round" opacity="0.9"/>
-            <g id="shuffleTicks"></g>
-            <circle id="shuffleHandle" cx="43.43" cy="156.57" r="10" fill="var(--color-accent)" cursor="pointer" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
-            <text x="100" y="88" text-anchor="middle" font-size="36" font-weight="bold" fill="var(--color-text-primary)" id="shuffleValue">0</text>
-            <text x="100" y="106" text-anchor="middle" font-size="12" fill="var(--color-text-secondary)">Minuten</text>
-          </svg>
-        </div>
-        <div style="margin-top: 16px; text-align: center;">
-          <button id="shuffleToggle" class="secondary" title="Shuffle starten" style="min-width:48px;">
-            <i data-lucide="play"></i>
-          </button>
-          <div id="shuffleStatus" style="margin-top: 8px; font-size: 12px; color: var(--color-text-muted);"></div>
-        </div>
-      </div>
-
-      <!-- DATENVERBRAUCH -->
-      <div class="settings-section" id="dataContainer">
-        <h3><i data-lucide="wifi"></i> Datenverbrauch</h3>
-        <div style="background:var(--color-bg-input); border:1px solid var(--color-border); border-radius:6px; padding:12px; margin-top:8px;">
-          <!-- Aktuelle Session -->
-          <div style="text-align:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--color-bg-tertiary);">
-            <div style="font-size:28px; font-weight:700; color:var(--color-accent);" id="currentDataUsage">0 MB</div>
-            <div style="font-size:11px; opacity:0.7;">Aktuelle Session</div>
-          </div>
-          <!-- Hochrechnungen stacked -->
-          <div style="font-size:11px; opacity:0.6; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Hochrechnung</div>
-          <div class="data-usage-item">
-            <span class="data-usage-item-name">1 Stunde</span>
-            <span class="data-usage-item-value" id="proj1h">—</span>
-          </div>
-          <div class="data-usage-item">
-            <span class="data-usage-item-name">Pro Tag (24h)</span>
-            <span class="data-usage-item-value" id="projDay">—</span>
-          </div>
-          <div class="data-usage-item">
-            <span class="data-usage-item-name">Pro Woche</span>
-            <span class="data-usage-item-value" id="projWeek">—</span>
-          </div>
-          <div class="data-usage-item" style="border-bottom:none;">
-            <span class="data-usage-item-name">Pro Monat (30 Tage)</span>
-            <span class="data-usage-item-value" id="projMonth">—</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
   <main>
+
     <!-- FILTER / SENDERLISTE -->
     <section>
       <h2><i data-lucide="search"></i> Sendersuche</h2>
@@ -483,7 +147,7 @@
   </div>
 
   <label style="display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:12px; cursor:pointer;">
-    <input type="checkbox" id="httpsOnlyToggle" style="width:auto; margin:0; accent-color:var(--color-accent);">
+    <input type="checkbox" id="httpsOnlyToggle" checked style="width:auto; margin:0; accent-color:var(--color-accent);">
     <i data-lucide="lock" style="width:13px; height:13px; flex-shrink:0;"></i>
     Nur sichere Streams (HTTPS)
   </label>
@@ -512,285 +176,13 @@
     <div class="loading">Klicke "Suchen" um zu starten...</div>
   </div>
 
-  <!-- GLOBE VIEW -->
-  <div id="globeView" hidden>
-    <div id="globeContainer"></div>
+  
 
-    <!-- Fullscreen: top-left – Now Playing -->
-    <div id="gfsNP" hidden>
-      <div class="gfs-np-info-row">
-        <img id="gfsLogo" class="gfs-logo" src="" alt="" hidden>
-        <div class="gfs-info">
-          <div id="gfsStationName">— kein Sender —</div>
-          <div id="gfsTitleText">—</div>
-        </div>
-      </div>
-      <div class="gfs-np-btns-row">
-        <button id="gfsFavBtn" class="gfs-ctrl-btn gfs-fav-btn" title="Zu Favoriten hinzufügen" disabled><i data-lucide="star"></i></button>
-        <button id="gfsRecBtn" class="gfs-ctrl-btn gfs-rec-btn" title="Aufnahme" disabled><span class="rec-dot"></span></button>
-        <button id="gfsPlayBtn" class="gfs-ctrl-btn" title="Play / Pause"><i data-lucide="play"></i></button>
-      </div>
-    </div>
+  
+  
 
-    <!-- Fullscreen: center-top – Brand logo -->
-    <div id="gfsBrand" hidden>
-      <img src="./images/icon-192.png" alt="Brummi's Rock Radio" title="Brummi's Rock Radio">
-    </div>
-
-    <!-- Fullscreen: top-right – Filter -->
-    <div id="gfsFilters" hidden>
-      <!-- Row 1: genres + HTTPS -->
-      <div class="gfs-filter-row">
-        <select id="gfsGenre" title="Hauptgenre"></select>
-        <select id="gfsSubgenre" title="Untergenre"></select>
-        <label class="gfs-https-label" title="Nur sichere Streams">
-          <input type="checkbox" id="gfsHttps">
-          <i data-lucide="lock" style="width:12px;height:12px;flex-shrink:0;"></i>
-        </label>
-      </div>
-      <!-- Row 2: text search -->
-      <div class="gfs-search-wrap">
-        <i data-lucide="search" style="width:13px;height:13px;flex-shrink:0;opacity:0.6;"></i>
-        <input id="gfsSearch" type="text" placeholder="Sender suchen…" autocomplete="off">
-      </div>
-    </div>
-
-    <!-- Globe style popup (hidden by default, toggled via .open class) -->
-    <div id="globeBrightnessPanel">
-      <!-- Texture presets -->
-      <div class="gbp-presets">
-        <button class="gbp-preset active" data-texture="night"  title="Nacht">🌙 Nacht</button>
-        <button class="gbp-preset"        data-texture="day"    title="Tag">☀️ Tag</button>
-        <button class="gbp-preset"        data-texture="marble" title="Blue Marble">🌍 Marble</button>
-        <button class="gbp-preset"        data-texture="topo"   title="Topographie">🗺 Topo</button>
-      </div>
-      <!-- Brightness slider -->
-      <div class="gbp-slider-row">
-        <i data-lucide="moon" style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
-        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5">
-        <i data-lucide="sun"  style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
-      </div>
-    </div>
-
-    <div id="globeControls">
-      <button id="globeExpandBtn"    title="Vollbild"><i data-lucide="expand"></i></button>
-      <button id="globeLocBtn"       title="Eigene Position"><i data-lucide="locate"></i></button>
-      <button id="globeZoomInBtn"    title="Zoom +"><i data-lucide="zoom-in"></i></button>
-      <button id="globeZoomOutBtn"   title="Zoom −"><i data-lucide="zoom-out"></i></button>
-      <button id="globeFitBtn"       title="Weltkugel zentrieren"><i data-lucide="maximize-2"></i></button>
-      <button id="globeBrightnessBtn" title="Helligkeit / Tageszeit"><i data-lucide="sun-medium"></i></button>
-    </div>
-    <div id="globePopup" hidden>
-      <div id="globePopupHeader">
-        <span id="globePopupTitle"></span>
-        <button id="globePopupClose" title="Schließen">×</button>
-      </div>
-      <div id="globePopupList"></div>
-    </div>
-    <div id="globeNoData" hidden>Keine Sender mit Positionsdaten gefunden.</div>
-  </div>
-
-  <!-- TUNER VIEW -->
-  <div id="tunerView" hidden>
-
-    <!-- Display window -->
-    <div id="tunerDisplay">
-      <div id="tunerStationName">— Sender wählen —</div>
-      <div id="tunerStationMeta"></div>
-      <div id="tunerScaleMode"></div>
-    </div>
-
-    <!-- Frequency scale -->
-    <div id="tunerScaleWrap">
-      <div id="tunerNeedle"></div>
-      <div id="tunerTrack">
-        <div id="tunerTicks"></div>
-      </div>
-    </div>
-
-    <!-- Knob + fullscreen button row -->
-    <div id="tunerKnobArea">
-      <div id="tunerKnobBezel">
-        <div class="bezel-tick" style="--i:0"></div>
-        <div class="bezel-tick" style="--i:1"></div>
-        <div class="bezel-tick" style="--i:2"></div>
-        <div class="bezel-tick" style="--i:3"></div>
-        <div class="bezel-tick" style="--i:4"></div>
-        <div class="bezel-tick" style="--i:5"></div>
-        <div class="bezel-tick" style="--i:6"></div>
-        <div class="bezel-tick" style="--i:7"></div>
-        <div class="bezel-tick" style="--i:8"></div>
-        <div class="bezel-tick" style="--i:9"></div>
-        <div class="bezel-tick" style="--i:10"></div>
-        <div class="bezel-tick" style="--i:11"></div>
-        <div id="tunerKnob">
-          <div class="knob-shine"></div>
-          <div class="knob-inner-ring"></div>
-          <div class="knob-marker-line"></div>
-          <div class="knob-center-dot"></div>
-        </div>
-      </div>
-      <div id="tunerKnobHint">Drehen zum Abstimmen</div>
-      <button id="retroExpandBtn" title="Retro-Radio Vollbild"><i data-lucide="radio"></i> Retro-Modus</button>
-    </div>
-
-  </div>
+  
 </section>
-
-<!-- ══════════════════════════════════════════════════════════════
-     RETRO RADIO FULLSCREEN OVERLAY
-     ══════════════════════════════════════════════════════════════ -->
-<div id="retroRadio" hidden>
-
-  <!-- Cabinet top bar -->
-  <div class="retro-top">
-    <div class="retro-brand-plate">
-      <img src="./images/icon-192.png" class="retro-logo-icon" alt="">
-      <div class="retro-brand-text">
-        <span class="retro-brand-name">BRUMMI'S ROCK RADIO</span>
-        <span class="retro-brand-sub">Stereo · Digital · HiFi</span>
-      </div>
-    </div>
-    <div class="retro-search-wrap">
-      <i data-lucide="search" class="retro-search-icon"></i>
-      <input id="retroSearchInput" class="retro-search-input" type="text" placeholder="Sender suchen…" autocomplete="off">
-    </div>
-  </div>
-
-  <!-- Frequency scale strip (reuses tuner tick system) -->
-  <div id="retroScaleWrap">
-    <div id="retroNeedle"></div>
-    <div id="retroTrack"><div id="retroTicks"></div></div>
-    <!-- Scale end labels -->
-    <span class="retro-scale-end left">FM</span>
-    <span class="retro-scale-end right">AM</span>
-  </div>
-
-  <!-- Cabinet body -->
-  <div class="retro-body">
-
-    <!-- Speaker grille (left) -->
-    <div class="retro-speaker">
-      <div class="speaker-cloth"></div>
-    </div>
-
-    <!-- Centre: amber station display + genre bands -->
-    <div class="retro-center">
-      <div class="retro-display-glass">
-        <div class="retro-display-station">
-          <img id="retroStationIcon" class="retro-station-icon" src="" alt="">
-          <div class="retro-display-station-info">
-            <div id="retroStationName">— Sender wählen —</div>
-            <div id="retroNowPlaying">Warte auf Metadaten…</div>
-          </div>
-        </div>
-        <div id="retroStationMeta"></div>
-        <div class="retro-divider"></div>
-        <canvas id="retroVisualizer" width="280" height="60"></canvas>
-        <div id="retroEqBtns" class="retro-eq-btns">
-          <button class="retro-eq-btn" data-preset="flat">FLAT</button>
-          <button class="retro-eq-btn" data-preset="rock">ROCK</button>
-          <button class="retro-eq-btn" data-preset="metal">METAL</button>
-          <button class="retro-eq-btn" data-preset="bass">BASS</button>
-        </div>
-      </div>
-
-      <!-- Main genre band buttons -->
-      <div class="retro-bands">
-        <button class="band-btn active" data-genre="">ALL</button>
-        <button class="band-btn" data-genre="rock">ROCK</button>
-        <button class="band-btn" data-genre="metal">METAL</button>
-        <button class="band-btn" data-genre="jazz">JAZZ</button>
-        <button class="band-btn" data-genre="classic">CLASS</button>
-        <button class="band-btn" data-genre="electronic">ELECTRO</button>
-      </div>
-
-      <!-- Sub-genre buttons (populated dynamically, fixed slot count) -->
-      <div id="retroSubBands" class="retro-sub-bands"></div>
-    </div>
-
-    <!-- Right column: knobs -->
-    <div class="retro-knobs-col">
-
-      <!-- Tuning knob (same element, re-parented visually via CSS trick) -->
-      <div class="retro-knob-group">
-        <div class="retro-knob-bezel">
-          <div class="bezel-tick" style="--i:0"></div><div class="bezel-tick" style="--i:1"></div>
-          <div class="bezel-tick" style="--i:2"></div><div class="bezel-tick" style="--i:3"></div>
-          <div class="bezel-tick" style="--i:4"></div><div class="bezel-tick" style="--i:5"></div>
-          <div class="bezel-tick" style="--i:6"></div><div class="bezel-tick" style="--i:7"></div>
-          <div class="bezel-tick" style="--i:8"></div><div class="bezel-tick" style="--i:9"></div>
-          <div class="bezel-tick" style="--i:10"></div><div class="bezel-tick" style="--i:11"></div>
-          <div id="retroTuneKnob" class="retro-knob">
-            <div class="knob-shine"></div>
-            <div class="knob-inner-ring"></div>
-            <div class="knob-marker-line"></div>
-            <div class="knob-center-dot"></div>
-          </div>
-        </div>
-        <div class="retro-knob-label">TUNING</div>
-      </div>
-
-      <!-- HTTPS toggle pushbutton (between knobs) -->
-      <button id="retroHttpsBtn" class="retro-https-btn" title="HTTPS-Only umschalten">
-        <i data-lucide="lock" style="width:12px;height:12px;"></i>
-        <span class="retro-https-btn-label">HTTPS</span>
-        <span id="retroHttpsState" class="retro-https-btn-state">OFF</span>
-      </button>
-
-      <!-- Volume knob (functional) -->
-      <div class="retro-knob-group">
-        <div class="retro-knob-bezel small">
-          <div class="bezel-tick" style="--i:0"></div><div class="bezel-tick" style="--i:1"></div>
-          <div class="bezel-tick" style="--i:2"></div><div class="bezel-tick" style="--i:3"></div>
-          <div class="bezel-tick" style="--i:4"></div><div class="bezel-tick" style="--i:5"></div>
-          <div class="bezel-tick" style="--i:6"></div><div class="bezel-tick" style="--i:7"></div>
-          <div class="bezel-tick" style="--i:8"></div><div class="bezel-tick" style="--i:9"></div>
-          <div class="bezel-tick" style="--i:10"></div><div class="bezel-tick" style="--i:11"></div>
-          <div id="retroVolKnob" class="retro-knob small">
-            <div class="knob-shine"></div>
-            <div class="knob-inner-ring"></div>
-            <div class="knob-marker-line"></div>
-            <div class="knob-center-dot"></div>
-          </div>
-        </div>
-        <div class="retro-knob-label">VOLUME</div>
-      </div>
-
-    </div>
-  </div><!-- /.retro-body -->
-
-  <!-- Bottom controls bar -->
-  <div class="retro-bottom">
-    <!-- Feet decoration (left side) -->
-    <div class="retro-feet">
-      <div class="retro-foot"></div>
-      <div class="retro-foot"></div>
-    </div>
-    <!-- Transport (centred) -->
-    <div class="retro-transport">
-      <button id="retroPrevBtn" class="retro-transport-btn" title="Vorheriger Sender">
-        <i data-lucide="skip-back"></i>
-      </button>
-      <button id="retroPlayBtn" class="retro-transport-btn play" title="Play / Pause">
-        <i data-lucide="play"></i>
-      </button>
-      <button id="retroNextBtn" class="retro-transport-btn" title="Nächster Sender">
-        <i data-lucide="skip-forward"></i>
-      </button>
-      <button id="retroRecBtn" class="retro-transport-btn rec" title="Aufnahme starten/stoppen">
-        <i data-lucide="circle"></i>
-      </button>
-    </div>
-    <!-- Feet decoration (right side) -->
-    <div class="retro-feet">
-      <div class="retro-foot"></div>
-      <div class="retro-foot"></div>
-    </div>
-  </div>
-
-</div><!-- /#retroRadio -->
-
 <!-- PLAYER & VERLAUF -->
 <section>
   <h2><i data-lucide="play"></i> Now Playing</h2>
@@ -938,11 +330,924 @@
     </div><!-- end historyCollapsible -->
   </div>
 </section>
-</div>
+  
+  <!-- TUNER VIEW -->
+  <div id="tunerView" hidden>
 
-  </main>
+    <!-- Display window -->
+    <div id="tunerDisplay">
+      <div id="tunerStationName">— Sender wählen —</div>
+      <div id="tunerStationMeta"></div>
+      <div id="tunerScaleMode"></div>
+    </div>
 
-<audio id="radioAudio" preload="none"></audio>
+    <!-- Frequency scale -->
+    <div id="tunerScaleWrap">
+      <div id="tunerNeedle"></div>
+      <div id="tunerTrack">
+        <div id="tunerTicks"></div>
+      </div>
+    </div>
+
+    <!-- Knob + fullscreen button row -->
+    <div id="tunerKnobArea">
+      <div id="tunerKnobBezel">
+        <div class="bezel-tick" style="--i:0"></div>
+        <div class="bezel-tick" style="--i:1"></div>
+        <div class="bezel-tick" style="--i:2"></div>
+        <div class="bezel-tick" style="--i:3"></div>
+        <div class="bezel-tick" style="--i:4"></div>
+        <div class="bezel-tick" style="--i:5"></div>
+        <div class="bezel-tick" style="--i:6"></div>
+        <div class="bezel-tick" style="--i:7"></div>
+        <div class="bezel-tick" style="--i:8"></div>
+        <div class="bezel-tick" style="--i:9"></div>
+        <div class="bezel-tick" style="--i:10"></div>
+        <div class="bezel-tick" style="--i:11"></div>
+        <div id="tunerKnob">
+          <div class="knob-shine"></div>
+          <div class="knob-inner-ring"></div>
+          <div class="knob-marker-line"></div>
+          <div class="knob-center-dot"></div>
+        </div>
+      </div>
+      <div id="tunerKnobHint">Drehen zum Abstimmen</div>
+      <button id="retroExpandBtn" title="Retro-Radio Vollbild"><i data-lucide="radio"></i> Retro-Modus</button>
+    </div>
+
+  </div>
+  </main></div><!-- /skin-list -->
+
+<div class="skin" id="skin-globe">
+<!-- GLOBE VIEW -->
+  <div id="globeView">
+    <div id="globeContainer"></div>
+
+    <!-- Fullscreen: top-left – Now Playing -->
+    <div id="gfsNP" hidden>
+      <div class="gfs-np-info-row">
+        <img id="gfsLogo" class="gfs-logo" src="" alt="" hidden>
+        <div class="gfs-info">
+          <div id="gfsStationName">— kein Sender —</div>
+          <div id="gfsTitleText">—</div>
+        </div>
+      </div>
+      <div class="gfs-np-btns-row">
+        <button id="gfsFavBtn" class="gfs-ctrl-btn gfs-fav-btn" title="Zu Favoriten hinzufügen" disabled><i data-lucide="star"></i></button>
+        <button id="gfsRecBtn" class="gfs-ctrl-btn gfs-rec-btn" title="Aufnahme" disabled><span class="rec-dot"></span></button>
+        <button id="gfsPlayBtn" class="gfs-ctrl-btn" title="Play / Pause"><i data-lucide="play"></i></button>
+      </div>
+    </div>
+
+    <!-- Fullscreen: center-top – Brand logo -->
+    <div id="gfsBrand" hidden>
+      <img src="./images/icon-192.png" alt="Brummi's Rock Radio" title="Brummi's Rock Radio">
+    </div>
+
+    <!-- Fullscreen: top-right – Filter -->
+    <div id="gfsFilters" hidden>
+      <!-- Row 1: genres + HTTPS -->
+      <div class="gfs-filter-row">
+        <select id="gfsGenre" title="Hauptgenre"></select>
+        <select id="gfsSubgenre" title="Untergenre"></select>
+        <label class="gfs-https-label" title="Nur sichere Streams">
+          <input type="checkbox" id="gfsHttps" checked>
+          <i data-lucide="lock" style="width:12px;height:12px;flex-shrink:0;"></i>
+        </label>
+      </div>
+      <!-- Row 2: text search -->
+      <div class="gfs-search-wrap">
+        <i data-lucide="search" style="width:13px;height:13px;flex-shrink:0;opacity:0.6;"></i>
+        <input id="gfsSearch" type="text" placeholder="Sender suchen…" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Globe style popup (hidden by default, toggled via .open class) -->
+    <div id="globeBrightnessPanel">
+      <!-- Texture presets -->
+      <div class="gbp-presets">
+        <button class="gbp-preset active" data-texture="night"  title="Nacht">🌙 Nacht</button>
+        <button class="gbp-preset"        data-texture="day"    title="Tag">☀️ Tag</button>
+        <button class="gbp-preset"        data-texture="marble" title="Blue Marble">🌍 Marble</button>
+        <button class="gbp-preset"        data-texture="topo"   title="Topographie">🗺 Topo</button>
+      </div>
+      <!-- Brightness slider -->
+      <div class="gbp-slider-row">
+        <i data-lucide="moon" style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
+        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5">
+        <i data-lucide="sun"  style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
+      </div>
+    </div>
+
+    <div id="globeControls">
+      <button id="globeExpandBtn"    title="Vollbild"><i data-lucide="expand"></i></button>
+      <button id="globeLocBtn"       title="Eigene Position"><i data-lucide="locate"></i></button>
+      <button id="globeZoomInBtn"    title="Zoom +"><i data-lucide="zoom-in"></i></button>
+      <button id="globeZoomOutBtn"   title="Zoom −"><i data-lucide="zoom-out"></i></button>
+      <button id="globeFitBtn"       title="Weltkugel zentrieren"><i data-lucide="maximize-2"></i></button>
+      <button id="globeBrightnessBtn" title="Helligkeit / Tageszeit"><i data-lucide="sun-medium"></i></button>
+    </div>
+    <div id="globePopup" hidden>
+      <div id="globePopupHeader">
+        <span id="globePopupTitle"></span>
+        <button id="globePopupClose" title="Schließen">×</button>
+      </div>
+      <div id="globePopupList"></div>
+    </div>
+    <div id="globeNoData" hidden>Keine Sender mit Positionsdaten gefunden.</div>
+  </div>
+
+  </div><!-- /skin-globe -->
+
+<div class="skin" id="skin-retro">
+<!-- ══════════════════════════════════════════════════════════════
+     RETRO RADIO FULLSCREEN OVERLAY
+     ══════════════════════════════════════════════════════════════ -->
+<div id="retroRadio">
+
+  <!-- Cabinet top bar -->
+  <div class="retro-top">
+    <div class="retro-brand-plate">
+      <img src="./images/icon-192.png" class="retro-logo-icon" alt="">
+      <div class="retro-brand-text">
+        <span class="retro-brand-name">BRUMMI'S ROCK RADIO</span>
+        <span class="retro-brand-sub">Stereo · Digital · HiFi</span>
+      </div>
+    </div>
+    <div class="retro-search-wrap">
+      <i data-lucide="search" class="retro-search-icon"></i>
+      <input id="retroSearchInput" class="retro-search-input" type="text" placeholder="Sender suchen…" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- Frequency scale strip (reuses tuner tick system) -->
+  <div id="retroScaleWrap">
+    <div id="retroNeedle"></div>
+    <div id="retroTrack"><div id="retroTicks"></div></div>
+    <!-- Scale end labels -->
+    <span class="retro-scale-end left">FM</span>
+    <span class="retro-scale-end right">AM</span>
+  </div>
+
+  <!-- Cabinet body -->
+  <div class="retro-body">
+
+    <!-- Speaker grille (left) -->
+    <div class="retro-speaker">
+      <div class="speaker-cloth"></div>
+    </div>
+
+    <!-- Centre: amber station display + genre bands -->
+    <div class="retro-center">
+      <div class="retro-display-glass">
+        <div class="retro-display-station">
+          <img id="retroStationIcon" class="retro-station-icon" src="" alt="">
+          <div class="retro-display-station-info">
+            <div id="retroStationName">— Sender wählen —</div>
+            <div id="retroNowPlaying">Warte auf Metadaten…</div>
+          </div>
+        </div>
+        <div id="retroStationMeta"></div>
+        <div class="retro-divider"></div>
+        <canvas id="retroVisualizer" width="280" height="60"></canvas>
+        <div id="retroEqBtns" class="retro-eq-btns">
+          <button class="retro-eq-btn" data-preset="flat">FLAT</button>
+          <button class="retro-eq-btn" data-preset="rock">ROCK</button>
+          <button class="retro-eq-btn" data-preset="metal">METAL</button>
+          <button class="retro-eq-btn" data-preset="bass">BASS</button>
+        </div>
+      </div>
+
+      <!-- Main genre band buttons -->
+      <div class="retro-bands">
+        <button class="band-btn active" data-genre="">ALL</button>
+        <button class="band-btn" data-genre="rock">ROCK</button>
+        <button class="band-btn" data-genre="metal">METAL</button>
+        <button class="band-btn" data-genre="jazz">JAZZ</button>
+        <button class="band-btn" data-genre="classic">CLASS</button>
+        <button class="band-btn" data-genre="electronic">ELECTRO</button>
+      </div>
+
+      <!-- Sub-genre buttons (populated dynamically, fixed slot count) -->
+      <div id="retroSubBands" class="retro-sub-bands"></div>
+    </div>
+
+    <!-- Right column: knobs -->
+    <div class="retro-knobs-col">
+
+      <!-- Tuning knob (same element, re-parented visually via CSS trick) -->
+      <div class="retro-knob-group">
+        <div class="retro-knob-bezel">
+          <div class="bezel-tick" style="--i:0"></div><div class="bezel-tick" style="--i:1"></div>
+          <div class="bezel-tick" style="--i:2"></div><div class="bezel-tick" style="--i:3"></div>
+          <div class="bezel-tick" style="--i:4"></div><div class="bezel-tick" style="--i:5"></div>
+          <div class="bezel-tick" style="--i:6"></div><div class="bezel-tick" style="--i:7"></div>
+          <div class="bezel-tick" style="--i:8"></div><div class="bezel-tick" style="--i:9"></div>
+          <div class="bezel-tick" style="--i:10"></div><div class="bezel-tick" style="--i:11"></div>
+          <div id="retroTuneKnob" class="retro-knob">
+            <div class="knob-shine"></div>
+            <div class="knob-inner-ring"></div>
+            <div class="knob-marker-line"></div>
+            <div class="knob-center-dot"></div>
+          </div>
+        </div>
+        <div class="retro-knob-label">TUNING</div>
+      </div>
+
+      <!-- HTTPS toggle pushbutton (between knobs) -->
+      <button id="retroHttpsBtn" class="retro-https-btn on" title="HTTPS-Only umschalten">
+        <i data-lucide="lock" style="width:12px;height:12px;"></i>
+        <span class="retro-https-btn-label">HTTPS</span>
+        <span id="retroHttpsState" class="retro-https-btn-state">ON</span>
+      </button>
+
+      <!-- Volume knob (functional) -->
+      <div class="retro-knob-group">
+        <div class="retro-knob-bezel small">
+          <div class="bezel-tick" style="--i:0"></div><div class="bezel-tick" style="--i:1"></div>
+          <div class="bezel-tick" style="--i:2"></div><div class="bezel-tick" style="--i:3"></div>
+          <div class="bezel-tick" style="--i:4"></div><div class="bezel-tick" style="--i:5"></div>
+          <div class="bezel-tick" style="--i:6"></div><div class="bezel-tick" style="--i:7"></div>
+          <div class="bezel-tick" style="--i:8"></div><div class="bezel-tick" style="--i:9"></div>
+          <div class="bezel-tick" style="--i:10"></div><div class="bezel-tick" style="--i:11"></div>
+          <div id="retroVolKnob" class="retro-knob small">
+            <div class="knob-shine"></div>
+            <div class="knob-inner-ring"></div>
+            <div class="knob-marker-line"></div>
+            <div class="knob-center-dot"></div>
+          </div>
+        </div>
+        <div class="retro-knob-label">VOLUME</div>
+      </div>
+
+    </div>
+  </div><!-- /.retro-body -->
+
+  <!-- Bottom controls bar -->
+  <div class="retro-bottom">
+    <!-- Feet decoration (left side) -->
+    <div class="retro-feet">
+      <div class="retro-foot"></div>
+      <div class="retro-foot"></div>
+    </div>
+    <!-- Transport (centred) -->
+    <div class="retro-transport">
+      <button id="retroPrevBtn" class="retro-transport-btn" title="Vorheriger Sender">
+        <i data-lucide="skip-back"></i>
+      </button>
+      <button id="retroPlayBtn" class="retro-transport-btn play" title="Play / Pause">
+        <i data-lucide="play"></i>
+      </button>
+      <button id="retroNextBtn" class="retro-transport-btn" title="Nächster Sender">
+        <i data-lucide="skip-forward"></i>
+      </button>
+      <button id="retroRecBtn" class="retro-transport-btn rec" title="Aufnahme starten/stoppen">
+        <i data-lucide="circle"></i>
+      </button>
+    </div>
+    <!-- Feet decoration (right side) -->
+    <div class="retro-feet">
+      <div class="retro-foot"></div>
+      <div class="retro-foot"></div>
+    </div>
+  </div>
+
+</div><!-- /#retroRadio -->
+  </div><!-- /skin-retro -->
+
+<div class="skin" id="skin-dj">
+<!-- ══════════════════════════════════════════════════════════════
+       DJ BOOTH — Redesigned with CSS vinyl + station lists
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="djMixer">
+
+    <!-- Header -->
+    <div class="dj-header">
+      <img src="./images/icon-192.png" class="dj-header-logo" alt="Brummi" title="Zurück zum Start">
+      <span class="dj-header-title">DJ BOOTH</span>
+    </div>
+
+    <!-- Body: Deck A | Mixer Center | Deck B -->
+    <div class="dj-body">
+
+      <!-- ═══ DECK A ═══════════════════════════════════════════════════ -->
+      <div id="djDeckA" class="dj-deck dj-deck-a">
+
+        <!-- Filter bar -->
+        <div class="dj-filters-bar">
+          <select id="djGenreA" class="dj-sel">
+            <option value="">Alle Genres</option>
+            <option value="favorites">⭐ Favoriten</option>
+            <option value="rock">Rock</option>
+            <option value="metal">Metal</option>
+            <option value="pop">Pop</option>
+            <option value="classic">Classic</option>
+            <option value="electronic">Electronic</option>
+            <option value="jazz">Jazz</option>
+          </select>
+          <select id="djSubgenreA" class="dj-sel"><option value="">Alle</option></select>
+          <input id="djSearchA" class="dj-search-fld" type="text" placeholder="Suchen…" autocomplete="off">
+        </div>
+
+        <!-- Deck label + CSS Vinyl disc -->
+        <div class="dj-deck-label">DECK A</div>
+        <div class="dj-vinyl-wrap" id="djVinylWrapA">
+          <div class="dj-vinyl" id="djVinylA">
+            <div class="dj-vinyl-label">
+              <img class="dj-vinyl-favicon" id="djFaviconA" src="" alt="">
+              <span class="dj-vinyl-label-text" id="djLabelTextA">A</span>
+            </div>
+            <div class="dj-vinyl-hole"></div>
+          </div>
+        </div>
+
+        <!-- Deck info (LED display) -->
+        <div class="dj-deck-info">
+          <div class="dj-np-station" id="djNameA">— Sender wählen —</div>
+          <div class="dj-np-track"   id="djTrackA">—</div>
+        </div>
+
+        <!-- BPM + Tempo -->
+        <div class="dj-bpm-row">
+          <div class="dj-bpm-display" id="djBpmA">--- BPM</div>
+          <input type="range" id="djTempoA" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" title="Tempo ±8%">
+          <span class="dj-tempo-val" id="djTempoValA">0%</span>
+        </div>
+
+        <!-- EQ faders (vertical) -->
+        <div class="dj-eq-section">
+          <div class="dj-eq-band"><label>HI</label>
+            <input type="range" id="djEqHiA"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
+            <span class="dj-eq-val">0</span></div>
+          <div class="dj-eq-band"><label>MID</label>
+            <input type="range" id="djEqMidA" class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
+            <span class="dj-eq-val">0</span></div>
+          <div class="dj-eq-band"><label>LO</label>
+            <input type="range" id="djEqLoA"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
+            <span class="dj-eq-val">0</span></div>
+        </div>
+
+        <!-- Control row -->
+        <div class="dj-ctrl-row">
+          <button id="djPlayA"      class="dj-btn dj-play-btn" title="Play / Stop">&#9654; A</button>
+          <button id="djCueA"       class="dj-btn dj-cue-btn"  title="CUE">CUE</button>
+          <button id="djFilterBtnA" class="dj-btn dj-filter-btn" title="LP / HP Filter">LP/HP</button>
+          <div class="dj-gain-wrap">
+            <label class="dj-gain-label">GAIN</label>
+            <input type="range" id="djGainA" min="0" max="150" value="100" class="dj-gain-slider">
+          </div>
+        </div>
+
+        <!-- Sort buttons -->
+        <div class="dj-sort-grp" id="djSortA">
+          <button class="dj-sort-btn active" data-sort="votes">VOTES</button>
+          <button class="dj-sort-btn" data-sort="bitrate">BIT</button>
+          <button class="dj-sort-btn" data-sort="distance">GPS</button>
+          <button class="dj-fav-filter-btn" id="djFavFilterA" title="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
+        </div>
+
+        <!-- Station list -->
+        <div class="dj-station-list" id="djStationListA"></div>
+      </div>
+
+      <!-- ═══ MIXER CENTER ══════════════════════════════════════════════ -->
+      <div class="dj-mixer-center">
+
+        <!-- Crossfader -->
+        <div class="dj-xfade-section">
+          <span class="dj-xfade-lbl">A</span>
+          <input type="range" id="djCrossfader" min="0" max="100" value="50" class="dj-crossfader">
+          <span class="dj-xfade-lbl">B</span>
+        </div>
+
+        <!-- Center visualizer -->
+        <canvas id="djVisualizer" class="dj-center-vis"></canvas>
+
+        <!-- Mirror play buttons -->
+        <div class="dj-mix-play-row">
+          <button id="djPlayAm" class="dj-btn dj-play-btn">&#9654; A</button>
+          <button id="djPlayBm" class="dj-btn dj-play-btn">&#9654; B</button>
+        </div>
+
+        <!-- Central HTTPS toggle -->
+        <label class="dj-https-center" title="Nur sichere Streams (HTTPS)">
+          <input type="checkbox" id="djHttpsCenter" checked>
+          <span>HTTPS</span>
+        </label>
+
+        <div class="dj-center-labels">
+          <span>EQ A</span><span>EQ B</span>
+        </div>
+      </div>
+
+      <!-- ═══ DECK B ═══════════════════════════════════════════════════ -->
+      <div id="djDeckB" class="dj-deck dj-deck-b">
+
+        <!-- Filter bar -->
+        <div class="dj-filters-bar">
+          <select id="djGenreB" class="dj-sel">
+            <option value="">Alle Genres</option>
+            <option value="favorites">⭐ Favoriten</option>
+            <option value="rock">Rock</option>
+            <option value="metal">Metal</option>
+            <option value="pop">Pop</option>
+            <option value="classic">Classic</option>
+            <option value="electronic">Electronic</option>
+            <option value="jazz">Jazz</option>
+          </select>
+          <select id="djSubgenreB" class="dj-sel"><option value="">Alle</option></select>
+          <input id="djSearchB" class="dj-search-fld" type="text" placeholder="Suchen…" autocomplete="off">
+        </div>
+
+        <!-- Deck label + CSS Vinyl disc -->
+        <div class="dj-deck-label">DECK B</div>
+        <div class="dj-vinyl-wrap" id="djVinylWrapB">
+          <div class="dj-vinyl" id="djVinylB">
+            <div class="dj-vinyl-label">
+              <img class="dj-vinyl-favicon" id="djFaviconB" src="" alt="">
+              <span class="dj-vinyl-label-text" id="djLabelTextB">B</span>
+            </div>
+            <div class="dj-vinyl-hole"></div>
+          </div>
+        </div>
+
+        <!-- Deck info (LED display) -->
+        <div class="dj-deck-info">
+          <div class="dj-np-station" id="djNameB">— Sender wählen —</div>
+          <div class="dj-np-track"   id="djTrackB">—</div>
+        </div>
+
+        <!-- BPM + Tempo -->
+        <div class="dj-bpm-row">
+          <div class="dj-bpm-display" id="djBpmB">--- BPM</div>
+          <input type="range" id="djTempoB" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader">
+          <span class="dj-tempo-val" id="djTempoValB">0%</span>
+        </div>
+
+        <!-- EQ faders (vertical) -->
+        <div class="dj-eq-section">
+          <div class="dj-eq-band"><label>HI</label>
+            <input type="range" id="djEqHiB"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
+            <span class="dj-eq-val">0</span></div>
+          <div class="dj-eq-band"><label>MID</label>
+            <input type="range" id="djEqMidB" class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
+            <span class="dj-eq-val">0</span></div>
+          <div class="dj-eq-band"><label>LO</label>
+            <input type="range" id="djEqLoB"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
+            <span class="dj-eq-val">0</span></div>
+        </div>
+
+        <!-- Control row -->
+        <div class="dj-ctrl-row">
+          <button id="djPlayB"      class="dj-btn dj-play-btn">&#9654; B</button>
+          <button id="djCueB"       class="dj-btn dj-cue-btn">CUE</button>
+          <button id="djFilterBtnB" class="dj-btn dj-filter-btn">LP/HP</button>
+          <div class="dj-gain-wrap">
+            <label class="dj-gain-label">GAIN</label>
+            <input type="range" id="djGainB" min="0" max="150" value="100" class="dj-gain-slider">
+          </div>
+        </div>
+
+        <!-- Sort buttons -->
+        <div class="dj-sort-grp" id="djSortB">
+          <button class="dj-sort-btn active" data-sort="votes">VOTES</button>
+          <button class="dj-sort-btn" data-sort="bitrate">BIT</button>
+          <button class="dj-sort-btn" data-sort="distance">GPS</button>
+          <button class="dj-fav-filter-btn" id="djFavFilterB" title="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
+        </div>
+
+        <!-- Station list -->
+        <div class="dj-station-list" id="djStationListB"></div>
+      </div>
+
+    </div><!-- /.dj-body -->
+
+    <!-- Footer -->
+    <div class="dj-footer">
+      <div><span class="dj-ftr-lbl">A:</span> <span id="djFooterA">—</span></div>
+      <div><span class="dj-ftr-lbl">B:</span> <span id="djFooterB">—</span></div>
+    </div>
+
+  </div><!-- /#djMixer -->
+
+  <!-- ═══ SHARED OVERLAYS ═══ -->
+</div><!-- /skin-dj -->
+
+  <!-- ═══ SHARED OVERLAYS (position:fixed) ═══ -->
+  <audio id="radioAudio" preload="none"></audio>
+<!-- SETTINGS PANEL -->
+  <div id="updateBanner">
+    <span>Update verfügbar!</span>
+    <button id="updateReloadBtn">Jetzt neu laden</button>
+  </div>
+
+  <div id="settingsOverlay"></div>
+
+  <!-- KEYBOARD SHORTCUT TOAST -->
+  <div id="kbToast"></div>
+
+  <!-- WHAT'S NEW MODAL -->
+  <div id="whatsNewOverlay">
+    <div id="whatsNewModal">
+      <div id="whatsNewModalHeader">
+        <h2>Neuigkeiten</h2>
+        <p class="wnv">Version 1.5.0</p>
+      </div>
+      <div id="whatsNewModalBody">
+        <ul>
+          <li>
+            <span class="wn-icon">🎛️</span>
+            <div>
+              <strong>Futuristische DJ-Kanzel</strong>
+              Interaktives Cyberpunk DJ-Pult mit EQs, Filtern, Crossfader und Live-BPM-Anzeige!
+            </div>
+          </li>
+          <li>
+            <span class="wn-icon">📻</span>
+            <div>
+              <strong>Mehr Sender & Limit</strong>
+              Zeige bis zu 300+ Sender. Das Limit ist in den Einstellungen anpassbar.
+            </div>
+          </li>
+          <li>
+            <span class="wn-icon">⭐</span>
+            <div>
+              <strong>Favoriten-Filter & Songinfos</strong>
+              Filtere DJ-Sender nach deinen Favoriten und sieh sofort, welcher Song gerade läuft!
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div id="whatsNewModalFooter">
+        <button id="whatsNewCloseBtn"><i data-lucide="check"></i> Alles klar!</button>
+      </div>
+    </div>
+  </div>
+  <div id="settingsPanel">
+    <div class="settings-header">
+      <h2><i data-lucide="settings"></i> Einstellungen</h2>
+      <button id="closeSettings"><i data-lucide="x"></i></button>
+    </div>
+    
+    <div class="settings-content">
+      
+      <!-- WIEDERGABE -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3><i data-lucide="radio"></i> Wiedergabe</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px 0;">
+            <input type="checkbox" id="autoSkipDeadToggle" checked style="width:18px; height:18px; accent-color: var(--color-accent);">
+            <div>
+              <div style="font-size:13px; font-weight:600;">Defekte Sender automatisch überspringen</div>
+              <div style="font-size:11px; opacity:0.7; margin-top:2px;">Wenn ein Stream nicht startet oder die Verbindung abbricht, wird automatisch der nächste Sender geladen.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- ANZEIGE -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3><i data-lucide="layout-list"></i> <span id="lang-station-limit-title">Max. angezeigte Sender</span></h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <div style="display:flex; flex-direction:column; gap:4px; padding:6px 0;">
+            <select id="stationLimitSelect" style="width:100%; height:36px; padding:6px 12px; font-size:13px; border-radius:6px; background:var(--color-bg-tertiary); color:var(--color-text-primary); border:1px solid var(--color-border); outline:none;">
+              <option value="50">50</option>
+              <option value="150">150</option>
+              <option value="300" selected>300 (Standard)</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+              <option value="99999">Alle / All</option>
+            </select>
+            <div id="lang-station-limit-desc" style="font-size:11px; opacity:0.7; margin-top:2px;">Begrenzt die Anzahl der geladenen Sender im DJ-Pult und in den Listen.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECORDING -->
+      <div class="settings-section" id="recSettingsSection">
+        <div class="settings-section-header">
+          <h3><i data-lucide="circle-dot"></i> Aufnahme</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <div id="recFolderRow">
+            <p style="font-size:12px; margin-bottom:10px;">Wähle einen Ordner, in dem aufgenommene Tracks gespeichert werden. Nur in Chrome und Edge verfügbar – andere Browser speichern in Downloads.</p>
+            <button id="recChangeFolderBtn" class="secondary" style="width:100%; margin-bottom: 12px;">
+              <i data-lucide="folder-open"></i> Speicherordner wählen
+            </button>
+            <p id="recFolderName" style="font-size:11px; color:var(--color-text-muted); margin-bottom: 12px;"></p>
+          </div>
+          <p id="recFolderUnsupported" style="font-size:12px; color:var(--color-text-muted); display:none; margin-bottom: 12px;">Ordnerauswahl wird von diesem Browser nicht unterstützt. Aufnahmen gehen in den Download-Ordner.</p>
+          
+          <label id="recAutoSplitLabel" style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px 0; border-top: 1px solid var(--color-bg-tertiary);">
+            <input type="checkbox" id="recAutoSplit" style="width:18px; height:18px; accent-color: var(--color-accent);">
+            <div>
+              <div style="font-size:13px; font-weight:600;">Bei Titelwechsel neuen Track starten</div>
+              <div style="font-size:11px; opacity:0.7; margin-top:2px;">Trennt die Aufnahme automatisch in einzelne Dateien, sobald ein neues Lied beginnt.</div>
+            </div>
+          </label>
+          <div id="recNote" style="font-size:11px; opacity:0.7; color:var(--color-accent); margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <!-- SPRACHE -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3 id="lang-settings-language"><i data-lucide="globe"></i> Sprache / Language</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <div class="settings-option">
+            <select id="languageSelect">
+              <option value="de">DE - Deutsch</option>
+              <option value="en">EN - English</option>
+              <option value="fr">FR - Français</option>
+              <option value="es">ES - Español</option>
+              <option value="it">IT - Italiano</option>
+            </select>
+          </div>
+          <p id="lang-translation-status" style="margin:4px 0; font-size:11px; opacity:0.7;"></p>
+          <p><small id="lang-language-info">Die Sprache wird automatisch erkannt basierend auf deinem Browser.</small></p>
+        </div>
+      </div>
+
+      <!-- THEME -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3><i data-lucide="palette"></i> Theme</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <div class="theme-options">
+            <div class="theme-option active" data-theme="brummie">
+              <div class="theme-preview" style="background: #0b0b0f;">
+                <div class="theme-preview-color" style="background: var(--color-bg-secondary);"></div>
+                <div class="theme-preview-color" style="background: #ef4444;"></div>
+                <div class="theme-preview-color" style="background: var(--color-bg-tertiary);"></div>
+              </div>
+              <div class="theme-option-name"><i data-lucide="radio"></i> Brummie</div>
+            </div>
+            <div class="theme-option" data-theme="sumsum">
+              <div class="theme-preview" style="background: #2d2538;">
+                <div class="theme-preview-color" style="background: #b19cd9;"></div>
+                <div class="theme-preview-color" style="background: #c9a876;"></div>
+                <div class="theme-preview-color" style="background: #5a7a5c;"></div>
+              </div>
+              <div class="theme-option-name"><i data-lucide="music-2"></i> Sumsum</div>
+            </div>
+            <div class="theme-option" data-theme="glaubnix">
+              <div class="theme-preview" style="background: #1a1a1a;">
+                <div class="theme-preview-color" style="background: #e74c3c;"></div>
+                <div class="theme-preview-color" style="background: #ffd700;"></div>
+                <div class="theme-preview-color" style="background: #27ae60;"></div>
+              </div>
+              <div class="theme-option-name"><i data-lucide="music"></i> Glaubnix</div>
+            </div>
+            <div class="theme-option" data-theme="setre">
+              <div class="theme-preview" style="background: #1a1f21;">
+                <div class="theme-preview-color" style="background: #ff8c00;"></div>
+                <div class="theme-preview-color" style="background: #0a7b83;"></div>
+                <div class="theme-preview-color" style="background: #d4a574;"></div>
+              </div>
+              <div class="theme-option-name"><i data-lucide="sunrise"></i> Setre</div>
+            </div>
+          </div>
+          <p><small id="lang-theme-info">Wähle ein Theme das zu deinem Musikgeschmack passt.</small></p>
+
+          <!-- CUSTOM THEME CREATOR -->
+          <button class="custom-theme-toggle" id="customThemeToggle">
+            <i data-lucide="palette"></i> 🎨 Custom Theme Creator – Eigene Farben wählen
+          </button>
+
+          <div id="customThemeCreator">
+            <div style="font-size:11px; opacity:0.6; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.4px;">Vorschau</div>
+            <div class="custom-theme-preview-bar">
+              <div id="prev-bg-primary"></div>
+              <div id="prev-bg-secondary"></div>
+              <div id="prev-accent"></div>
+              <div id="prev-bg-tertiary"></div>
+              <div id="prev-text"></div>
+            </div>
+            <div class="color-picker-grid">
+              <div class="color-picker-item"><label>Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-primary" value="#0b0b0f"><input type="text" id="ct-bg-primary" value="#0B0B0F" maxlength="7"></div></div>
+              <div class="color-picker-item"><label>Karten / Panels</label><div class="color-picker-row"><input type="color" id="cp-bg-secondary" value="#111827"><input type="text" id="ct-bg-secondary" value="#111827" maxlength="7"></div></div>
+              <div class="color-picker-item"><label>Akzentfarbe</label><div class="color-picker-row"><input type="color" id="cp-accent" value="#ef4444"><input type="text" id="ct-accent" value="#EF4444" maxlength="7"></div></div>
+              <div class="color-picker-item"><label>Elemente / Border</label><div class="color-picker-row"><input type="color" id="cp-bg-tertiary" value="#1f2937"><input type="text" id="ct-bg-tertiary" value="#1F2937" maxlength="7"></div></div>
+              <div class="color-picker-item"><label>Textfarbe</label><div class="color-picker-row"><input type="color" id="cp-text" value="#f5f5f5"><input type="text" id="ct-text" value="#F5F5F5" maxlength="7"></div></div>
+              <div class="color-picker-item"><label>Input-Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-input" value="#020617"><input type="text" id="ct-bg-input" value="#020617" maxlength="7"></div></div>
+            </div>
+            <div class="custom-theme-actions">
+              <button id="applyCustomTheme"><i data-lucide="check"></i> Anwenden</button>
+              <button class="secondary" id="resetCustomTheme"><i data-lucide="rotate-ccw"></i> Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIG DATEI -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3><i data-lucide="file-down"></i> Import / Export</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <p style="font-size: 12px; margin-bottom: 12px;">Exportiere deine Favoriten, Theme, EQ-Einstellungen und Verlauf als Datei – und lade sie auf einem anderen Gerät wieder ein.</p>
+          <button id="configExportBtn" class="secondary" style="width: 100%; margin-bottom: 8px;">
+            <i data-lucide="download"></i> Einstellungen exportieren
+          </button>
+          <button id="configImportBtn" class="secondary" style="width: 100%;">
+            <i data-lucide="upload"></i> Einstellungen importieren
+          </button>
+          <input type="file" id="configFileInput" accept=".json" style="display: none;">
+          <p id="configImportStatus" style="font-size: 11px; margin-top: 8px; min-height: 16px;"></p>
+        </div>
+      </div>
+
+      <!-- PWA / APP INSTALLATION -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3><i data-lucide="smartphone"></i> App &amp; PWA</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <p style="font-size:12px; margin-bottom:10px;">Installiere Brummi's Rock Radio als App auf deinem Gerät – kein App Store nötig.</p>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <button id="installBtn" class="secondary" style="display:none; flex:1; min-width:120px;">
+              <i data-lucide="download"></i> App installieren
+            </button>
+            <span id="pwaStatus" style="font-size:12px; opacity:0.75;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KEYBOARD SHORTCUTS -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3><i data-lucide="keyboard"></i> Tastaturkürzel</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <table class="shortcuts-table">
+            <tbody>
+              <tr><td><kbd>Space</kbd></td><td>Play / Pause</td></tr>
+              <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Vorheriger / Nächster Sender</td></tr>
+              <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Lautstärke +5 % / −5 %</td></tr>
+              <tr><td><kbd>M</kbd></td><td>Stummschalten / An</td></tr>
+              <tr><td><kbd>F</kbd></td><td>Favorit toggeln</td></tr>
+              <tr><td><kbd>Esc</kbd></td><td>Einstellungen schließen</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ABOUT & DONATION -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h3><i data-lucide="info"></i> Über diese App</h3>
+          <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+        </div>
+        <div class="settings-section-content">
+          <p><strong>Brummi's Rock Radio</strong></p>
+          <p>Version: 1.5.0</p>
+          <p>Eine Web-App zum Streamen von Radio-Sendern weltweit.</p>
+          <p style="margin-top: 12px;"><small>Datenquelle: Radio Browser API<br>30,000+ Sender · Kostenlos · Keine Werbung</small></p>
+          <button id="checkUpdateBtn" class="secondary" style="width:100%; margin-top:12px;">
+            <i data-lucide="refresh-cw"></i> Nach Updates suchen
+          </button>
+          <p id="checkUpdateStatus" style="font-size:11px; margin-top:6px; min-height:14px;"></p>
+        </div>
+      </div>
+
+      <!-- STANDALONE UNTERSTÜTZUNG (Always visible at the bottom) -->
+      <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-bg-tertiary);">
+        <h4 id="lang-support-title" style="margin: 0 0 10px 0; font-size: 14px; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="heart" style="color: var(--color-accent); width: 16px; height: 16px;"></i> Unterstützung
+        </h4>
+        <p id="lang-support-desc" style="font-size: 12px; margin-bottom: 12px; color: var(--color-text-secondary); line-height: 1.5;">Diese App ist kostenlos und Open Source. Wenn sie dir gefällt, freue ich mich über eine kleine Unterstützung!</p>
+        <a id="donateBtn" href="https://ko-fi.com/christopheschneider" target="_blank" rel="noopener" class="kofi-link-btn">
+          <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="Ko-Fi" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">Support auf Ko-Fi
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toolsPanel">
+    <div class="settings-header">
+      <h2><i data-lucide="clock"></i> Timer &amp; Daten</h2>
+      <button id="closeTools"><i data-lucide="x"></i></button>
+    </div>
+    
+    <div class="settings-content">
+      <!-- SLEEP TIMER -->
+      <div class="settings-section">
+        <h3><i data-lucide="clock"></i> Sleep Timer</h3>
+        <!-- Mode Toggle -->
+        <div class="sleep-mode-toggle" style="display: flex; gap: 8px; margin-bottom: 16px; justify-content: center;">
+          <button type="button" class="sleep-mode-btn active" data-mode="countdown">
+            <i data-lucide="timer"></i> Timer
+          </button>
+          <button type="button" class="sleep-mode-btn" data-mode="endtime">
+            <i data-lucide="clock"></i> Uhrzeit
+          </button>
+        </div>
+        
+        <!-- Countdown Timer -->
+        <div id="sleepCountdown" class="sleep-control active">
+          <div class="timer-container" style="display:flex; justify-content:center;">
+            <svg class="circular-timer" viewBox="0 0 200 185" width="200" height="185">
+              <path d="M 43.43,156.57 A 80,80 0 1,1 156.57,156.57" fill="none" stroke="var(--color-bg-tertiary)" stroke-width="12" stroke-linecap="round"/>
+              <path id="sleepArc" d="" fill="none" stroke="var(--color-accent)" stroke-width="12" stroke-linecap="round" opacity="0.9"/>
+              <g id="sleepTicks"></g>
+              <circle id="sleepHandle" cx="43.43" cy="156.57" r="10" fill="var(--color-accent)" cursor="pointer" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
+              <text x="100" y="88" text-anchor="middle" font-size="36" font-weight="bold" fill="var(--color-text-primary)" id="sleepValue">0</text>
+              <text x="100" y="106" text-anchor="middle" font-size="12" fill="var(--color-text-secondary)">Minuten</text>
+            </svg>
+          </div>
+        </div>
+        
+        <!-- End Time Clock -->
+        <div id="sleepEndtime" class="sleep-control" style="display: none;">
+          <div class="timer-container" style="display:flex; justify-content:center;">
+            <svg class="circular-clock" viewBox="0 0 200 200" width="200" height="200">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="var(--color-bg-tertiary)" stroke-width="2"/>
+              <g id="hourMarkers"></g>
+              <line id="hourHand" x1="100" y1="100" x2="100" y2="50" stroke="var(--color-accent)" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="100" cy="100" r="8" fill="var(--color-accent)"/>
+              <text x="100" y="160" text-anchor="middle" font-size="16" font-weight="bold" fill="var(--color-text-primary)" id="endTimeDisplay">--:--</text>
+            </svg>
+          </div>
+        </div>
+        
+        <div style="margin-top: 16px; text-align: center;">
+          <button id="sleepToggle" class="secondary" title="Timer starten" style="min-width:48px;">
+            <i data-lucide="play"></i>
+          </button>
+          <div id="sleepStatus" style="margin-top: 8px; font-size: 12px; color: var(--color-text-muted);"></div>
+        </div>
+      </div>
+
+      <!-- AUTO-SHUFFLE -->
+      <div class="settings-section">
+        <h3><i data-lucide="shuffle"></i> Auto-Shuffle</h3>
+        <p style="font-size:12px; margin-bottom:12px;">Springt nach Ablauf der Zeit automatisch zum nächsten Sender.</p>
+        <div class="timer-container" style="display:flex; justify-content:center;">
+          <svg class="circular-timer" viewBox="0 0 200 185" width="200" height="185">
+            <path d="M 43.43,156.57 A 80,80 0 1,1 156.57,156.57" fill="none" stroke="var(--color-bg-tertiary)" stroke-width="12" stroke-linecap="round"/>
+            <path id="shuffleArc" d="" fill="none" stroke="var(--color-accent)" stroke-width="12" stroke-linecap="round" opacity="0.9"/>
+            <g id="shuffleTicks"></g>
+            <circle id="shuffleHandle" cx="43.43" cy="156.57" r="10" fill="var(--color-accent)" cursor="pointer" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
+            <text x="100" y="88" text-anchor="middle" font-size="36" font-weight="bold" fill="var(--color-text-primary)" id="shuffleValue">0</text>
+            <text x="100" y="106" text-anchor="middle" font-size="12" fill="var(--color-text-secondary)">Minuten</text>
+          </svg>
+        </div>
+        <div style="margin-top: 16px; text-align: center;">
+          <button id="shuffleToggle" class="secondary" title="Shuffle starten" style="min-width:48px;">
+            <i data-lucide="play"></i>
+          </button>
+          <div id="shuffleStatus" style="margin-top: 8px; font-size: 12px; color: var(--color-text-muted);"></div>
+        </div>
+      </div>
+
+      <!-- DATENVERBRAUCH -->
+      <div class="settings-section" id="dataContainer">
+        <h3><i data-lucide="wifi"></i> Datenverbrauch</h3>
+        <div style="background:var(--color-bg-input); border:1px solid var(--color-border); border-radius:6px; padding:12px; margin-top:8px;">
+          <!-- Aktuelle Session -->
+          <div style="text-align:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--color-bg-tertiary);">
+            <div style="font-size:28px; font-weight:700; color:var(--color-accent);" id="currentDataUsage">0 MB</div>
+            <div style="font-size:11px; opacity:0.7;">Aktuelle Session</div>
+          </div>
+          <!-- Hochrechnungen stacked -->
+          <div style="font-size:11px; opacity:0.6; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Hochrechnung</div>
+          <div class="data-usage-item">
+            <span class="data-usage-item-name">1 Stunde</span>
+            <span class="data-usage-item-value" id="proj1h">—</span>
+          </div>
+          <div class="data-usage-item">
+            <span class="data-usage-item-name">Pro Tag (24h)</span>
+            <span class="data-usage-item-value" id="projDay">—</span>
+          </div>
+          <div class="data-usage-item">
+            <span class="data-usage-item-name">Pro Woche</span>
+            <span class="data-usage-item-value" id="projWeek">—</span>
+          </div>
+          <div class="data-usage-item" style="border-bottom:none;">
+            <span class="data-usage-item-name">Pro Monat (30 Tage)</span>
+            <span class="data-usage-item-value" id="projMonth">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 
   <!-- ── Global Buttons (Settings, Legal, Home) ──────────────────────────── -->
   <!-- FAB group – always visible, collapses to toggle button -->
@@ -950,8 +1255,8 @@
     <button id="fabToggle" title="Menü"><i data-lucide="more-vertical"></i></button>
     <button id="legalBtn"      class="fab-btn" title="Rechtliche Hinweise">ⓘ</button>
     <button id="toolsBtn"      class="fab-btn" title="Timer &amp; Daten"><i data-lucide="clock"></i></button>
-    <button id="globalHomeBtn" class="fab-btn" title="Zurück zum Start"><i data-lucide="home"></i></button>
     <button id="settingsBtn"   class="fab-btn" title="Einstellungen"><i data-lucide="settings"></i></button>
+    <button id="globalHomeBtn" class="fab-btn" title="Zurück zum Start"><i data-lucide="home"></i></button>
   </div>
 
   <!-- ── Info Modal ───────────────────────────────────────────────────────── -->
@@ -983,7 +1288,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=60"></script>
 
   <!-- Vercel Web Analytics – only active when deployed on Vercel -->
   <script defer src="/_vercel/insights/script.js"></script>
