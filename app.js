@@ -1710,6 +1710,8 @@ document.addEventListener('DOMContentLoaded', () => {
       displayedStations = sourceStations.slice(0, displayLimit);
       stationCountEl.textContent = `${displayedStations.length} von ${sourceStations.length}${showOnlyFavorites ? ' ⭐' : (httpsOnlyToggle.checked ? ' 🔒' : '')}`;
       
+      // ⚡ Bolt Optimization: Use DocumentFragment to batch DOM insertions and prevent layout thrashing
+      const fragment = document.createDocumentFragment();
       displayedStations.forEach((st, index) => {
         const row = document.createElement("div");
         row.className = "station";
@@ -1720,7 +1722,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const logo = document.createElement("div");
         logo.className = "station-logo";
         if (st.favicon) {
-          logo.innerHTML = `<img src="${st.favicon}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'" alt=""/>`;
+          // ⚡ Bolt Optimization: Add loading="lazy" to defer image loading until they enter viewport
+          logo.innerHTML = `<img src="${st.favicon}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'" alt=""/>`;
         } else {
           logo.textContent = st.logoText;
         }
@@ -1758,8 +1761,9 @@ document.addEventListener('DOMContentLoaded', () => {
         row.appendChild(logo);
         row.appendChild(main);
         row.appendChild(fav);
-        stationsListEl.appendChild(row);
+        fragment.appendChild(row);
       });
+      stationsListEl.appendChild(fragment);
       
       loadMoreBtn.style.display = displayedStations.length < sourceStations.length ? "block" : "none";
       if (window._tunerRefresh) window._tunerRefresh();
@@ -7443,6 +7447,8 @@ if (document.readyState === 'loading') {
     if (!listEl) return;
     listEl.innerHTML = '';
     const activeStation = deck === 'A' ? stationA : stationB;
+    // ⚡ Bolt Optimization: Use DocumentFragment to batch DOM insertions and prevent layout thrashing
+    const fragment = document.createDocumentFragment();
     stations.forEach(st => {
       const row = document.createElement('div');
       row.className = 'dj-station-row' + (activeStation && activeStation.id === st.id ? ' active' : '');
@@ -7454,6 +7460,8 @@ if (document.readyState === 'loading') {
         const img = document.createElement('img');
         img.src = st.favicon;
         img.alt = '';
+        // ⚡ Bolt Optimization: Add loading="lazy" to defer image loading until they enter viewport
+        img.loading = 'lazy';
         img.onerror = () => { img.remove(); disc.appendChild(ph); };
         disc.appendChild(img);
       } else {
@@ -7487,9 +7495,10 @@ if (document.readyState === 'loading') {
       row.appendChild(meta);
       row.appendChild(favBtn);
       row.addEventListener('click', () => loadDeck(deck, st));
-      listEl.appendChild(row);
+      fragment.appendChild(row);
       if (window.lucide) lucide.createIcons({ nodes: [favBtn] });
     });
+    listEl.appendChild(fragment);
   }
 
   // ── DJ Deck Metadata Polling ──────────────────────────────────────────────
