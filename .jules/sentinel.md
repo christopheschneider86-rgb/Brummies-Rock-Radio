@@ -1,0 +1,4 @@
+## 2026-10-05 - Fix DOM XSS vulnerabilities
+**Vulnerability:** DOM XSS was possible in two places within `app.js`. In the station list rendering, user-supplied `st.favicon` was concatenated into `innerHTML`. In the globe popup feature, untrusted values `st.name` and `st.country` were inserted directly into `innerHTML` using template strings.
+**Learning:** Concatenating untrusted data directly into strings meant for `innerHTML` poses a critical XSS risk in web applications without a strict CSP. This happens often when manually managing DOM elements.
+**Prevention:** Use `document.createElement()` along with assigning to properties like `.textContent`, `.src`, or `.href` instead of using `innerHTML`. If `innerHTML` is strictly necessary for template literals, ensure all untrusted variables are rigorously passed through an `escapeHTML` function before insertion.
