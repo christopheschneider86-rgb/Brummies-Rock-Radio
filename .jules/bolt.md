@@ -1,0 +1,3 @@
+## 2024-05-24 - Canvas RAF Performance & CSS Variables
+**Learning:** Using `getComputedStyle(document.documentElement).getPropertyValue()` inside a `requestAnimationFrame` loop (like Web Audio visualizers) triggers a synchronous style recalculation every frame, causing massive layout thrashing and CPU spikes. Similarly, repeatedly parsing hex color strings in high-frequency loops (e.g., inside a frequency bin loop per frame) adds measurable overhead.
+**Action:** Always cache CSS variable values and pre-compute complex values (like HEX to RGB) outside of high-frequency loops. Only recalculate them when the underlying theme actually changes.

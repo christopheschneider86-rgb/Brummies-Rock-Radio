@@ -1637,14 +1637,17 @@ document.addEventListener('DOMContentLoaded', () => {
         list = list.filter(s => selectedCountries.has(s.country));
       }
       
+      // ⚡ Bolt: Use Set for O(1) favorite lookups during sort instead of Array.includes O(N)
+      const favoritesSet = new Set(favorites);
+
       list.sort((a, b) => {
         for (const sortType of currentSort) {
           let result = 0;
           
           switch(sortType) {
             case "favorites":
-              const aFav = favorites.includes(a.id) ? 1 : 0;
-              const bFav = favorites.includes(b.id) ? 1 : 0;
+              const aFav = favoritesSet.has(a.id) ? 1 : 0;
+              const bFav = favoritesSet.has(b.id) ? 1 : 0;
               result = bFav - aFav;
               break;
             case "distance":
@@ -1710,11 +1713,16 @@ document.addEventListener('DOMContentLoaded', () => {
       displayedStations = sourceStations.slice(0, displayLimit);
       stationCountEl.textContent = `${displayedStations.length} von ${sourceStations.length}${showOnlyFavorites ? ' ⭐' : (httpsOnlyToggle.checked ? ' 🔒' : '')}`;
       
+      // ⚡ Bolt: Use DocumentFragment to batch DOM insertions
+      // Also use Set for O(1) favorite lookups during render loop
+      const favoritesSet = new Set(favorites);
+      const fragment = document.createDocumentFragment();
+
       displayedStations.forEach((st, index) => {
         const row = document.createElement("div");
         row.className = "station";
         if (currentStation && currentStation.id === st.id) row.classList.add("active");
-        if (favorites.includes(st.id)) row.classList.add("favorite");
+        if (favoritesSet.has(st.id)) row.classList.add("favorite");
         row.addEventListener("click", () => selectStation(st, index));
 
         const logo = document.createElement("div");
@@ -1748,7 +1756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         main.appendChild(meta);
 
         const fav = document.createElement("div");
-        fav.className = "station-fav " + (favorites.includes(st.id) ? "" : "inactive");
+        fav.className = "station-fav " + (favoritesSet.has(st.id) ? "" : "inactive");
         fav.textContent = "★";
         fav.addEventListener("click", (ev) => {
           ev.stopPropagation();
@@ -1758,9 +1766,11 @@ document.addEventListener('DOMContentLoaded', () => {
         row.appendChild(logo);
         row.appendChild(main);
         row.appendChild(fav);
-        stationsListEl.appendChild(row);
+        fragment.appendChild(row);
       });
       
+      stationsListEl.appendChild(fragment);
+
       loadMoreBtn.style.display = displayedStations.length < sourceStations.length ? "block" : "none";
       if (window._tunerRefresh) window._tunerRefresh();
       if (window._globeRefresh) window._globeRefresh();
@@ -2428,20 +2438,20 @@ function startMetadataPolling() {
         const barWidth = (canvas.width / bufferLength) * 2.5;
         let x = 0;
         
+        // ⚡ Bolt: Parse accent color hex to RGB once per frame outside the loop
+        // instead of per-frequency-bin to avoid ~7680 string parses per second
+        let accentRGB = { r: 239, g: 68, b: 68 }; // Default red
+        if (accentColor.startsWith('#')) {
+          const hex = accentColor.slice(1);
+          accentRGB = {
+            r: parseInt(hex.slice(0, 2), 16),
+            g: parseInt(hex.slice(2, 4), 16),
+            b: parseInt(hex.slice(4, 6), 16)
+          };
+        }
+
         for (let i = 0; i < bufferLength; i++) {
           const barHeight = (dataArray[i] / 255) * Math.min(canvas.height, 120);
-          
-          // Create gradient based on theme accent color
-          // Parse accent color (hex to RGB)
-          let accentRGB = { r: 239, g: 68, b: 68 }; // Default red
-          if (accentColor.startsWith('#')) {
-            const hex = accentColor.slice(1);
-            accentRGB = {
-              r: parseInt(hex.slice(0, 2), 16),
-              g: parseInt(hex.slice(2, 4), 16),
-              b: parseInt(hex.slice(4, 6), 16)
-            };
-          }
           
           // Vary intensity based on frequency
           const intensity = barHeight / canvas.height;
@@ -7969,6 +7979,30 @@ if (document.readyState === 'loading') {
   const djVisCvs = document.getElementById('djVisualizer');
   let visRafId = null;
 
+  // ⚡ Bolt: Cache theme colors outside the RAF loop.
+  // Instead of recalculating style per frame, use the variables
+  // cached in refreshThemeCache (cachedBgColor / cachedAccentColor).
+  // Calculate rgb values only when accent color changes
+  let djCachedAccentColor = '#bd00ff';
+  let djCachedAccentColorRgb = '189, 0, 255';
+
+  function updateDJVisualizerColors() {
+    const accent = typeof cachedAccentColor !== 'undefined' && cachedAccentColor
+      ? cachedAccentColor : '#bd00ff';
+
+    if (accent !== djCachedAccentColor) {
+      djCachedAccentColor = accent;
+      if (accent.startsWith('#')) {
+        let hex = accent.slice(1);
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        const r = parseInt(hex.slice(0, 2), 16) || 189;
+        const g = parseInt(hex.slice(2, 4), 16) || 0;
+        const b = parseInt(hex.slice(4, 6), 16) || 255;
+        djCachedAccentColorRgb = `${r}, ${g}, ${b}`;
+      }
+    }
+  }
+
   function drawDJVisualizer() {
     if (!djVisCvs) return;
 
@@ -7991,9 +8025,10 @@ if (document.readyState === 'loading') {
     const h = djVisCvs.height || 80;
     const vc = djVisCvs.getContext('2d');
 
-    const rootStyle = getComputedStyle(document.documentElement);
-    const colorAccent = rootStyle.getPropertyValue('--color-accent').trim() || '#bd00ff';
-    const colorAccentRgb = rootStyle.getPropertyValue('--color-accent-rgb').trim() || '189, 0, 255';
+    // ⚡ Bolt: Remove getComputedStyle from 60fps loop to prevent layout thrashing
+    updateDJVisualizerColors();
+    const colorAccent = djCachedAccentColor;
+    const colorAccentRgb = djCachedAccentColorRgb;
 
     if (!analyserNode) {
       vc.fillStyle = '#020203';
