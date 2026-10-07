@@ -1710,6 +1710,9 @@ document.addEventListener('DOMContentLoaded', () => {
       displayedStations = sourceStations.slice(0, displayLimit);
       stationCountEl.textContent = `${displayedStations.length} von ${sourceStations.length}${showOnlyFavorites ? ' ⭐' : (httpsOnlyToggle.checked ? ' 🔒' : '')}`;
       
+      // ⚡ Bolt: Use DocumentFragment to batch DOM appends and prevent layout thrashing
+      const fragment = document.createDocumentFragment();
+
       displayedStations.forEach((st, index) => {
         const row = document.createElement("div");
         row.className = "station";
@@ -1758,9 +1761,11 @@ document.addEventListener('DOMContentLoaded', () => {
         row.appendChild(logo);
         row.appendChild(main);
         row.appendChild(fav);
-        stationsListEl.appendChild(row);
+        fragment.appendChild(row);
       });
       
+      stationsListEl.appendChild(fragment);
+
       loadMoreBtn.style.display = displayedStations.length < sourceStations.length ? "block" : "none";
       if (window._tunerRefresh) window._tunerRefresh();
       if (window._globeRefresh) window._globeRefresh();
@@ -7443,6 +7448,10 @@ if (document.readyState === 'loading') {
     if (!listEl) return;
     listEl.innerHTML = '';
     const activeStation = deck === 'A' ? stationA : stationB;
+
+    // ⚡ Bolt: Use DocumentFragment to batch DOM appends and prevent layout thrashing
+    const fragment = document.createDocumentFragment();
+
     stations.forEach(st => {
       const row = document.createElement('div');
       row.className = 'dj-station-row' + (activeStation && activeStation.id === st.id ? ' active' : '');
@@ -7487,9 +7496,11 @@ if (document.readyState === 'loading') {
       row.appendChild(meta);
       row.appendChild(favBtn);
       row.addEventListener('click', () => loadDeck(deck, st));
-      listEl.appendChild(row);
+      fragment.appendChild(row);
       if (window.lucide) lucide.createIcons({ nodes: [favBtn] });
     });
+
+    listEl.appendChild(fragment);
   }
 
   // ── DJ Deck Metadata Polling ──────────────────────────────────────────────
