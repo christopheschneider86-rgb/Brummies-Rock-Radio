@@ -68,6 +68,18 @@ const ModeManager = (() => {
   };
 })();
 
+// ── Utilities ────────────────────────────────────────────────────────────────
+window.escapeHTML = function(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[tag]));
+};
+
 // ── Bootstrap on DOMContentLoaded ────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Activate welcome skin
@@ -1720,7 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const logo = document.createElement("div");
         logo.className = "station-logo";
         if (st.favicon) {
-          logo.innerHTML = `<img src="${st.favicon}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'" alt=""/>`;
+          logo.innerHTML = `<img src="${window.escapeHTML(st.favicon)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'" alt=""/>`;
         } else {
           logo.textContent = st.logoText;
         }
@@ -4814,8 +4826,8 @@ function startMetadataPolling() {
 
           row.innerHTML = `
             <div class="gpi-body">
-              <span class="gpi-name">${st.name}</span>
-              <span class="gpi-meta">${[st.country, st.bitrate ? st.bitrate + ' kbps' : '', votes + ' ▲'].filter(Boolean).join(' · ')}</span>
+              <span class="gpi-name">${window.escapeHTML(st.name)}</span>
+              <span class="gpi-meta">${[window.escapeHTML(st.country), st.bitrate ? st.bitrate + ' kbps' : '', votes + ' ▲'].filter(Boolean).join(' · ')}</span>
             </div>
             <button class="gpi-fav${isFav ? ' is-fav' : ''}" title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
               <i data-lucide="star"></i>
