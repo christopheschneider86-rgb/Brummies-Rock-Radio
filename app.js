@@ -3,6 +3,21 @@
 // Replaces all ad-hoc hidden/classList manipulations with a clean API.
 // Usage:  ModeManager.switchTo('list')   ModeManager.current()
 // ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Escapes HTML special characters to prevent XSS attacks when interpolating
+ * untrusted data (e.g. from APIs) into the DOM via innerHTML.
+ */
+function escapeHtml(unsafe) {
+  if (typeof unsafe !== 'string') return unsafe;
+  return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+}
+
 const ModeManager = (() => {
   'use strict';
 
@@ -1720,7 +1735,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const logo = document.createElement("div");
         logo.className = "station-logo";
         if (st.favicon) {
-          logo.innerHTML = `<img src="${st.favicon}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'" alt=""/>`;
+          logo.innerHTML = `<img src="${escapeHtml(st.favicon)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'" alt=""/>`;
         } else {
           logo.textContent = st.logoText;
         }
@@ -4814,8 +4829,8 @@ function startMetadataPolling() {
 
           row.innerHTML = `
             <div class="gpi-body">
-              <span class="gpi-name">${st.name}</span>
-              <span class="gpi-meta">${[st.country, st.bitrate ? st.bitrate + ' kbps' : '', votes + ' ▲'].filter(Boolean).join(' · ')}</span>
+              <span class="gpi-name">${escapeHtml(st.name)}</span>
+              <span class="gpi-meta">${[escapeHtml(st.country), st.bitrate ? st.bitrate + ' kbps' : '', votes + ' ▲'].filter(Boolean).join(' · ')}</span>
             </div>
             <button class="gpi-fav${isFav ? ' is-fav' : ''}" title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
               <i data-lucide="star"></i>
