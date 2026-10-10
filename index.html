@@ -160,11 +160,11 @@
 
   <div class="sort-controls">
     <small style="width:100%; margin-bottom: 6px;">Sortierung:</small>
-    <button class="secondary" data-sort="favorites"><i data-lucide="star"></i></button>
-    <button class="secondary active" data-sort="distance"><i data-lucide="map-pin"></i></button>
-    <button class="secondary" data-sort="votes"><i data-lucide="users"></i></button>
-    <button class="secondary" data-sort="bitrate"><i data-lucide="music"></i></button>
-    <button class="secondary" data-sort="name"><i data-lucide="type"></i></button>
+    <button aria-label="Nach Favoriten sortieren" class="secondary" data-sort="favorites"><i data-lucide="star"></i></button>
+    <button aria-label="Nach Entfernung sortieren" class="secondary active" data-sort="distance"><i data-lucide="map-pin"></i></button>
+    <button aria-label="Nach Bewertungen sortieren" class="secondary" data-sort="votes"><i data-lucide="users"></i></button>
+    <button aria-label="Nach Bitrate sortieren" class="secondary" data-sort="bitrate"><i data-lucide="music"></i></button>
+    <button aria-label="Nach Name sortieren" class="secondary" data-sort="name"><i data-lucide="type"></i></button>
   </div>
 
   <div class="status-bar">
@@ -195,9 +195,9 @@
   </div>
 
   <div id="transport">
-    <button id="prevBtn" disabled><i data-lucide="skip-back"></i></button>
-    <button id="playBtn" disabled><i data-lucide="play"></i></button>
-    <button id="nextBtn" disabled><i data-lucide="skip-forward"></i></button>
+    <button aria-label="Vorheriger Sender" id="prevBtn" disabled><i data-lucide="skip-back"></i></button>
+    <button aria-label="Abspielen / Pausieren" id="playBtn" disabled><i data-lucide="play"></i></button>
+    <button aria-label="Nächster Sender" id="nextBtn" disabled><i data-lucide="skip-forward"></i></button>
   </div>
 
   <!-- NOW PLAYING + RECORDING (one coherent block) -->
@@ -205,7 +205,7 @@
 
     <!-- Left: Recording button + live timer -->
     <div id="recControl">
-      <button id="recBtn" disabled title="Aufnahme starten / stoppen">
+      <button id="recBtn" disabled title="Aufnahme starten / stoppen" aria-label="Aufnahme starten / stoppen">
         <span class="rec-dot"></span>
       </button>
       <span id="recTimer"></span>
@@ -217,10 +217,10 @@
     </div>
 
     <!-- Right: Favorite + Google search -->
-    <button id="npFavBtn" class="secondary" disabled title="Zu Favoriten hinzufügen">
+    <button id="npFavBtn" class="secondary" disabled title="Zu Favoriten hinzufügen" aria-label="Zu Favoriten hinzufügen">
       <i data-lucide="star" width="14" height="14"></i>
     </button>
-    <button id="searchNowPlayingBtn" class="secondary" disabled title="Im Browser suchen">
+    <button id="searchNowPlayingBtn" class="secondary" disabled title="Im Browser suchen" aria-label="Im Browser suchen">
       <i data-lucide="search" width="14" height="14"></i>
     </button>
 
@@ -297,8 +297,8 @@
         <video id="bgVideo2" class="bg-vid" muted playsinline preload="auto"></video>
         <canvas id="visualizer"></canvas>
         <div id="vizControls">
-          <button id="videoToggleBtn" title="Video an/aus"><i data-lucide="video"></i></button>
-          <button id="historyToggleBtn" title="Verlauf ein-/ausklappen"><i data-lucide="chevron-down"></i></button>
+          <button id="videoToggleBtn" title="Video an/aus" aria-label="Video an/aus"><i data-lucide="video"></i></button>
+          <button id="historyToggleBtn" title="Verlauf ein-/ausklappen" aria-label="Verlauf ein-/ausklappen"><i data-lucide="chevron-down"></i></button>
         </div>
       </div>
     </div>
@@ -312,7 +312,7 @@
     <div class="history-controls" style="display:flex; align-items:center; gap:6px;">
       <button class="secondary active" data-view="stations"><i data-lucide="radio"></i> Sender</button>
       <button class="secondary" data-view="stats"><i data-lucide="bar-chart-2"></i> Stats</button>
-      <button class="secondary" id="clearAllHistoryStats" title="Ansicht zurücksetzen" style="margin-left:auto; padding:6px 10px; flex-shrink:0;"><i data-lucide="trash-2"></i></button>
+      <button class="secondary" id="clearAllHistoryStats" title="Ansicht zurücksetzen" style="margin-left:auto; padding:6px 10px; flex-shrink:0;" aria-label="Ansicht zurücksetzen"><i data-lucide="trash-2"></i></button>
     </div>
     
     <div id="historyContainer">
@@ -372,7 +372,7 @@
         </div>
       </div>
       <div id="tunerKnobHint">Drehen zum Abstimmen</div>
-      <button id="retroExpandBtn" title="Retro-Radio Vollbild"><i data-lucide="radio"></i> Retro-Modus</button>
+      <button id="retroExpandBtn" title="Retro-Radio Vollbild" aria-label="Retro-Radio Vollbild"><i data-lucide="radio"></i> Retro-Modus</button>
     </div>
 
   </div>
@@ -393,9 +393,9 @@
         </div>
       </div>
       <div class="gfs-np-btns-row">
-        <button id="gfsFavBtn" class="gfs-ctrl-btn gfs-fav-btn" title="Zu Favoriten hinzufügen" disabled><i data-lucide="star"></i></button>
-        <button id="gfsRecBtn" class="gfs-ctrl-btn gfs-rec-btn" title="Aufnahme" disabled><span class="rec-dot"></span></button>
-        <button id="gfsPlayBtn" class="gfs-ctrl-btn" title="Play / Pause"><i data-lucide="play"></i></button>
+        <button id="gfsFavBtn" class="gfs-ctrl-btn gfs-fav-btn" title="Zu Favoriten hinzufügen" disabled aria-label="Zu Favoriten hinzufügen"><i data-lucide="star"></i></button>
+        <button id="gfsRecBtn" class="gfs-ctrl-btn gfs-rec-btn" title="Aufnahme" disabled aria-label="Aufnahme"><span class="rec-dot"></span></button>
+        <button id="gfsPlayBtn" class="gfs-ctrl-btn" title="Play / Pause" aria-label="Play / Pause"><i data-lucide="play"></i></button>
       </div>
     </div>
 
@@ -426,10 +426,10 @@
     <div id="globeBrightnessPanel">
       <!-- Texture presets -->
       <div class="gbp-presets">
-        <button class="gbp-preset active" data-texture="night"  title="Nacht">🌙 Nacht</button>
-        <button class="gbp-preset"        data-texture="day"    title="Tag">☀️ Tag</button>
-        <button class="gbp-preset"        data-texture="marble" title="Blue Marble">🌍 Marble</button>
-        <button class="gbp-preset"        data-texture="topo"   title="Topographie">🗺 Topo</button>
+        <button class="gbp-preset active" data-texture="night"  title="Nacht" aria-label="Nacht">🌙 Nacht</button>
+        <button class="gbp-preset"        data-texture="day"    title="Tag" aria-label="Tag">☀️ Tag</button>
+        <button class="gbp-preset"        data-texture="marble" title="Blue Marble" aria-label="Blue Marble">🌍 Marble</button>
+        <button class="gbp-preset"        data-texture="topo"   title="Topographie" aria-label="Topographie">🗺 Topo</button>
       </div>
       <!-- Brightness slider -->
       <div class="gbp-slider-row">
@@ -440,17 +440,17 @@
     </div>
 
     <div id="globeControls">
-      <button id="globeExpandBtn"    title="Vollbild"><i data-lucide="expand"></i></button>
-      <button id="globeLocBtn"       title="Eigene Position"><i data-lucide="locate"></i></button>
-      <button id="globeZoomInBtn"    title="Zoom +"><i data-lucide="zoom-in"></i></button>
-      <button id="globeZoomOutBtn"   title="Zoom −"><i data-lucide="zoom-out"></i></button>
-      <button id="globeFitBtn"       title="Weltkugel zentrieren"><i data-lucide="maximize-2"></i></button>
-      <button id="globeBrightnessBtn" title="Helligkeit / Tageszeit"><i data-lucide="sun-medium"></i></button>
+      <button id="globeExpandBtn"    title="Vollbild" aria-label="Vollbild"><i data-lucide="expand"></i></button>
+      <button id="globeLocBtn"       title="Eigene Position" aria-label="Eigene Position"><i data-lucide="locate"></i></button>
+      <button id="globeZoomInBtn"    title="Zoom +" aria-label="Zoom +"><i data-lucide="zoom-in"></i></button>
+      <button id="globeZoomOutBtn"   title="Zoom −" aria-label="Zoom −"><i data-lucide="zoom-out"></i></button>
+      <button id="globeFitBtn"       title="Weltkugel zentrieren" aria-label="Weltkugel zentrieren"><i data-lucide="maximize-2"></i></button>
+      <button id="globeBrightnessBtn" title="Helligkeit / Tageszeit" aria-label="Helligkeit / Tageszeit"><i data-lucide="sun-medium"></i></button>
     </div>
     <div id="globePopup" hidden>
       <div id="globePopupHeader">
         <span id="globePopupTitle"></span>
-        <button id="globePopupClose" title="Schließen">×</button>
+        <button id="globePopupClose" title="Schließen" aria-label="Schließen">×</button>
       </div>
       <div id="globePopupList"></div>
     </div>
@@ -555,7 +555,7 @@
       </div>
 
       <!-- HTTPS toggle pushbutton (between knobs) -->
-      <button id="retroHttpsBtn" class="retro-https-btn on" title="HTTPS-Only umschalten">
+      <button id="retroHttpsBtn" class="retro-https-btn on" title="HTTPS-Only umschalten" aria-label="HTTPS-Only umschalten">
         <i data-lucide="lock" style="width:12px;height:12px;"></i>
         <span class="retro-https-btn-label">HTTPS</span>
         <span id="retroHttpsState" class="retro-https-btn-state">ON</span>
@@ -592,16 +592,16 @@
     </div>
     <!-- Transport (centred) -->
     <div class="retro-transport">
-      <button id="retroPrevBtn" class="retro-transport-btn" title="Vorheriger Sender">
+      <button id="retroPrevBtn" class="retro-transport-btn" title="Vorheriger Sender" aria-label="Vorheriger Sender">
         <i data-lucide="skip-back"></i>
       </button>
-      <button id="retroPlayBtn" class="retro-transport-btn play" title="Play / Pause">
+      <button id="retroPlayBtn" class="retro-transport-btn play" title="Play / Pause" aria-label="Play / Pause">
         <i data-lucide="play"></i>
       </button>
-      <button id="retroNextBtn" class="retro-transport-btn" title="Nächster Sender">
+      <button id="retroNextBtn" class="retro-transport-btn" title="Nächster Sender" aria-label="Nächster Sender">
         <i data-lucide="skip-forward"></i>
       </button>
-      <button id="retroRecBtn" class="retro-transport-btn rec" title="Aufnahme starten/stoppen">
+      <button id="retroRecBtn" class="retro-transport-btn rec" title="Aufnahme starten/stoppen" aria-label="Aufnahme starten/stoppen">
         <i data-lucide="circle"></i>
       </button>
     </div>
@@ -689,9 +689,9 @@
 
         <!-- Control row -->
         <div class="dj-ctrl-row">
-          <button id="djPlayA"      class="dj-btn dj-play-btn" title="Play / Stop">&#9654; A</button>
-          <button id="djCueA"       class="dj-btn dj-cue-btn"  title="CUE">CUE</button>
-          <button id="djFilterBtnA" class="dj-btn dj-filter-btn" title="LP / HP Filter">LP/HP</button>
+          <button id="djPlayA"      class="dj-btn dj-play-btn" title="Play / Stop" aria-label="Play / Stop">&#9654; A</button>
+          <button id="djCueA"       class="dj-btn dj-cue-btn"  title="CUE" aria-label="CUE">CUE</button>
+          <button id="djFilterBtnA" class="dj-btn dj-filter-btn" title="LP / HP Filter" aria-label="LP / HP Filter">LP/HP</button>
           <div class="dj-gain-wrap">
             <label class="dj-gain-label">GAIN</label>
             <input type="range" id="djGainA" min="0" max="150" value="100" class="dj-gain-slider">
@@ -700,10 +700,10 @@
 
         <!-- Sort buttons -->
         <div class="dj-sort-grp" id="djSortA">
-          <button class="dj-sort-btn active" data-sort="votes">VOTES</button>
-          <button class="dj-sort-btn" data-sort="bitrate">BIT</button>
-          <button class="dj-sort-btn" data-sort="distance">GPS</button>
-          <button class="dj-fav-filter-btn" id="djFavFilterA" title="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
+          <button aria-label="Nach Bewertungen sortieren" class="dj-sort-btn active" data-sort="votes">VOTES</button>
+          <button aria-label="Nach Bitrate sortieren" class="dj-sort-btn" data-sort="bitrate">BIT</button>
+          <button aria-label="Nach Entfernung sortieren" class="dj-sort-btn" data-sort="distance">GPS</button>
+          <button class="dj-fav-filter-btn" id="djFavFilterA" title="Nur Favoriten anzeigen" aria-label="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
         </div>
 
         <!-- Station list -->
@@ -810,10 +810,10 @@
 
         <!-- Sort buttons -->
         <div class="dj-sort-grp" id="djSortB">
-          <button class="dj-sort-btn active" data-sort="votes">VOTES</button>
-          <button class="dj-sort-btn" data-sort="bitrate">BIT</button>
-          <button class="dj-sort-btn" data-sort="distance">GPS</button>
-          <button class="dj-fav-filter-btn" id="djFavFilterB" title="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
+          <button aria-label="Nach Bewertungen sortieren" class="dj-sort-btn active" data-sort="votes">VOTES</button>
+          <button aria-label="Nach Bitrate sortieren" class="dj-sort-btn" data-sort="bitrate">BIT</button>
+          <button aria-label="Nach Entfernung sortieren" class="dj-sort-btn" data-sort="distance">GPS</button>
+          <button class="dj-fav-filter-btn" id="djFavFilterB" title="Nur Favoriten anzeigen" aria-label="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
         </div>
 
         <!-- Station list -->
@@ -886,7 +886,7 @@
   <div id="settingsPanel">
     <div class="settings-header">
       <h2><i data-lucide="settings"></i> Einstellungen</h2>
-      <button id="closeSettings"><i data-lucide="x"></i></button>
+      <button aria-label="Einstellungen schließen" id="closeSettings"><i data-lucide="x"></i></button>
     </div>
     
     <div class="settings-content">
@@ -1141,7 +1141,7 @@
   <div id="toolsPanel">
     <div class="settings-header">
       <h2><i data-lucide="clock"></i> Timer &amp; Daten</h2>
-      <button id="closeTools"><i data-lucide="x"></i></button>
+      <button aria-label="Werkzeuge schließen" id="closeTools"><i data-lucide="x"></i></button>
     </div>
     
     <div class="settings-content">
@@ -1186,7 +1186,7 @@
         </div>
         
         <div style="margin-top: 16px; text-align: center;">
-          <button id="sleepToggle" class="secondary" title="Timer starten" style="min-width:48px;">
+          <button id="sleepToggle" class="secondary" title="Timer starten" style="min-width:48px;" aria-label="Timer starten">
             <i data-lucide="play"></i>
           </button>
           <div id="sleepStatus" style="margin-top: 8px; font-size: 12px; color: var(--color-text-muted);"></div>
@@ -1208,7 +1208,7 @@
           </svg>
         </div>
         <div style="margin-top: 16px; text-align: center;">
-          <button id="shuffleToggle" class="secondary" title="Shuffle starten" style="min-width:48px;">
+          <button id="shuffleToggle" class="secondary" title="Shuffle starten" style="min-width:48px;" aria-label="Shuffle starten">
             <i data-lucide="play"></i>
           </button>
           <div id="shuffleStatus" style="margin-top: 8px; font-size: 12px; color: var(--color-text-muted);"></div>
@@ -1252,11 +1252,11 @@
   <!-- ── Global Buttons (Settings, Legal, Home) ──────────────────────────── -->
   <!-- FAB group – always visible, collapses to toggle button -->
   <div id="fabGroup">
-    <button id="fabToggle" title="Menü"><i data-lucide="more-vertical"></i></button>
-    <button id="legalBtn"      class="fab-btn" title="Rechtliche Hinweise">ⓘ</button>
-    <button id="toolsBtn"      class="fab-btn" title="Timer &amp; Daten"><i data-lucide="clock"></i></button>
-    <button id="settingsBtn"   class="fab-btn" title="Einstellungen"><i data-lucide="settings"></i></button>
-    <button id="globalHomeBtn" class="fab-btn" title="Zurück zum Start"><i data-lucide="home"></i></button>
+    <button id="fabToggle" title="Menü" aria-label="Menü"><i data-lucide="more-vertical"></i></button>
+    <button id="legalBtn"      class="fab-btn" title="Rechtliche Hinweise" aria-label="Rechtliche Hinweise">ⓘ</button>
+    <button id="toolsBtn"      class="fab-btn" title="Timer &amp; Daten" aria-label="Timer &amp; Daten"><i data-lucide="clock"></i></button>
+    <button id="settingsBtn"   class="fab-btn" title="Einstellungen" aria-label="Einstellungen"><i data-lucide="settings"></i></button>
+    <button id="globalHomeBtn" class="fab-btn" title="Zurück zum Start" aria-label="Zurück zum Start"><i data-lucide="home"></i></button>
   </div>
 
   <!-- ── Info Modal ───────────────────────────────────────────────────────── -->
@@ -1264,7 +1264,7 @@
     <div id="legalModal">
       <div id="legalModalHeader">
         <h2>Rechtliche Hinweise</h2>
-        <button id="legalCloseBtn"><i data-lucide="x"></i></button>
+        <button aria-label="Rechtliche Hinweise schließen" id="legalCloseBtn"><i data-lucide="x"></i></button>
       </div>
       <div id="legalModalBody">
         <h3>📡 Senderdaten – Radio Browser</h3>
