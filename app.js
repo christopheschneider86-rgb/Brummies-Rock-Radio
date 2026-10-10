@@ -315,6 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 60 fps draw() loop never touches getComputedStyle.
     let cachedBgColor     = '';
     let cachedAccentColor = '';
+    let cachedAccentColorRgb = '';
+    let cachedAccentColorHover = '';
 
     // ── Recording state ───────────────────────────────────────────────────────
     let mediaRecDest      = null;  // MediaStreamDestination (created in initAudioContext)
@@ -4791,10 +4793,8 @@ function startMetadataPolling() {
         globeNoData.hidden = true;
 
         const clusters   = cluster(stations, gridSize(currentAlt));
-        const accent     = getComputedStyle(document.documentElement)
-                             .getPropertyValue('--color-accent').trim() || cachedAccentColor || '#e8402a';
-        const clusterCol = getComputedStyle(document.documentElement)
-                             .getPropertyValue('--color-accent-hover').trim() || '#f97316';
+        const accent     = cachedAccentColor || '#e8402a';
+        const clusterCol = cachedAccentColorHover || '#f97316';
 
         globe
           .pointsData(clusters)
@@ -5595,8 +5595,10 @@ function startMetadataPolling() {
     function refreshThemeCache() {
       requestAnimationFrame(() => {
         const s = getComputedStyle(document.documentElement);
-        cachedBgColor     = s.getPropertyValue('--color-bg-primary').trim();
-        cachedAccentColor = s.getPropertyValue('--color-accent').trim();
+        cachedBgColor          = s.getPropertyValue('--color-bg-primary').trim();
+        cachedAccentColor      = s.getPropertyValue('--color-accent').trim();
+        cachedAccentColorRgb   = s.getPropertyValue('--color-accent-rgb').trim();
+        cachedAccentColorHover = s.getPropertyValue('--color-accent-hover').trim();
         updateThemeCursor();
         // Propagate new accent to the live globe instance (atmosphere + point colours)
         if (window._globeThemeUpdate) window._globeThemeUpdate();
@@ -8017,9 +8019,8 @@ if (document.readyState === 'loading') {
     const h = djVisCvs.height || 80;
     const vc = djVisCvs.getContext('2d');
 
-    const rootStyle = getComputedStyle(document.documentElement);
-    const colorAccent = rootStyle.getPropertyValue('--color-accent').trim() || '#bd00ff';
-    const colorAccentRgb = rootStyle.getPropertyValue('--color-accent-rgb').trim() || '189, 0, 255';
+    const colorAccent = cachedAccentColor || '#bd00ff';
+    const colorAccentRgb = cachedAccentColorRgb || '189, 0, 255';
 
     if (!analyserNode) {
       vc.fillStyle = '#020203';
