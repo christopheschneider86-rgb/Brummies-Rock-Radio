@@ -4835,7 +4835,7 @@ function startMetadataPolling() {
           row.innerHTML = `
             <div class="gpi-body">
               <span class="gpi-name">${escapeHtml(st.name)}</span>
-              <span class="gpi-meta">${[escapeHtml(st.country), st.bitrate ? st.bitrate + ' kbps' : '', votes + ' ▲'].filter(Boolean).join(' · ')}</span>
+              <span class="gpi-meta">${[escapeHtml(st.country), st.bitrate ? escapeHtml(String(st.bitrate)) + ' kbps' : '', escapeHtml(String(votes)) + ' ▲'].filter(Boolean).join(' · ')}</span>
             </div>
             <button class="gpi-fav${isFav ? ' is-fav' : ''}" title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
               <i data-lucide="star"></i>
