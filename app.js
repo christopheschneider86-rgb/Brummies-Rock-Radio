@@ -4386,6 +4386,9 @@ function startMetadataPolling() {
       document.addEventListener('touchend',   ()  => { if (volDragging) volDragEnd();   });
 
       // ── Retro Visualizer – oscilloscope waveform ─────────────────────────
+      // ⚡ Bolt: Cache Uint8Array outside the render loop to prevent garbage collection thrashing at 60fps
+      let retroVisBuf = null;
+
       function startRetroVis() {
         if (retroVisRAF) return;
         const cvs = retroVisCvs;
@@ -4409,7 +4412,10 @@ function startMetadataPolling() {
           if (window._analyser) {
             // ── Real audio: triggered oscilloscope ───────────────────────
             const bufLen = window._analyser.fftSize;
-            const buf    = new Uint8Array(bufLen);
+            if (!retroVisBuf || retroVisBuf.length !== bufLen) {
+              retroVisBuf = new Uint8Array(bufLen);
+            }
+            const buf = retroVisBuf;
             window._analyser.getByteTimeDomainData(buf);
 
             // Find first rising zero-crossing for stable trigger
@@ -7479,7 +7485,13 @@ if (document.readyState === 'loading') {
         const img = document.createElement('img');
         img.src = st.favicon;
         img.alt = '';
-        img.onerror = () => { img.remove(); disc.appendChild(ph); };
+        img.onerror = () => {
+          img.remove();
+          const ph = document.createElement('span');
+          ph.className = 'dj-station-row-disc-placeholder';
+          ph.textContent = (st.name || '?').slice(0,2).toUpperCase();
+          disc.appendChild(ph);
+        };
         disc.appendChild(img);
       } else {
         const ph = document.createElement('span');
@@ -7996,6 +8008,10 @@ if (document.readyState === 'loading') {
   const djVisCvs = document.getElementById('djVisualizer');
   let visRafId = null;
 
+  // ⚡ Bolt: Cache objects outside the rendering loop to prevent garbage collection pauses
+  let djVisBuf = null;
+  let djVisGradCache = { w: 0, h: 0, color: '', grad: null };
+
   function drawDJVisualizer() {
     if (!djVisCvs) return;
 
@@ -8028,18 +8044,16 @@ if (document.readyState === 'loading') {
       // Draw grid
       vc.strokeStyle = `rgba(${colorAccentRgb}, 0.04)`;
       vc.lineWidth = 1;
+      vc.beginPath();
       for (let y = 10; y < h; y += 15) {
-        vc.beginPath();
         vc.moveTo(0, y);
         vc.lineTo(w, y);
-        vc.stroke();
       }
       for (let x = 10; x < w; x += 25) {
-        vc.beginPath();
         vc.moveTo(x, 0);
         vc.lineTo(x, h);
-        vc.stroke();
       }
+      vc.stroke();
 
       // Pulsing standby center line
       const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 300);
@@ -8054,7 +8068,11 @@ if (document.readyState === 'loading') {
       return;
     }
 
-    const buf = new Uint8Array(analyserNode.frequencyBinCount);
+    const bufLen = analyserNode.frequencyBinCount;
+    if (!djVisBuf || djVisBuf.length !== bufLen) {
+      djVisBuf = new Uint8Array(bufLen);
+    }
+    const buf = djVisBuf;
     analyserNode.getByteFrequencyData(buf);
     
     // Sleek trail effect background
@@ -8064,24 +8082,28 @@ if (document.readyState === 'loading') {
     // Draw faint cyber grid
     vc.strokeStyle = `rgba(${colorAccentRgb}, 0.03)`;
     vc.lineWidth = 1;
+    vc.beginPath();
     for (let y = 10; y < h; y += 15) {
-      vc.beginPath();
       vc.moveTo(0, y);
       vc.lineTo(w, y);
-      vc.stroke();
     }
     for (let x = 10; x < w; x += 25) {
-      vc.beginPath();
       vc.moveTo(x, 0);
       vc.lineTo(x, h);
-      vc.stroke();
     }
+    vc.stroke();
 
     // Dynamic horizontal gradient blending Cyan (Deck A) -> Purple/Theme (Center) -> Magenta (Deck B)
-    const grad = vc.createLinearGradient(0, 0, w, 0);
-    grad.addColorStop(0, '#00f3ff');
-    grad.addColorStop(0.5, colorAccent);
-    grad.addColorStop(1, '#ff007f');
+    if (djVisGradCache.w !== w || djVisGradCache.h !== h || djVisGradCache.color !== colorAccent) {
+      djVisGradCache.grad = vc.createLinearGradient(0, 0, w, 0);
+      djVisGradCache.grad.addColorStop(0, '#00f3ff');
+      djVisGradCache.grad.addColorStop(0.5, colorAccent);
+      djVisGradCache.grad.addColorStop(1, '#ff007f');
+      djVisGradCache.w = w;
+      djVisGradCache.h = h;
+      djVisGradCache.color = colorAccent;
+    }
+    const grad = djVisGradCache.grad;
 
     const barCount = 40;
     const barW = Math.max(2, (w / barCount) * 0.7);

@@ -9,3 +9,11 @@
 ## 2025-02-18 - String manipulation in high-frequency rendering loops
 **Learning:** Parsing color strings (e.g., hex to RGB) inside a high-frequency animation loop (like `requestAnimationFrame` running 60fps) within a secondary `for` loop (e.g., once for each of the 128 frequency bins in an audio visualizer) results in thousands of redundant string allocations and `parseInt` calls per second.
 **Action:** Move expensive string manipulations and parsing logic outside of inner rendering loops, ideally executing them only once per frame (or better yet, only when the value actually changes) to minimize CPU overhead and garbage collection pauses.
+
+## 2025-02-18 - Caching Objects Outside Animation Loops
+**Learning:** Frequent object instantiation (e.g., `new Uint8Array`, `createLinearGradient`) inside high-frequency `requestAnimationFrame` loops (60fps) causes excessive memory allocation and triggers frequent garbage collection pauses, leading to visible stuttering.
+**Action:** Always cache persistent objects or buffers in closure variables outside the render loop and reuse them. Only reallocate if dimensions (like `fftSize` or canvas size) dynamically change.
+
+## 2025-02-18 - Batching Canvas Operations
+**Learning:** Issuing individual `.beginPath()` and `.stroke()` calls for every line segment (e.g., drawing a grid with 50 lines) has massive overhead in the Canvas 2D API.
+**Action:** Batch drawing operations by calling `.beginPath()` once, executing all `.moveTo()` and `.lineTo()` commands in a loop, and calling `.stroke()` exactly once at the end.
