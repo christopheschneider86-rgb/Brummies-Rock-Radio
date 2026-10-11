@@ -1240,6 +1240,7 @@ document.addEventListener('DOMContentLoaded', () => {
           rm.className = 'country-tag-remove';
           rm.innerHTML = '×';
           rm.title = 'Entfernen';
+          rm.setAttribute('aria-label', 'Entfernen');
           rm.addEventListener('click', e => {
             e.stopPropagation();
             selectedCountries.delete(c);
@@ -2615,12 +2616,14 @@ function startMetadataPolling() {
         clearTimeout(shuffleTimer);
         setIcon(shuffleToggle, 'play');
         shuffleToggle.title = 'Shuffle starten';
+        shuffleToggle.setAttribute('aria-label', 'Shuffle starten');
         shuffleToggle.classList.remove("active");
         shuffleStatusEl.classList.remove("active");
       } else {
         shuffleActive = true;
         setIcon(shuffleToggle, 'square');
         shuffleToggle.title = 'Shuffle stoppen';
+        shuffleToggle.setAttribute('aria-label', 'Shuffle stoppen');
         shuffleToggle.classList.add("active");
         scheduleShuffle();
       }
@@ -2689,12 +2692,14 @@ function startMetadataPolling() {
         clearTimeout(sleepTimer);
         setIcon(sleepToggle, 'play');
         sleepToggle.title = 'Timer starten';
+        sleepToggle.setAttribute('aria-label', 'Timer starten');
         sleepToggle.classList.remove("active");
         sleepStatusEl.classList.remove("active");
       } else {
         sleepActive = true;
         setIcon(sleepToggle, 'square');
         sleepToggle.title = 'Timer stoppen';
+        sleepToggle.setAttribute('aria-label', 'Timer stoppen');
         sleepToggle.classList.add("active");
         
         const mode = document.querySelector('.sleep-mode-btn.active').dataset.mode;
@@ -2708,6 +2713,7 @@ function startMetadataPolling() {
             sleepActive = false;
             setIcon(sleepToggle, 'play');
             sleepToggle.title = 'Timer starten';
+            sleepToggle.setAttribute('aria-label', 'Timer starten');
             sleepToggle.classList.remove("active");
             sleepStatusEl.classList.remove("active");
             alert("⏰ Sleep Timer abgelaufen");
@@ -2728,6 +2734,7 @@ function startMetadataPolling() {
             sleepActive = false;
             setIcon(sleepToggle, 'play');
             sleepToggle.title = 'Timer starten';
+            sleepToggle.setAttribute('aria-label', 'Timer starten');
             sleepToggle.classList.remove("active");
             sleepStatusEl.classList.remove("active");
             alert("⏰ Sleep Timer abgelaufen");
@@ -4836,7 +4843,7 @@ function startMetadataPolling() {
               <span class="gpi-name">${escapeHtml(st.name)}</span>
               <span class="gpi-meta">${[escapeHtml(st.country), st.bitrate ? escapeHtml(String(st.bitrate)) + ' kbps' : '', escapeHtml(String(votes)) + ' ▲'].filter(Boolean).join(' · ')}</span>
             </div>
-            <button class="gpi-fav${isFav ? ' is-fav' : ''}" title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
+            <button class="gpi-fav${isFav ? ' is-fav' : ''}" title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}" aria-label="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
               <i data-lucide="star"></i>
             </button>`;
 
@@ -5198,6 +5205,7 @@ function startMetadataPolling() {
         // Change expand icon to shrink
         globeExpandBtn.innerHTML = '<i data-lucide="shrink"></i>';
         globeExpandBtn.title = 'Vollbild beenden';
+        globeExpandBtn.setAttribute('aria-label', 'Vollbild beenden');
         globeExpandBtn.classList.add('fs-active');
         if (window.lucide) lucide.createIcons({ nodes: [globeExpandBtn] });
         // ESC to exit
@@ -5218,6 +5226,7 @@ function startMetadataPolling() {
         resizeGlobe();
         globeExpandBtn.innerHTML = '<i data-lucide="expand"></i>';
         globeExpandBtn.title = 'Vollbild';
+        globeExpandBtn.setAttribute('aria-label', 'Vollbild');
         globeExpandBtn.classList.remove('fs-active');
         if (window.lucide) lucide.createIcons({ nodes: [globeExpandBtn] });
         document.removeEventListener('keydown', onFsEsc);
@@ -6717,6 +6726,7 @@ if (document.readyState === 'loading') {
       btn.classList.toggle('is-fav', isFav);
       btn.disabled = !currentStation;
       btn.title = isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen';
+      btn.setAttribute('aria-label', btn.title);
       if (window.lucide) lucide.createIcons({ nodes: [btn] });
     });
   }
@@ -7502,6 +7512,7 @@ if (document.readyState === 'loading') {
       favBtn.className = 'dj-station-row-fav' + (isFav ? ' active' : '');
       favBtn.innerHTML = `<i data-lucide="star" style="width:12px;height:12px;${isFav ? 'fill:currentColor;' : ''}"></i>`;
       favBtn.title = isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen';
+      favBtn.setAttribute('aria-label', favBtn.title);
       favBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (window._toggleFavorite) window._toggleFavorite(st.id);
