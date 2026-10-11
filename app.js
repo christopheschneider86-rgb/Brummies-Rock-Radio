@@ -2447,23 +2447,22 @@ function startMetadataPolling() {
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         
+        // ⚡ Bolt: Parse accent color once per frame outside the loop
+        let accentRGB = { r: 239, g: 68, b: 68 }; // Default red
+        if (accentColor.startsWith('#')) {
+          const hex = accentColor.slice(1);
+          accentRGB = {
+            r: parseInt(hex.slice(0, 2), 16),
+            g: parseInt(hex.slice(2, 4), 16),
+            b: parseInt(hex.slice(4, 6), 16)
+          };
+        }
+
         const barWidth = (canvas.width / bufferLength) * 2.5;
         let x = 0;
         
         for (let i = 0; i < bufferLength; i++) {
           const barHeight = (dataArray[i] / 255) * Math.min(canvas.height, 120);
-          
-          // Create gradient based on theme accent color
-          // Parse accent color (hex to RGB)
-          let accentRGB = { r: 239, g: 68, b: 68 }; // Default red
-          if (accentColor.startsWith('#')) {
-            const hex = accentColor.slice(1);
-            accentRGB = {
-              r: parseInt(hex.slice(0, 2), 16),
-              g: parseInt(hex.slice(2, 4), 16),
-              b: parseInt(hex.slice(4, 6), 16)
-            };
-          }
           
           // Vary intensity based on frequency
           const intensity = barHeight / canvas.height;
