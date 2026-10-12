@@ -17,3 +17,6 @@
 ## 2025-02-18 - Batching Canvas Operations
 **Learning:** Issuing individual `.beginPath()` and `.stroke()` calls for every line segment (e.g., drawing a grid with 50 lines) has massive overhead in the Canvas 2D API.
 **Action:** Batch drawing operations by calling `.beginPath()` once, executing all `.moveTo()` and `.lineTo()` commands in a loop, and calling `.stroke()` exactly once at the end.
+## 2024-05-15 - Visualizer requestAnimationFrame String Allocation
+**Learning:** `requestAnimationFrame` loops generating complex strings like `rgb(r, g, b)` every frame for every visualizer bar can cause severe garbage collection thrashing and stuttering. Since the byte frequency data comes from an array of 0-255 values, precomputing the 256 possible colors limits string allocation entirely.
+**Action:** When drawing visualizers based on limited byte arrays (e.g. `Uint8Array(256)`), cache string properties outside the loop indexing by the data value.

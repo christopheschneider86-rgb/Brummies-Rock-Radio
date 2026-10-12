@@ -2429,6 +2429,11 @@ function startMetadataPolling() {
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
       
+      // ⚡ Bolt: Cache objects outside the rendering loop to prevent string allocation thrashing
+      let colorCache = new Array(256);
+      let lastAccentColor = null;
+      let lastCanvasHeight = null;
+
       function draw() {
         if (!visualizerActive) return;
         requestAnimationFrame(draw);
@@ -2450,30 +2455,41 @@ function startMetadataPolling() {
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         
-        // ⚡ Bolt: Parse accent color once per frame outside the loop
-        let accentRGB = { r: 239, g: 68, b: 68 }; // Default red
-        if (accentColor.startsWith('#')) {
-          const hex = accentColor.slice(1);
-          accentRGB = {
-            r: parseInt(hex.slice(0, 2), 16),
-            g: parseInt(hex.slice(2, 4), 16),
-            b: parseInt(hex.slice(4, 6), 16)
-          };
+        // ⚡ Bolt: Parse accent color and cache 256 RGB strings outside the inner loop
+        if (accentColor !== lastAccentColor || canvas.height !== lastCanvasHeight) {
+          let accentRGB = { r: 239, g: 68, b: 68 }; // Default red
+          if (accentColor.startsWith('#')) {
+            const hex = accentColor.slice(1);
+            accentRGB = {
+              r: parseInt(hex.slice(0, 2), 16),
+              g: parseInt(hex.slice(2, 4), 16),
+              b: parseInt(hex.slice(4, 6), 16)
+            };
+          }
+
+          const maxH = Math.min(canvas.height, 120);
+          for (let v = 0; v < 256; v++) {
+            const barHeight = (v / 255) * maxH;
+            const intensity = canvas.height > 0 ? (barHeight / canvas.height) : 0;
+            const r = Math.floor(accentRGB.r * intensity + 100);
+            const g = Math.floor(accentRGB.g * intensity + 50);
+            const b = Math.floor(accentRGB.b * intensity + 50);
+            colorCache[v] = `rgb(${r}, ${g}, ${b})`;
+          }
+
+          lastAccentColor = accentColor;
+          lastCanvasHeight = canvas.height;
         }
 
         const barWidth = (canvas.width / bufferLength) * 2.5;
+        const heightMultiplier = Math.min(canvas.height, 120) / 255;
         let x = 0;
         
         for (let i = 0; i < bufferLength; i++) {
-          const barHeight = (dataArray[i] / 255) * Math.min(canvas.height, 120);
+          const val = dataArray[i];
+          const barHeight = val * heightMultiplier;
           
-          // Vary intensity based on frequency
-          const intensity = barHeight / canvas.height;
-          const r = Math.floor(accentRGB.r * intensity + 100);
-          const g = Math.floor(accentRGB.g * intensity + 50);
-          const b = Math.floor(accentRGB.b * intensity + 50);
-          
-          ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+          ctx.fillStyle = colorCache[val];
           ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
           
           x += barWidth + 1;
