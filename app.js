@@ -310,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- GLOBALE VARIABLEN ---
     const allStations = [];
     let sortedStations = [];   // sorted/filtered view of allStations (never mutates allStations)
+    let httpsSortedStations = []; // cached https-only filtered list
     let displayedStations = [];
     // Cached theme colors – updated in applyTheme/applyCustomTheme so the
     // 60 fps draw() loop never touches getComputedStyle.
@@ -1692,6 +1693,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       sortedStations = list;
+      httpsSortedStations = list.filter(s => s.streamUrl && s.streamUrl.startsWith('https://'));
       renderStations();
     }
 
@@ -1715,7 +1717,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const httpsOnly = httpsOnlyToggle.checked;
         sourceStations = httpsOnly
-          ? sortedStations.filter(s => s.streamUrl && s.streamUrl.startsWith('https://'))
+          ? httpsSortedStations
           : sortedStations;
         if (sourceStations.length === 0) {
           stationsListEl.innerHTML = `<div class="loading">${httpsOnly ? '🔒 Keine HTTPS-Sender gefunden – Filter deaktivieren?' : 'Keine Sender gefunden'}</div>`;
