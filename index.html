@@ -129,7 +129,7 @@
     </div>
 
     <div class="filter-group">
-      <label>Standort</label>
+      <label for="locationMode">Standort</label>
       <div class="location-selector">
         <select id="locationMode">
           <option value="auto">Automatisch</option>
@@ -676,13 +676,13 @@
 
         <!-- EQ faders (vertical) -->
         <div class="dj-eq-section">
-          <div class="dj-eq-band"><label>HI</label>
+          <div class="dj-eq-band"><label for="djEqHiA">HI</label>
             <input type="range" id="djEqHiA"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>MID</label>
+          <div class="dj-eq-band"><label for="djEqMidA">MID</label>
             <input type="range" id="djEqMidA" class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>LO</label>
+          <div class="dj-eq-band"><label for="djEqLoA">LO</label>
             <input type="range" id="djEqLoA"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
         </div>
@@ -693,7 +693,7 @@
           <button id="djCueA"       class="dj-btn dj-cue-btn"  title="CUE" aria-label="CUE">CUE</button>
           <button id="djFilterBtnA" class="dj-btn dj-filter-btn" title="LP / HP Filter" aria-label="LP / HP Filter">LP/HP</button>
           <div class="dj-gain-wrap">
-            <label class="dj-gain-label">GAIN</label>
+            <label class="dj-gain-label" for="djGainA">GAIN</label>
             <input type="range" id="djGainA" min="0" max="150" value="100" class="dj-gain-slider">
           </div>
         </div>
@@ -725,8 +725,8 @@
 
         <!-- Mirror play buttons -->
         <div class="dj-mix-play-row">
-          <button id="djPlayAm" class="dj-btn dj-play-btn">&#9654; A</button>
-          <button id="djPlayBm" class="dj-btn dj-play-btn">&#9654; B</button>
+          <button id="djPlayAm" class="dj-btn dj-play-btn" title="Play / Stop A" aria-label="Play / Stop A">&#9654; A</button>
+          <button id="djPlayBm" class="dj-btn dj-play-btn" title="Play / Stop B" aria-label="Play / Stop B">&#9654; B</button>
         </div>
 
         <!-- Central HTTPS toggle -->
@@ -786,24 +786,24 @@
 
         <!-- EQ faders (vertical) -->
         <div class="dj-eq-section">
-          <div class="dj-eq-band"><label>HI</label>
+          <div class="dj-eq-band"><label for="djEqHiB">HI</label>
             <input type="range" id="djEqHiB"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>MID</label>
+          <div class="dj-eq-band"><label for="djEqMidB">MID</label>
             <input type="range" id="djEqMidB" class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>LO</label>
+          <div class="dj-eq-band"><label for="djEqLoB">LO</label>
             <input type="range" id="djEqLoB"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
         </div>
 
         <!-- Control row -->
         <div class="dj-ctrl-row">
-          <button id="djPlayB"      class="dj-btn dj-play-btn">&#9654; B</button>
-          <button id="djCueB"       class="dj-btn dj-cue-btn">CUE</button>
-          <button id="djFilterBtnB" class="dj-btn dj-filter-btn">LP/HP</button>
+          <button id="djPlayB"      class="dj-btn dj-play-btn" title="Play / Stop" aria-label="Play / Stop">&#9654; B</button>
+          <button id="djCueB"       class="dj-btn dj-cue-btn" title="CUE" aria-label="CUE">CUE</button>
+          <button id="djFilterBtnB" class="dj-btn dj-filter-btn" title="LP / HP Filter" aria-label="LP / HP Filter">LP/HP</button>
           <div class="dj-gain-wrap">
-            <label class="dj-gain-label">GAIN</label>
+            <label class="dj-gain-label" for="djGainB">GAIN</label>
             <input type="range" id="djGainB" min="0" max="150" value="100" class="dj-gain-slider">
           </div>
         </div>
