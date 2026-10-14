@@ -129,7 +129,7 @@
     </div>
 
     <div class="filter-group">
-      <label>Standort</label>
+      <label for="locationMode">Standort</label>
       <div class="location-selector">
         <select id="locationMode">
           <option value="auto">Automatisch</option>
@@ -229,7 +229,7 @@
   <!-- Recording options moved to Settings Panel -->
 
   <div id="volumeControl">
-    <label>Lautstärke</label>
+    <label for="volumeRange">Lautstärke</label>
     <input id="volumeRange" type="range" min="0" max="100" value="70" />
     <div id="volumeValue">70%</div>
   </div>
@@ -244,7 +244,7 @@
           <div class="eq-value" data-index="0">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="0" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="0" aria-label="Bass" />
           </div>
           <div class="eq-freq">80 Hz</div>
         </div>
@@ -253,7 +253,7 @@
           <div class="eq-value" data-index="1">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="1" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="1" aria-label="Tiefen" />
           </div>
           <div class="eq-freq">400 Hz</div>
         </div>
@@ -262,7 +262,7 @@
           <div class="eq-value" data-index="2">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="2" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="2" aria-label="Mitten" />
           </div>
           <div class="eq-freq">1 kHz</div>
         </div>
@@ -271,7 +271,7 @@
           <div class="eq-value" data-index="3">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="3" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="3" aria-label="Höhen" />
           </div>
           <div class="eq-freq">3.5 kHz</div>
         </div>
@@ -280,7 +280,7 @@
           <div class="eq-value" data-index="4">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="4" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="4" aria-label="Präsenz" />
           </div>
           <div class="eq-freq">10 kHz</div>
         </div>
@@ -434,7 +434,7 @@
       <!-- Brightness slider -->
       <div class="gbp-slider-row">
         <i data-lucide="moon" style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
-        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5">
+        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5" aria-label="Globus-Helligkeit">
         <i data-lucide="sun"  style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
       </div>
     </div>
@@ -670,19 +670,19 @@
         <!-- BPM + Tempo -->
         <div class="dj-bpm-row">
           <div class="dj-bpm-display" id="djBpmA">--- BPM</div>
-          <input type="range" id="djTempoA" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" title="Tempo ±8%">
+          <input type="range" id="djTempoA" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" title="Tempo ±8%" aria-label="Tempo Deck A">
           <span class="dj-tempo-val" id="djTempoValA">0%</span>
         </div>
 
         <!-- EQ faders (vertical) -->
         <div class="dj-eq-section">
-          <div class="dj-eq-band"><label>HI</label>
+          <div class="dj-eq-band"><label for="djEqHiA">HI</label>
             <input type="range" id="djEqHiA"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>MID</label>
+          <div class="dj-eq-band"><label for="djEqMidA">MID</label>
             <input type="range" id="djEqMidA" class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>LO</label>
+          <div class="dj-eq-band"><label for="djEqLoA">LO</label>
             <input type="range" id="djEqLoA"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
         </div>
@@ -693,7 +693,7 @@
           <button id="djCueA"       class="dj-btn dj-cue-btn"  title="CUE" aria-label="CUE">CUE</button>
           <button id="djFilterBtnA" class="dj-btn dj-filter-btn" title="LP / HP Filter" aria-label="LP / HP Filter">LP/HP</button>
           <div class="dj-gain-wrap">
-            <label class="dj-gain-label">GAIN</label>
+            <label class="dj-gain-label" for="djGainA">GAIN</label>
             <input type="range" id="djGainA" min="0" max="150" value="100" class="dj-gain-slider">
           </div>
         </div>
@@ -716,7 +716,7 @@
         <!-- Crossfader -->
         <div class="dj-xfade-section">
           <span class="dj-xfade-lbl">A</span>
-          <input type="range" id="djCrossfader" min="0" max="100" value="50" class="dj-crossfader">
+          <input type="range" id="djCrossfader" min="0" max="100" value="50" class="dj-crossfader" aria-label="Crossfader">
           <span class="dj-xfade-lbl">B</span>
         </div>
 
@@ -780,19 +780,19 @@
         <!-- BPM + Tempo -->
         <div class="dj-bpm-row">
           <div class="dj-bpm-display" id="djBpmB">--- BPM</div>
-          <input type="range" id="djTempoB" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader">
+          <input type="range" id="djTempoB" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" aria-label="Tempo Deck B">
           <span class="dj-tempo-val" id="djTempoValB">0%</span>
         </div>
 
         <!-- EQ faders (vertical) -->
         <div class="dj-eq-section">
-          <div class="dj-eq-band"><label>HI</label>
+          <div class="dj-eq-band"><label for="djEqHiB">HI</label>
             <input type="range" id="djEqHiB"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>MID</label>
+          <div class="dj-eq-band"><label for="djEqMidB">MID</label>
             <input type="range" id="djEqMidB" class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
-          <div class="dj-eq-band"><label>LO</label>
+          <div class="dj-eq-band"><label for="djEqLoB">LO</label>
             <input type="range" id="djEqLoB"  class="dj-eq-slider" min="-12" max="12" value="0" step="1" orient="vertical">
             <span class="dj-eq-val">0</span></div>
         </div>
@@ -803,7 +803,7 @@
           <button id="djCueB"       class="dj-btn dj-cue-btn">CUE</button>
           <button id="djFilterBtnB" class="dj-btn dj-filter-btn">LP/HP</button>
           <div class="dj-gain-wrap">
-            <label class="dj-gain-label">GAIN</label>
+            <label class="dj-gain-label" for="djGainB">GAIN</label>
             <input type="range" id="djGainB" min="0" max="150" value="100" class="dj-gain-slider">
           </div>
         </div>
