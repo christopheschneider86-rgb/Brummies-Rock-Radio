@@ -9,8 +9,8 @@
  * untrusted data (e.g. from APIs) into the DOM via innerHTML.
  */
 function escapeHtml(unsafe) {
-  if (typeof unsafe !== 'string') return unsafe;
-  return unsafe
+  // [Sentinel] SECURITY FIX: Coerce non-string inputs to prevent type-confusion XSS bypass
+  return String(unsafe)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
