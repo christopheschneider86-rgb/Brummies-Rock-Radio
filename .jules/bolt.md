@@ -20,3 +20,7 @@
 ## 2024-05-15 - Visualizer requestAnimationFrame String Allocation
 **Learning:** `requestAnimationFrame` loops generating complex strings like `rgb(r, g, b)` every frame for every visualizer bar can cause severe garbage collection thrashing and stuttering. Since the byte frequency data comes from an array of 0-255 values, precomputing the 256 possible colors limits string allocation entirely.
 **Action:** When drawing visualizers based on limited byte arrays (e.g. `Uint8Array(256)`), cache string properties outside the loop indexing by the data value.
+
+## 2024-05-15 - Optimizing Array Lookups in Rendering Loops
+**Learning:** Checking existence in an Array (e.g. `favorites.includes()`) within a tight loop (like rendering hundreds of stations) turns an O(n) operation into an O(n^2) bottleneck, causing noticeable layout stutter.
+**Action:** Convert the collection to a `Set` to leverage O(1) hash map lookups.
