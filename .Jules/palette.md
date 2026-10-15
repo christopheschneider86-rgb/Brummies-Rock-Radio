@@ -4,3 +4,6 @@
 ## 2023-10-27 - Label Association and ARIA Labels
 **Learning:** HTML forms in custom vanilla UI may leave `<label>` orphaned and icon buttons lacking `<button aria-label="">` and `title=""`.
 **Action:** Add `for` to `<label>` to map to inputs by ID. Add `aria-label` and `title` to custom symbol buttons.
+## 2023-11-20 - Standalone Layout Controls Accessibility
+**Learning:** Some custom skins (like DJ, Retro, and Globe) utilize standalone `input` (text and range) and `select` elements where the layout does not permit a separate visible `<label>` element. These easily become inaccessible to screen reader users if no alternative description is provided.
+**Action:** When working on complex layouts and standalone controls, make sure to add `aria-label` directly to the `input` or `select` elements to provide screen reader context.
