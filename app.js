@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let recTimerInterval  = null;  // interval for the clock display
     let recTitleAtStart   = '';    // metadata at the start of the current session
     let recPendingSplit   = false; // true when autosplit triggered a stop-and-restart
-    let favorites = JSON.parse(localStorage.getItem("brummiesFavorites") || "[]");
+    let favorites = new Set(JSON.parse(localStorage.getItem("brummiesFavorites") || "[]"));
     let favoriteStationsData = JSON.parse(localStorage.getItem("brummiesFavoritesData") || "{}");
     let historyData = JSON.parse(localStorage.getItem("brummiesHistory") || "[]");
     let listeningStats = JSON.parse(localStorage.getItem("brummiesListeningStats") || "{}");
@@ -1662,8 +1662,8 @@ document.addEventListener('DOMContentLoaded', () => {
           
           switch(sortType) {
             case "favorites":
-              const aFav = favorites.includes(a.id) ? 1 : 0;
-              const bFav = favorites.includes(b.id) ? 1 : 0;
+              const aFav = favorites.has(a.id) ? 1 : 0;
+              const bFav = favorites.has(b.id) ? 1 : 0;
               result = bFav - aFav;
               break;
             case "distance":
@@ -1737,7 +1737,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement("div");
         row.className = "station";
         if (currentStation && currentStation.id === st.id) row.classList.add("active");
-        if (favorites.includes(st.id)) row.classList.add("favorite");
+        if (favorites.has(st.id)) row.classList.add("favorite");
         row.addEventListener("click", () => selectStation(st, index));
 
         const logo = document.createElement("div");
@@ -1771,7 +1771,7 @@ document.addEventListener('DOMContentLoaded', () => {
         main.appendChild(meta);
 
         const fav = document.createElement("div");
-        fav.className = "station-fav " + (favorites.includes(st.id) ? "" : "inactive");
+        fav.className = "station-fav " + (favorites.has(st.id) ? "" : "inactive");
         fav.textContent = "★";
         fav.addEventListener("click", (ev) => {
           ev.stopPropagation();
@@ -1792,16 +1792,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function toggleFavorite(id) {
-      if (favorites.includes(id)) {
-        favorites = favorites.filter(f => f !== id);
+      if (favorites.has(id)) {
+        favorites.delete(id);
         delete favoriteStationsData[id];
       } else {
-        favorites.push(id);
+        favorites.add(id);
         const st = allStations.find(s => s.id === id)
                 || displayedStations.find(s => s.id === id);
         if (st) favoriteStationsData[id] = st;
       }
-      localStorage.setItem("brummiesFavorites", JSON.stringify(favorites));
+      localStorage.setItem("brummiesFavorites", JSON.stringify([...favorites]));
       localStorage.setItem("brummiesFavoritesData", JSON.stringify(favoriteStationsData));
       renderStations();
       if (window._updateNpFavBtns)   window._updateNpFavBtns();
@@ -1810,7 +1810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window._toggleFavorite = toggleFavorite;
-    window._isFavorite = (id) => favorites.includes(id);
+    window._isFavorite = (id) => favorites.has(id);
 
     // --- METADATA FETCHING ---
 function startMetadataPolling() {
@@ -3928,7 +3928,7 @@ function startMetadataPolling() {
           case 'F':
             if (!currentStation) return;
             toggleFavorite(currentStation.id);
-            showToast(favorites.includes(currentStation.id) ? '⭐ Favorit hinzugefügt' : '☆ Favorit entfernt');
+            showToast(favorites.has(currentStation.id) ? '⭐ Favorit hinzugefügt' : '☆ Favorit entfernt');
             break;
         }
       });
@@ -4849,8 +4849,8 @@ function startMetadataPolling() {
 
         // Sort: favourites first (by votes), then rest (by votes)
         const sorted = [...d.stations].sort((a, b) => {
-          const aF = favorites.includes(a.id) ? 0 : 1;
-          const bF = favorites.includes(b.id) ? 0 : 1;
+          const aF = favorites.has(a.id) ? 0 : 1;
+          const bF = favorites.has(b.id) ? 0 : 1;
           if (aF !== bF) return aF - bF;
           return (b.votes || 0) - (a.votes || 0);
         });
@@ -4860,7 +4860,7 @@ function startMetadataPolling() {
           row.className = 'globe-popup-item';
 
           const votes = st.votes > 999 ? (st.votes / 1000).toFixed(1) + 'k' : (st.votes || 0);
-          const isFav = favorites.includes(st.id);
+          const isFav = favorites.has(st.id);
 
           row.innerHTML = `
             <div class="gpi-body">
@@ -5971,7 +5971,7 @@ function startMetadataPolling() {
       const config = {
         version: 1,
         exportedAt: new Date().toISOString(),
-        favorites: JSON.parse(localStorage.getItem('brummiesFavorites') || '[]'),
+        favorites: [...favorites],
         favoritesData: JSON.parse(localStorage.getItem('brummiesFavoritesData') || '{}'),
         theme: localStorage.getItem('brummiesTheme') || 'brummie',
         customTheme: JSON.parse(localStorage.getItem('brummiesCustomTheme') || 'null'),
@@ -5999,8 +5999,8 @@ function startMetadataPolling() {
           if (!config.version) throw new Error('Ungültige Konfigurationsdatei');
 
           if (Array.isArray(config.favorites)) {
-            favorites = config.favorites;
-            localStorage.setItem('brummiesFavorites', JSON.stringify(favorites));
+            favorites = new Set(config.favorites);
+            localStorage.setItem('brummiesFavorites', JSON.stringify([...favorites]));
           }
           if (config.favoritesData && typeof config.favoritesData === 'object') {
             favoriteStationsData = config.favoritesData;
@@ -6033,7 +6033,7 @@ function startMetadataPolling() {
           }
 
           // Fehlende Stationsdaten per API nachladen
-          const missingIds = favorites.filter(id => !favoriteStationsData[id]);
+          const missingIds = [...favorites].filter(id => !favoriteStationsData[id]);
           if (missingIds.length > 0) {
             statusEl.textContent = '⏳ Lade Senderdaten...';
             Promise.all(missingIds.map(id =>
@@ -6057,7 +6057,7 @@ function startMetadataPolling() {
               });
               localStorage.setItem('brummiesFavoritesData', JSON.stringify(favoriteStationsData));
               renderStations();
-              statusEl.textContent = `✅ ${favorites.length} Favorit(en) geladen!`;
+              statusEl.textContent = `✅ ${favorites.size} Favorit(en) geladen!`;
               statusEl.style.color = '#27ae60';
               setTimeout(() => { statusEl.textContent = ''; }, 4000);
             });
@@ -6744,7 +6744,7 @@ if (document.readyState === 'loading') {
   const gfsNPEl   = document.getElementById('gfsNP');
 
   function updateNpFavBtns() {
-    const isFav = !!(currentStation && favorites.includes(currentStation.id));
+    const isFav = !!(currentStation && favorites.has(currentStation.id));
     [npFavBtn, gfsFavBtn].forEach(btn => {
       if (!btn) return;
       btn.classList.toggle('is-fav', isFav);
