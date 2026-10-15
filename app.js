@@ -7864,19 +7864,31 @@ if (document.readyState === 'loading') {
     const search = (searchEl?.value || '').toLowerCase().trim();
     const https  = httpsEl?.checked || djHttpsGlobal;
     const favActive = deck === 'A' ? djFavFilterActiveA : djFavFilterActiveB;
+
+    // ⚡ Bolt: Cache lowercase strings and combine tags once per station to prevent garbage collection thrashing in filter loop
+    const genreLower = genre ? genre.toLowerCase() : '';
+    const subgenreLower = subgenre ? subgenre.toLowerCase() : '';
+
     let filtered = src.filter(st => {
       if (favActive) {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
       }
+
+      let combinedTags = null;
+
       if (genre === 'favorites') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
-      } else if (genre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(genre.toLowerCase())) {
-        return false;
+      } else if (genre) {
+        combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        if (!combinedTags.includes(genreLower)) return false;
       }
-      if (subgenre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(subgenre.toLowerCase())) return false;
-      if (search && !st.name.toLowerCase().includes(search)) return false;
+      if (subgenre) {
+        if (!combinedTags) combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        if (!combinedTags.includes(subgenreLower)) return false;
+      }
+      if (search && !(st.name || '').toLowerCase().includes(search)) return false;
       if (https  && !st.streamUrl?.startsWith('https')) return false;
       return true;
     });

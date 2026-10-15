@@ -24,3 +24,7 @@
 ## 2025-03-05 - Optimizing Array Includes with Sets
 **Learning:** Checking `favorites.includes(id)` on a large array (5000+ items) inside sorting and filtering loops triggers a massive O(N * M) time complexity overhead, consuming measurable CPU time.
 **Action:** When a collection is repeatedly checked for inclusion (`includes`), use a `Set` instead of an `Array`. `Set.has(id)` provides O(1) constant-time lookup, drastically reducing the operation time from ~28ms to ~0.1ms for a million operations.
+
+## 2025-03-05 - Avoid String Concatenations inside Array Filters
+**Learning:** Performing multiple string concatenations (e.g. `(st.genre || '') + (st.tags || '')`) and converting them to lowercase (`.toLowerCase()`) inside an `.filter()` loop that runs repeatedly on keystrokes on large arrays (up to 1000 items) creates high memory pressure, Garbage Collection thrashing and visible input lag.
+**Action:** When filtering large arrays iteratively (e.g. `filterDeckStations`), hoist invariant `.toLowerCase()` calculations (like search keywords) outside the loop. Cache complex string combinations like concatenated tags in a local variable inside the loop conditionally, so they are only computed once per item when needed, preventing redundant string allocations.
