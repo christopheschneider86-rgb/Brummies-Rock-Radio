@@ -160,11 +160,11 @@
 
   <div class="sort-controls">
     <small style="width:100%; margin-bottom: 6px;">Sortierung:</small>
-    <button aria-label="Nach Favoriten sortieren" class="secondary" data-sort="favorites"><i data-lucide="star"></i></button>
-    <button aria-label="Nach Entfernung sortieren" class="secondary active" data-sort="distance"><i data-lucide="map-pin"></i></button>
-    <button aria-label="Nach Bewertungen sortieren" class="secondary" data-sort="votes"><i data-lucide="users"></i></button>
-    <button aria-label="Nach Bitrate sortieren" class="secondary" data-sort="bitrate"><i data-lucide="music"></i></button>
-    <button aria-label="Nach Name sortieren" class="secondary" data-sort="name"><i data-lucide="type"></i></button>
+    <button aria-label="Nach Favoriten sortieren" title="Nach Favoriten sortieren" class="secondary" data-sort="favorites"><i data-lucide="star"></i></button>
+    <button aria-label="Nach Entfernung sortieren" title="Nach Entfernung sortieren" class="secondary active" data-sort="distance"><i data-lucide="map-pin"></i></button>
+    <button aria-label="Nach Bewertungen sortieren" title="Nach Bewertungen sortieren" class="secondary" data-sort="votes"><i data-lucide="users"></i></button>
+    <button aria-label="Nach Bitrate sortieren" title="Nach Bitrate sortieren" class="secondary" data-sort="bitrate"><i data-lucide="music"></i></button>
+    <button aria-label="Nach Name sortieren" title="Nach Name sortieren" class="secondary" data-sort="name"><i data-lucide="type"></i></button>
   </div>
 
   <div class="status-bar">
@@ -195,9 +195,9 @@
   </div>
 
   <div id="transport">
-    <button aria-label="Vorheriger Sender" id="prevBtn" disabled><i data-lucide="skip-back"></i></button>
-    <button aria-label="Abspielen / Pausieren" id="playBtn" disabled><i data-lucide="play"></i></button>
-    <button aria-label="Nächster Sender" id="nextBtn" disabled><i data-lucide="skip-forward"></i></button>
+    <button aria-label="Vorheriger Sender" title="Vorheriger Sender" id="prevBtn" disabled><i data-lucide="skip-back"></i></button>
+    <button aria-label="Abspielen / Pausieren" title="Abspielen / Pausieren" id="playBtn" disabled><i data-lucide="play"></i></button>
+    <button aria-label="Nächster Sender" title="Nächster Sender" id="nextBtn" disabled><i data-lucide="skip-forward"></i></button>
   </div>
 
   <!-- NOW PLAYING + RECORDING (one coherent block) -->
@@ -229,7 +229,7 @@
   <!-- Recording options moved to Settings Panel -->
 
   <div id="volumeControl">
-    <label>Lautstärke</label>
+    <label for="volumeRange">Lautstärke</label>
     <input id="volumeRange" type="range" min="0" max="100" value="70" />
     <div id="volumeValue">70%</div>
   </div>
@@ -244,7 +244,7 @@
           <div class="eq-value" data-index="0">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="0" />
+            <input type="range" aria-label="Equalizer Bass" title="Equalizer Bass" min="-12" max="12" value="0" step="1" data-index="0" />
           </div>
           <div class="eq-freq">80 Hz</div>
         </div>
@@ -253,7 +253,7 @@
           <div class="eq-value" data-index="1">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="1" />
+            <input type="range" aria-label="Equalizer Low" title="Equalizer Low" min="-12" max="12" value="0" step="1" data-index="1" />
           </div>
           <div class="eq-freq">400 Hz</div>
         </div>
@@ -262,7 +262,7 @@
           <div class="eq-value" data-index="2">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="2" />
+            <input type="range" aria-label="Equalizer Mid" title="Equalizer Mid" min="-12" max="12" value="0" step="1" data-index="2" />
           </div>
           <div class="eq-freq">1 kHz</div>
         </div>
@@ -271,7 +271,7 @@
           <div class="eq-value" data-index="3">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="3" />
+            <input type="range" aria-label="Equalizer High" title="Equalizer High" min="-12" max="12" value="0" step="1" data-index="3" />
           </div>
           <div class="eq-freq">3.5 kHz</div>
         </div>
@@ -280,7 +280,7 @@
           <div class="eq-value" data-index="4">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="4" />
+            <input type="range" aria-label="Equalizer Treble" title="Equalizer Treble" min="-12" max="12" value="0" step="1" data-index="4" />
           </div>
           <div class="eq-freq">10 kHz</div>
         </div>
@@ -434,7 +434,7 @@
       <!-- Brightness slider -->
       <div class="gbp-slider-row">
         <i data-lucide="moon" style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
-        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5">
+        <input type="range" aria-label="Globe Helligkeit" title="Globe Helligkeit" id="globeBrightnessSlider" min="30" max="190" value="100" step="5">
         <i data-lucide="sun"  style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
       </div>
     </div>
@@ -716,7 +716,7 @@
         <!-- Crossfader -->
         <div class="dj-xfade-section">
           <span class="dj-xfade-lbl">A</span>
-          <input type="range" id="djCrossfader" min="0" max="100" value="50" class="dj-crossfader">
+          <input type="range" aria-label="Crossfader" title="Crossfader" id="djCrossfader" min="0" max="100" value="50" class="dj-crossfader">
           <span class="dj-xfade-lbl">B</span>
         </div>
 
