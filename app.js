@@ -7861,21 +7861,40 @@ if (document.readyState === 'loading') {
     const src = (typeof allStations !== 'undefined' && allStations.length) ? allStations : [];
     const genre  = genreEl?.value  || '';
     const subgenre = subgenreEl?.value || '';
+
+    // ⚡ Bolt: Hoist string transformations out of the filter loop
+    const genreLower = genre.toLowerCase();
+    const subgenreLower = subgenre.toLowerCase();
+
     const search = (searchEl?.value || '').toLowerCase().trim();
     const https  = httpsEl?.checked || djHttpsGlobal;
     const favActive = deck === 'A' ? djFavFilterActiveA : djFavFilterActiveB;
+
     let filtered = src.filter(st => {
       if (favActive) {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
       }
+
+      // ⚡ Bolt: Compute combined tags string once per iteration to avoid redundant allocations
+      let tagsLower = null;
+      const getTagsLower = () => {
+        if (tagsLower === null) {
+          tagsLower = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        }
+        return tagsLower;
+      };
+
       if (genre === 'favorites') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
-      } else if (genre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(genre.toLowerCase())) {
+      } else if (genre && !getTagsLower().includes(genreLower)) {
         return false;
       }
-      if (subgenre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(subgenre.toLowerCase())) return false;
+
+      // Memory: the subgenre check must operate independently
+      if (subgenre && !getTagsLower().includes(subgenreLower)) return false;
+
       if (search && !st.name.toLowerCase().includes(search)) return false;
       if (https  && !st.streamUrl?.startsWith('https')) return false;
       return true;
