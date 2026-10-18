@@ -88,7 +88,7 @@
   <div class="filter-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
     <div class="filter-group">
       <label for="genreSelect">Hauptgenre</label>
-      <select id="genreSelect">
+    <select id="genreSelect" aria-label="Hauptgenre">
         <option value="">Alle Genres</option>
         <option value="rock" selected>Rock</option>
         <option value="metal">Metal</option>
@@ -101,7 +101,7 @@
 
     <div class="filter-group">
       <label for="subgenreSelect">Untergenre</label>
-      <select id="subgenreSelect">
+    <select id="subgenreSelect" aria-label="Untergenre">
         <option value="">Alle</option>
       </select>
     </div>
@@ -122,7 +122,7 @@
             <button type="button" data-country="United Kingdom">🇬🇧 UK</button>
             <button type="button" data-country="The United States Of America">🇺🇸 US</button>
           </div>
-          <input id="countrySearch" type="text" placeholder="Land suchen…" autocomplete="off">
+          <input id="countrySearch" type="text" placeholder="Land suchen…" autocomplete="off" aria-label="Land suchen">
           <div id="countryList" class="country-list"></div>
         </div>
       </div>
@@ -131,7 +131,7 @@
     <div class="filter-group">
       <label for="locationMode">Standort</label>
       <div class="location-selector">
-        <select id="locationMode">
+        <select id="locationMode" aria-label="Standort">
           <option value="auto">Automatisch</option>
           <option value="DE">Deutschland</option>
           <option value="AT">Österreich</option>
@@ -229,7 +229,7 @@
   <!-- Recording options moved to Settings Panel -->
 
   <div id="volumeControl">
-    <label>Lautstärke</label>
+    <label for="volumeRange">Lautstärke</label>
     <input id="volumeRange" type="range" min="0" max="100" value="70" />
     <div id="volumeValue">70%</div>
   </div>
@@ -244,7 +244,7 @@
           <div class="eq-value" data-index="0">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="0" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="0" aria-label="Equalizer 80 Hz" />
           </div>
           <div class="eq-freq">80 Hz</div>
         </div>
@@ -253,7 +253,7 @@
           <div class="eq-value" data-index="1">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="1" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="1" aria-label="Equalizer 400 Hz" />
           </div>
           <div class="eq-freq">400 Hz</div>
         </div>
@@ -262,7 +262,7 @@
           <div class="eq-value" data-index="2">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="2" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="2" aria-label="Equalizer 1 kHz" />
           </div>
           <div class="eq-freq">1 kHz</div>
         </div>
@@ -271,7 +271,7 @@
           <div class="eq-value" data-index="3">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="3" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="3" aria-label="Equalizer 3.5 kHz" />
           </div>
           <div class="eq-freq">3.5 kHz</div>
         </div>
@@ -280,7 +280,7 @@
           <div class="eq-value" data-index="4">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="4" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="4" aria-label="Equalizer 10 kHz" />
           </div>
           <div class="eq-freq">10 kHz</div>
         </div>
@@ -476,7 +476,7 @@
     </div>
     <div class="retro-search-wrap">
       <i data-lucide="search" class="retro-search-icon"></i>
-      <input id="retroSearchInput" class="retro-search-input" type="text" placeholder="Sender suchen…" autocomplete="off">
+      <input id="retroSearchInput" class="retro-search-input" type="text" placeholder="Sender suchen…" autocomplete="off" aria-label="Sender suchen">
     </div>
   </div>
 
@@ -670,7 +670,7 @@
         <!-- BPM + Tempo -->
         <div class="dj-bpm-row">
           <div class="dj-bpm-display" id="djBpmA">--- BPM</div>
-          <input type="range" id="djTempoA" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" title="Tempo ±8%">
+          <input type="range" id="djTempoA" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" title="Tempo ±8%" aria-label="Deck A Tempo">
           <span class="dj-tempo-val" id="djTempoValA">0%</span>
         </div>
 
