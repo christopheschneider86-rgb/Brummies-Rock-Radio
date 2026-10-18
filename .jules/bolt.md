@@ -24,3 +24,7 @@
 ## 2025-03-05 - Optimizing Array Includes with Sets
 **Learning:** Checking `favorites.includes(id)` on a large array (5000+ items) inside sorting and filtering loops triggers a massive O(N * M) time complexity overhead, consuming measurable CPU time.
 **Action:** When a collection is repeatedly checked for inclusion (`includes`), use a `Set` instead of an `Array`. `Set.has(id)` provides O(1) constant-time lookup, drastically reducing the operation time from ~28ms to ~0.1ms for a million operations.
+
+## 2025-05-18 - Caching Substrings in Inner Loops
+**Learning:** Re-computing `.toLowerCase()` on variables that don't change within a loop (like user input fields) or repeatedly computing `.toLowerCase()` on string concatenations for each condition check creates significant CPU overhead and generates many short-lived strings, triggering garbage collection.
+**Action:** Always hoist invariant string manipulations outside of loops. Within iterations, compute and cache intermediate string concatenations exactly once so they can be reused across multiple checks.

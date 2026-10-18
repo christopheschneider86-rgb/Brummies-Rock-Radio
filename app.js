@@ -7864,18 +7864,30 @@ if (document.readyState === 'loading') {
     const search = (searchEl?.value || '').toLowerCase().trim();
     const https  = httpsEl?.checked || djHttpsGlobal;
     const favActive = deck === 'A' ? djFavFilterActiveA : djFavFilterActiveB;
+
+    // ⚡ Bolt: Hoist string lowercasing outside the filter loop and cache iteration variables
+    // to prevent garbage collection pauses during high-frequency API search filtering.
+    const genreLower = genre ? genre.toLowerCase() : '';
+    const subgenreLower = subgenre ? subgenre.toLowerCase() : '';
+
     let filtered = src.filter(st => {
       if (favActive) {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
       }
+
+      let tagsLower = null;
+      if ((genre && genre !== 'favorites') || subgenre) {
+        tagsLower = ((st.genre || '') + (st.tags || '')).toLowerCase();
+      }
+
       if (genre === 'favorites') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
-      } else if (genre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(genre.toLowerCase())) {
+      } else if (genre && !tagsLower.includes(genreLower)) {
         return false;
       }
-      if (subgenre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(subgenre.toLowerCase())) return false;
+      if (subgenre && !tagsLower.includes(subgenreLower)) return false;
       if (search && !st.name.toLowerCase().includes(search)) return false;
       if (https  && !st.streamUrl?.startsWith('https')) return false;
       return true;
