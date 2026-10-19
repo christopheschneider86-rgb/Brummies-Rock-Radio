@@ -24,3 +24,6 @@
 ## 2025-03-05 - Optimizing Array Includes with Sets
 **Learning:** Checking `favorites.includes(id)` on a large array (5000+ items) inside sorting and filtering loops triggers a massive O(N * M) time complexity overhead, consuming measurable CPU time.
 **Action:** When a collection is repeatedly checked for inclusion (`includes`), use a `Set` instead of an `Array`. `Set.has(id)` provides O(1) constant-time lookup, drastically reducing the operation time from ~28ms to ~0.1ms for a million operations.
+## 2023-10-19 - Hoisting string operations and caching in large filters
+**Learning:** In the `app.js` filter functions (e.g., `filterDeckStations`), processing thousands of items led to repetitive `.toLowerCase()` conversions and string concatenations for every item evaluated. This causes input lag and garbage collection thrashing in JavaScript.
+**Action:** Always extract invariant string operations (like converting the search terms `genre` and `subgenre` to lowercase) outside of high-frequency loops. Additionally, cache intermediate string computations (like combining and converting `st.genre` and `st.tags` to lowercase) within the loop into variables so they are only computed once per item, even if checked against multiple filters.

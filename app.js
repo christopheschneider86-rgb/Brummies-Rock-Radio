@@ -7861,21 +7861,41 @@ if (document.readyState === 'loading') {
     const src = (typeof allStations !== 'undefined' && allStations.length) ? allStations : [];
     const genre  = genreEl?.value  || '';
     const subgenre = subgenreEl?.value || '';
+
+    // Performance optimization: hoist lowercase conversions outside the filter loop
+    // to prevent redundant computations and reduce garbage collection thrashing
+    const genreLower = genre ? genre.toLowerCase() : '';
+    const subgenreLower = subgenre ? subgenre.toLowerCase() : '';
     const search = (searchEl?.value || '').toLowerCase().trim();
     const https  = httpsEl?.checked || djHttpsGlobal;
     const favActive = deck === 'A' ? djFavFilterActiveA : djFavFilterActiveB;
+
     let filtered = src.filter(st => {
       if (favActive) {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
       }
+
       if (genre === 'favorites') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
-      } else if (genre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(genre.toLowerCase())) {
+      }
+
+      // Cache intermediate string creation per iteration,
+      // placed after the favorites early return to prevent unnecessary computation
+      let searchTagsLower = null;
+      // Exclude 'favorites' from triggering the computation if subgenre is empty
+      if ((genreLower && genreLower !== 'favorites') || subgenreLower) {
+        searchTagsLower = ((st.genre || '') + (st.tags || '')).toLowerCase();
+      }
+
+      if (genreLower && genreLower !== 'favorites' && !searchTagsLower.includes(genreLower)) {
         return false;
       }
-      if (subgenre && !((st.genre || '') + (st.tags || '')).toLowerCase().includes(subgenre.toLowerCase())) return false;
+
+      // Note: subgenre is evaluated independently of genre as per memory constraints
+      if (subgenreLower && !searchTagsLower.includes(subgenreLower)) return false;
+
       if (search && !st.name.toLowerCase().includes(search)) return false;
       if (https  && !st.streamUrl?.startsWith('https')) return false;
       return true;
