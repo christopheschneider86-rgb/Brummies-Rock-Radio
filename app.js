@@ -3988,6 +3988,9 @@ function startMetadataPolling() {
         const sort = currentSort.find(s => s !== 'favorites') || currentSort[0] || 'name';
         if (tunerModeEl) tunerModeEl.textContent = SCALE_LABELS[sort] || '';
 
+        // ⚡ Bolt: Use DocumentFragment to batch DOM appends and prevent layout thrashing
+        const fragment = document.createDocumentFragment();
+
         stations.forEach((st, i) => {
           const tick = document.createElement('div');
           const dist = Math.abs(i - tunerIndex);
@@ -4003,8 +4006,10 @@ function startMetadataPolling() {
           tick.appendChild(mark);
           tick.appendChild(label);
           tick.addEventListener('click', () => commitStation(i));
-          tunerTicksEl.appendChild(tick);
+          fragment.appendChild(tick);
         });
+
+        tunerTicksEl.appendChild(fragment);
 
         positionScale(false);
         updateDisplay();
@@ -4245,7 +4250,11 @@ function startMetadataPolling() {
           }
           return;
         }
+
+        // ⚡ Bolt: Use DocumentFragment to batch DOM appends and prevent layout thrashing
+        const fragment = document.createDocumentFragment();
         const retroActiveIdx = stations.indexOf(displayedStations[tunerIndex]);
+
         stations.forEach((st, i) => {
           const tick = document.createElement('div');
           const dist = Math.abs(i - retroActiveIdx);
@@ -4260,8 +4269,10 @@ function startMetadataPolling() {
             const realIdx = displayedStations.indexOf(st);
             commitStation(realIdx >= 0 ? realIdx : 0);
           });
-          retroTicksEl.appendChild(tick);
+          fragment.appendChild(tick);
         });
+
+        retroTicksEl.appendChild(fragment);
         positionRetroScale(false);
       }
 
