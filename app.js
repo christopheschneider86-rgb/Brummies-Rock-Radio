@@ -4230,11 +4230,12 @@ function startMetadataPolling() {
       function getRetroStations() {
         if (!retroSearchText) return displayedStations;
         const q = retroSearchText.toLowerCase();
-        return displayedStations.filter(s =>
-          s.name.toLowerCase().includes(q) ||
-          (s.genre || '').toLowerCase().includes(q) ||
-          (s.country || '').toLowerCase().includes(q)
-        );
+        return displayedStations.filter(s => {
+          if (s.name && s.name.toLowerCase().includes(q)) return true;
+          if (s.genre && s.genre.toLowerCase().includes(q)) return true;
+          if (s.country && s.country.toLowerCase().includes(q)) return true;
+          return false;
+        });
       }
 
       // ── Retro scale (mirrors main scale but in retroTicks) ────────────────
@@ -4817,11 +4818,12 @@ function startMetadataPolling() {
         // Apply text filter
         if (globeSearchText) {
           const q = globeSearchText.toLowerCase();
-          stations = stations.filter(s =>
-            s.name.toLowerCase().includes(q) ||
-            (s.genre || '').toLowerCase().includes(q) ||
-            (s.country || '').toLowerCase().includes(q)
-          );
+          stations = stations.filter(s => {
+            if (s.name && s.name.toLowerCase().includes(q)) return true;
+            if (s.genre && s.genre.toLowerCase().includes(q)) return true;
+            if (s.country && s.country.toLowerCase().includes(q)) return true;
+            return false;
+          });
         }
         if (stations.length === 0) {
           globeNoData.textContent = globeSearchText
@@ -7891,15 +7893,18 @@ if (document.readyState === 'loading') {
       if (genre === 'favorites') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
-      } else if (genre) {
+      } else if (genreLower) {
         combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
         if (!combinedTags.includes(genreLower)) return false;
       }
-      if (subgenre) {
+      if (subgenreLower) {
         if (!combinedTags) combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
         if (!combinedTags.includes(subgenreLower)) return false;
       }
-      if (search && !(st.name || '').toLowerCase().includes(search)) return false;
+      if (search) {
+        const nameMatch = st.name && st.name.toLowerCase().includes(search);
+        if (!nameMatch) return false;
+      }
       if (https  && !st.streamUrl?.startsWith('https')) return false;
       return true;
     });
