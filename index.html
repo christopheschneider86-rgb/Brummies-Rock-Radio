@@ -160,11 +160,11 @@
 
   <div class="sort-controls">
     <small style="width:100%; margin-bottom: 6px;">Sortierung:</small>
-    <button aria-label="Nach Favoriten sortieren" class="secondary" data-sort="favorites"><i data-lucide="star"></i></button>
-    <button aria-label="Nach Entfernung sortieren" class="secondary active" data-sort="distance"><i data-lucide="map-pin"></i></button>
-    <button aria-label="Nach Bewertungen sortieren" class="secondary" data-sort="votes"><i data-lucide="users"></i></button>
-    <button aria-label="Nach Bitrate sortieren" class="secondary" data-sort="bitrate"><i data-lucide="music"></i></button>
-    <button aria-label="Nach Name sortieren" class="secondary" data-sort="name"><i data-lucide="type"></i></button>
+    <button aria-label="Nach Favoriten sortieren" title="Nach Favoriten sortieren" class="secondary" data-sort="favorites"><i data-lucide="star"></i></button>
+    <button aria-label="Nach Entfernung sortieren" title="Nach Entfernung sortieren" class="secondary active" data-sort="distance"><i data-lucide="map-pin"></i></button>
+    <button aria-label="Nach Bewertungen sortieren" title="Nach Bewertungen sortieren" class="secondary" data-sort="votes"><i data-lucide="users"></i></button>
+    <button aria-label="Nach Bitrate sortieren" title="Nach Bitrate sortieren" class="secondary" data-sort="bitrate"><i data-lucide="music"></i></button>
+    <button aria-label="Nach Name sortieren" title="Nach Name sortieren" class="secondary" data-sort="name"><i data-lucide="type"></i></button>
   </div>
 
   <div class="status-bar">
@@ -195,9 +195,9 @@
   </div>
 
   <div id="transport">
-    <button aria-label="Vorheriger Sender" id="prevBtn" disabled><i data-lucide="skip-back"></i></button>
-    <button aria-label="Abspielen / Pausieren" id="playBtn" disabled><i data-lucide="play"></i></button>
-    <button aria-label="Nächster Sender" id="nextBtn" disabled><i data-lucide="skip-forward"></i></button>
+    <button aria-label="Vorheriger Sender" title="Vorheriger Sender (←)" id="prevBtn" disabled><i data-lucide="skip-back"></i></button>
+    <button aria-label="Abspielen / Pausieren" title="Abspielen / Pausieren (Leertaste)" id="playBtn" disabled><i data-lucide="play"></i></button>
+    <button aria-label="Nächster Sender" title="Nächster Sender (→)" id="nextBtn" disabled><i data-lucide="skip-forward"></i></button>
   </div>
 
   <!-- NOW PLAYING + RECORDING (one coherent block) -->
@@ -217,7 +217,7 @@
     </div>
 
     <!-- Right: Favorite + Google search -->
-    <button id="npFavBtn" class="secondary" disabled title="Zu Favoriten hinzufügen" aria-label="Zu Favoriten hinzufügen">
+    <button id="npFavBtn" class="secondary" disabled title="Zu Favoriten hinzufügen (F)" aria-label="Zu Favoriten hinzufügen">
       <i data-lucide="star" width="14" height="14"></i>
     </button>
     <button id="searchNowPlayingBtn" class="secondary" disabled title="Im Browser suchen" aria-label="Im Browser suchen">
