@@ -2014,37 +2014,6 @@ function startMetadataPolling() {
       }
     }
     
-    function calculateDataUsage(period) {
-      const now = Date.now();
-      let cutoffTime;
-      
-      switch(period) {
-        case "1h":
-          cutoffTime = now - (60 * 60 * 1000); // 1 Stunde
-          break;
-        case "24h":
-          cutoffTime = now - (24 * 60 * 60 * 1000); // 24 Stunden
-          break;
-        case "week":
-          cutoffTime = now - (7 * 24 * 60 * 60 * 1000); // 7 Tage
-          break;
-        case "month":
-          cutoffTime = now - (30 * 24 * 60 * 60 * 1000); // 30 Tage
-          break;
-        default:
-          cutoffTime = now - (60 * 60 * 1000);
-      }
-      
-      const periodData = dataUsage.filter(entry => entry.timestamp >= cutoffTime);
-      const total = periodData.reduce((sum, entry) => sum + entry.data, 0);
-      
-      return {
-        total: total,
-        count: periodData.length,
-        entries: periodData
-      };
-    }
-    
     function formatDataSize(mb) {
       if (mb >= 1000) {
         return (mb / 1000).toFixed(2) + " GB";
