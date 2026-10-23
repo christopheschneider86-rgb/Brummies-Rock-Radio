@@ -6991,27 +6991,6 @@ if (document.readyState === 'loading') {
     });
   }
 
-  // ── Nod animation then switch mode ──────────────────────────────────────
-  function hideWelcome(targetMode) {
-    const mode = targetMode || 'list';
-    if (welcomeModel) {
-      isNodding = true;
-      welcomeModel.setAttribute('camera-orbit', `0deg 95deg auto`);
-      setTimeout(() => {
-        welcomeModel.setAttribute('camera-orbit', `0deg 60deg auto`);
-        setTimeout(() => {
-          welcomeModel.setAttribute('camera-orbit', `0deg 75deg auto`);
-          setTimeout(() => {
-            isNodding = false;
-            ModeManager.switchTo(mode);
-          }, 200);
-        }, 200);
-      }, 200);
-    } else {
-      ModeManager.switchTo(mode);
-    }
-  }
-
   // (duplicate click handlers removed, using the primary DOMContentLoaded ones)
 
   if (globalHomeBtn) {
