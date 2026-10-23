@@ -7144,25 +7144,6 @@ if (document.readyState === 'loading') {
     }
   });
 
-  // ── Welcome buttons → mode switch (added here to guarantee execution) ──────
-  // initWelcomeScreen adds identical listeners but from a closure that may
-  // not execute correctly in all environments. These run last and are definitive.
-  function doHideWelcome(targetMode) {
-    const wm = document.getElementById('welcomeModel');
-    if (wm) {
-      wm.setAttribute('camera-orbit', '0deg 95deg auto');
-      setTimeout(() => {
-        wm.setAttribute('camera-orbit', '0deg 60deg auto');
-        setTimeout(() => {
-          wm.setAttribute('camera-orbit', '0deg 75deg auto');
-          setTimeout(() => ModeManager.switchTo(targetMode), 200);
-        }, 200);
-      }, 200);
-    } else {
-      ModeManager.switchTo(targetMode);
-    }
-  }
-  // (duplicate click handlers removed, using the primary DOMContentLoaded ones)
 
   // ── Logo / icon clicks → always return to welcome ────────────────────────
   // Logo clicks (retro cabinet, globe brand, header logo) → welcome
