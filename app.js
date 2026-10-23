@@ -4873,14 +4873,34 @@ function startMetadataPolling() {
           const votes = st.votes > 999 ? (st.votes / 1000).toFixed(1) + 'k' : (st.votes || 0);
           const isFav = favorites.has(st.id);
 
-          row.innerHTML = `
-            <div class="gpi-body">
-              <span class="gpi-name">${escapeHtml(st.name)}</span>
-              <span class="gpi-meta">${[escapeHtml(st.country), st.bitrate ? escapeHtml(String(st.bitrate)) + ' kbps' : '', escapeHtml(String(votes)) + ' ▲'].filter(Boolean).join(' · ')}</span>
-            </div>
-            <button class="gpi-fav${isFav ? ' is-fav' : ''}" title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}" aria-label="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
-              <i data-lucide="star"></i>
-            </button>`;
+          const gpiBody = document.createElement('div');
+          gpiBody.className = 'gpi-body';
+
+          const gpiName = document.createElement('span');
+          gpiName.className = 'gpi-name';
+          gpiName.textContent = st.name;
+          gpiBody.appendChild(gpiName);
+
+          const gpiMeta = document.createElement('span');
+          gpiMeta.className = 'gpi-meta';
+          gpiMeta.textContent = [
+            st.country,
+            st.bitrate ? st.bitrate + ' kbps' : '',
+            votes + ' ▲'
+          ].filter(Boolean).join(' · ');
+          gpiBody.appendChild(gpiMeta);
+
+          const favBtn = document.createElement('button');
+          favBtn.className = 'gpi-fav' + (isFav ? ' is-fav' : '');
+          favBtn.title = isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen';
+          favBtn.setAttribute('aria-label', favBtn.title);
+
+          const icon = document.createElement('i');
+          icon.setAttribute('data-lucide', 'star');
+          favBtn.appendChild(icon);
+
+          row.appendChild(gpiBody);
+          row.appendChild(favBtn);
 
           // Select station on row click (but not on fav button)
           row.addEventListener('click', e => {
