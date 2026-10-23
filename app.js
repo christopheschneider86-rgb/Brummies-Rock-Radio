@@ -4231,9 +4231,9 @@ function startMetadataPolling() {
         if (!retroSearchText) return displayedStations;
         const q = retroSearchText.toLowerCase();
         return displayedStations.filter(s =>
-          s.name.toLowerCase().includes(q) ||
-          (s.genre || '').toLowerCase().includes(q) ||
-          (s.country || '').toLowerCase().includes(q)
+          (s.name ? s.name.toLowerCase() : '').includes(q) ||
+          (s.genre ? s.genre.toLowerCase() : '').includes(q) ||
+          (s.country ? s.country.toLowerCase() : '').includes(q)
         );
       }
 
@@ -4818,9 +4818,9 @@ function startMetadataPolling() {
         if (globeSearchText) {
           const q = globeSearchText.toLowerCase();
           stations = stations.filter(s =>
-            s.name.toLowerCase().includes(q) ||
-            (s.genre || '').toLowerCase().includes(q) ||
-            (s.country || '').toLowerCase().includes(q)
+            (s.name ? s.name.toLowerCase() : '').includes(q) ||
+            (s.genre ? s.genre.toLowerCase() : '').includes(q) ||
+            (s.country ? s.country.toLowerCase() : '').includes(q)
           );
         }
         if (stations.length === 0) {
@@ -7881,26 +7881,28 @@ if (document.readyState === 'loading') {
     const subgenreLower = subgenre ? subgenre.toLowerCase() : '';
 
     let filtered = src.filter(st => {
-      if (favActive) {
+      // ⚡ Bolt: early returns for simple properties
+      if (https && (!st.streamUrl || !st.streamUrl.startsWith('https'))) return false;
+
+      // ⚡ Bolt: early return for favorites
+      if (favActive || genre === 'favorites') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
       }
 
-      let combinedTags = null;
+      // ⚡ Bolt: search matching on name before expensive concatenation
+      if (search) {
+        const stName = st.name ? st.name.toLowerCase() : '';
+        if (!stName.includes(search)) return false;
+      }
 
-      if (genre === 'favorites') {
-        const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
-        if (!isFav) return false;
-      } else if (genre) {
-        combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
-        if (!combinedTags.includes(genreLower)) return false;
+      // ⚡ Bolt: compute combinedTags only if necessary
+      if ((genre && genre !== 'favorites') || subgenre) {
+        const combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        if (genre && genre !== 'favorites' && !combinedTags.includes(genreLower)) return false;
+        if (subgenre && !combinedTags.includes(subgenreLower)) return false;
       }
-      if (subgenre) {
-        if (!combinedTags) combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
-        if (!combinedTags.includes(subgenreLower)) return false;
-      }
-      if (search && !(st.name || '').toLowerCase().includes(search)) return false;
-      if (https  && !st.streamUrl?.startsWith('https')) return false;
+
       return true;
     });
 
