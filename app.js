@@ -1316,7 +1316,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function filterCountryList(query) {
       const q = query.toLowerCase();
       countryListEl.querySelectorAll('label').forEach(label => {
-        label.style.display = label.textContent.toLowerCase().includes(q) ? '' : 'none';
+        if (!label.dataset.search) label.dataset.search = label.textContent.toLowerCase();
+        label.style.display = label.dataset.search.includes(q) ? '' : 'none';
       });
     }
     const locationMode = document.getElementById("locationMode");
@@ -4230,11 +4231,10 @@ function startMetadataPolling() {
       function getRetroStations() {
         if (!retroSearchText) return displayedStations;
         const q = retroSearchText.toLowerCase();
-        return displayedStations.filter(s =>
-          s.name.toLowerCase().includes(q) ||
-          (s.genre || '').toLowerCase().includes(q) ||
-          (s.country || '').toLowerCase().includes(q)
-        );
+        return displayedStations.filter(s => {
+          if (!s._searchString) s._searchString = ((s.name || '') + ' ' + (s.genre || '') + ' ' + (s.country || '')).toLowerCase();
+          return s._searchString.includes(q);
+        });
       }
 
       // ── Retro scale (mirrors main scale but in retroTicks) ────────────────
@@ -4817,11 +4817,10 @@ function startMetadataPolling() {
         // Apply text filter
         if (globeSearchText) {
           const q = globeSearchText.toLowerCase();
-          stations = stations.filter(s =>
-            s.name.toLowerCase().includes(q) ||
-            (s.genre || '').toLowerCase().includes(q) ||
-            (s.country || '').toLowerCase().includes(q)
-          );
+          stations = stations.filter(s => {
+            if (!s._searchString) s._searchString = ((s.name || '') + ' ' + (s.genre || '') + ' ' + (s.country || '')).toLowerCase();
+            return s._searchString.includes(q);
+          });
         }
         if (stations.length === 0) {
           globeNoData.textContent = globeSearchText
@@ -7892,14 +7891,17 @@ if (document.readyState === 'loading') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
       } else if (genre) {
-        combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
-        if (!combinedTags.includes(genreLower)) return false;
+        if (!st._tagsLower) st._tagsLower = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        if (!st._tagsLower.includes(genreLower)) return false;
       }
       if (subgenre) {
-        if (!combinedTags) combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
-        if (!combinedTags.includes(subgenreLower)) return false;
+        if (!st._tagsLower) st._tagsLower = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        if (!st._tagsLower.includes(subgenreLower)) return false;
       }
-      if (search && !(st.name || '').toLowerCase().includes(search)) return false;
+      if (search) {
+        if (!st._nameLower) st._nameLower = (st.name || '').toLowerCase();
+        if (!st._nameLower.includes(search)) return false;
+      }
       if (https  && !st.streamUrl?.startsWith('https')) return false;
       return true;
     });
