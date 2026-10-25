@@ -1187,8 +1187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const donateText = currentLang === 'de' ? 'Support auf Ko-Fi' : 'Support on Ko-Fi';
         donateBtn.innerHTML = `<img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="Ko-Fi" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">${donateText}`;
       }
-      
-      console.log('Complete UI translated to:', currentLang);
     }
 
     // --- DOM ELEMENTE ---
