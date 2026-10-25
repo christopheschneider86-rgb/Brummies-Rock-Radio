@@ -1941,8 +1941,10 @@ function startMetadataPolling() {
     function parseGenericJson(text) {
       try {
         const j = JSON.parse(text);
-        return j?.title || j?.song || j?.track || j?.now_playing?.song?.title
-          || j?.current_track?.title || j?.live?.is_live ? null : (j?.song?.title || null);
+        if (j?.live?.is_live) return null;
+
+        const songStr = typeof j?.song === 'string' ? j.song : j?.song?.title;
+        return j?.title || songStr || j?.track || j?.now_playing?.song?.title || j?.current_track?.title || null;
       } catch {}
       return null;
     }
