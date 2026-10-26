@@ -1376,7 +1376,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!candidate || !candidate.streamUrl) continue;
         if (deadStations.has(candidate.id)) continue;
         if (currentStation && candidate.id === currentStation.id) continue;
-        console.log('[Auto-skip] Trying next working station:', candidate.name);
         stationInfoEl.textContent = `⏭ Wechsle zu: ${candidate.name}`;
         selectStation(candidate, idx);
         // Drive the tuner knob visually if tuner view is active
