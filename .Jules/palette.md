@@ -11,3 +11,7 @@
 ## 2026-10-21 - [Added for attributes to Custom Theme Creator labels]
 **Learning:** In the Custom Theme Creator grid, the `<label>` tags were structurally separated from their corresponding `<input type="color">` elements without any programmatic association. Adding explicitly matched `for` attributes improves accessibility for screen readers and allows users to click the text labels to focus the inputs.
 **Action:** Always ensure that every `<label>` tag correctly references the `id` of its corresponding interactive input using a `for` attribute, particularly in custom grids or separated layouts where standard nesting is bypassed.
+
+## 2026-10-21 - Icon Tooltips and Shortcut Discovery
+**Learning:** Abstract icon-only buttons (like those for sorting or playback) often have `aria-label`s for screen readers but omit `title` attributes, leaving visual users without context. Furthermore, existing keyboard shortcuts remain hidden unless users explicitly find the settings panel. Surfacing these shortcuts in tooltips significantly improves UX.
+**Action:** When adding or auditing icon-only buttons, always ensure a `title` attribute is present alongside the `aria-label`. If a button has an associated keyboard shortcut, append it to the tooltip (e.g., `title="Abspielen / Pausieren (Leertaste)"`) to boost discoverability.
