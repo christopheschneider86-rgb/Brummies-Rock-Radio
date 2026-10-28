@@ -1314,7 +1314,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function filterCountryList(query) {
       const q = query.toLowerCase();
       countryListEl.querySelectorAll('label').forEach(label => {
-        label.style.display = label.textContent.toLowerCase().includes(q) ? '' : 'none';
+        // ⚡ Bolt: Use pre-cached dataset.search to avoid repeated toLowerCase() calls during filtering
+        label.style.display = (label.dataset.search || '').includes(q) ? '' : 'none';
       });
     }
     const locationMode = document.getElementById("locationMode");
