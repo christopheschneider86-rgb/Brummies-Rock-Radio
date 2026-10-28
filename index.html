@@ -886,7 +886,7 @@
   <div id="settingsPanel">
     <div class="settings-header">
       <h2><i data-lucide="settings"></i> Einstellungen</h2>
-      <button aria-label="Einstellungen schließen" id="closeSettings"><i data-lucide="x"></i></button>
+      <button aria-label="Einstellungen schließen" title="Einstellungen schließen" id="closeSettings"><i data-lucide="x"></i></button>
     </div>
     
     <div class="settings-content">
@@ -916,7 +916,7 @@
         </div>
         <div class="settings-section-content">
           <div style="display:flex; flex-direction:column; gap:4px; padding:6px 0;">
-            <select id="stationLimitSelect" style="width:100%; height:36px; padding:6px 12px; font-size:13px; border-radius:6px; background:var(--color-bg-tertiary); color:var(--color-text-primary); border:1px solid var(--color-border); outline:none;">
+            <select id="stationLimitSelect" aria-label="Maximal angezeigte Sender" style="width:100%; height:36px; padding:6px 12px; font-size:13px; border-radius:6px; background:var(--color-bg-tertiary); color:var(--color-text-primary); border:1px solid var(--color-border); outline:none;">
               <option value="50">50</option>
               <option value="150">150</option>
               <option value="300" selected>300 (Standard)</option>
@@ -964,7 +964,7 @@
         </div>
         <div class="settings-section-content">
           <div class="settings-option">
-            <select id="languageSelect">
+            <select id="languageSelect" aria-label="Sprache auswählen">
               <option value="de">DE - Deutsch</option>
               <option value="en">EN - English</option>
               <option value="fr">FR - Français</option>
@@ -1035,12 +1035,12 @@
               <div id="prev-text"></div>
             </div>
             <div class="color-picker-grid">
-              <div class="color-picker-item"><label for="cp-bg-primary">Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-primary" value="#0b0b0f"><input type="text" id="ct-bg-primary" value="#0B0B0F" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-bg-secondary">Karten / Panels</label><div class="color-picker-row"><input type="color" id="cp-bg-secondary" value="#111827"><input type="text" id="ct-bg-secondary" value="#111827" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-accent">Akzentfarbe</label><div class="color-picker-row"><input type="color" id="cp-accent" value="#ef4444"><input type="text" id="ct-accent" value="#EF4444" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-bg-tertiary">Elemente / Border</label><div class="color-picker-row"><input type="color" id="cp-bg-tertiary" value="#1f2937"><input type="text" id="ct-bg-tertiary" value="#1F2937" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-text">Textfarbe</label><div class="color-picker-row"><input type="color" id="cp-text" value="#f5f5f5"><input type="text" id="ct-text" value="#F5F5F5" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-bg-input">Input-Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-input" value="#020617"><input type="text" id="ct-bg-input" value="#020617" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-primary">Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-primary" value="#0b0b0f"><input type="text" id="ct-bg-primary" aria-label="Hex-Wert für Hintergrund" value="#0B0B0F" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-secondary">Karten / Panels</label><div class="color-picker-row"><input type="color" id="cp-bg-secondary" value="#111827"><input type="text" id="ct-bg-secondary" aria-label="Hex-Wert für Karten / Panels" value="#111827" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-accent">Akzentfarbe</label><div class="color-picker-row"><input type="color" id="cp-accent" value="#ef4444"><input type="text" id="ct-accent" aria-label="Hex-Wert für Akzentfarbe" value="#EF4444" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-tertiary">Elemente / Border</label><div class="color-picker-row"><input type="color" id="cp-bg-tertiary" value="#1f2937"><input type="text" id="ct-bg-tertiary" aria-label="Hex-Wert für Elemente / Border" value="#1F2937" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-text">Textfarbe</label><div class="color-picker-row"><input type="color" id="cp-text" value="#f5f5f5"><input type="text" id="ct-text" aria-label="Hex-Wert für Textfarbe" value="#F5F5F5" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-input">Input-Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-input" value="#020617"><input type="text" id="ct-bg-input" aria-label="Hex-Wert für Input-Hintergrund" value="#020617" maxlength="7"></div></div>
             </div>
             <div class="custom-theme-actions">
               <button id="applyCustomTheme"><i data-lucide="check"></i> Anwenden</button>
@@ -1141,7 +1141,7 @@
   <div id="toolsPanel">
     <div class="settings-header">
       <h2><i data-lucide="clock"></i> Timer &amp; Daten</h2>
-      <button aria-label="Werkzeuge schließen" id="closeTools"><i data-lucide="x"></i></button>
+      <button aria-label="Werkzeuge schließen" title="Werkzeuge schließen" id="closeTools"><i data-lucide="x"></i></button>
     </div>
     
     <div class="settings-content">
@@ -1264,7 +1264,7 @@
     <div id="legalModal">
       <div id="legalModalHeader">
         <h2>Rechtliche Hinweise</h2>
-        <button aria-label="Rechtliche Hinweise schließen" id="legalCloseBtn"><i data-lucide="x"></i></button>
+        <button aria-label="Rechtliche Hinweise schließen" title="Rechtliche Hinweise schließen" id="legalCloseBtn"><i data-lucide="x"></i></button>
       </div>
       <div id="legalModalBody">
         <h3>📡 Senderdaten – Radio Browser</h3>
