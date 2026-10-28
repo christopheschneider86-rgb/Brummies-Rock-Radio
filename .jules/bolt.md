@@ -28,3 +28,7 @@
 ## 2025-03-05 - Avoid String Concatenations inside Array Filters
 **Learning:** Performing multiple string concatenations (e.g. `(st.genre || '') + (st.tags || '')`) and converting them to lowercase (`.toLowerCase()`) inside an `.filter()` loop that runs repeatedly on keystrokes on large arrays (up to 1000 items) creates high memory pressure, Garbage Collection thrashing and visible input lag.
 **Action:** When filtering large arrays iteratively (e.g. `filterDeckStations`), hoist invariant `.toLowerCase()` calculations (like search keywords) outside the loop. Cache complex string combinations like concatenated tags in a local variable inside the loop conditionally, so they are only computed once per item when needed, preventing redundant string allocations.
+
+## 2025-03-05 - Lazy Caching Transformed Strings
+**Learning:** Frequent `.toLowerCase()` conversions and string concatenations on objects in arrays or DOM elements during high-frequency input filtering trigger excessive string allocations and Garbage Collection thrashing.
+**Action:** Lazily cache these derived strings on the objects themselves (e.g., `s._nameLower`, `s._combinedTags`) or DOM element datasets (`dataset.search`) upon first evaluation. Subsequent filter iterations can reuse these cached strings, significantly improving filter responsiveness.
