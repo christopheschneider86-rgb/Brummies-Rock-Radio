@@ -1605,6 +1605,8 @@ document.addEventListener('DOMContentLoaded', () => {
       countryListEl.innerHTML = '';
       countries.forEach(country => {
         const label = document.createElement('label');
+        // ⚡ Bolt: Cache lowercase country name to avoid repetitive memory allocations during search
+        label.dataset.search = country ? country.toLowerCase() : '';
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.value = country;
@@ -4198,9 +4200,19 @@ function startMetadataPolling() {
         if (!retroSearchText) return displayedStations;
         const q = retroSearchText.toLowerCase();
         return displayedStations.filter(s => {
-          if (s.name && s.name.toLowerCase().includes(q)) return true;
-          if (s.genre && s.genre.toLowerCase().includes(q)) return true;
-          if (s.country && s.country.toLowerCase().includes(q)) return true;
+          // ⚡ Bolt: Lazily cache lowercased fields to prevent GC thrashing during search
+          if (s.name) {
+            if (s._nameLower === undefined) s._nameLower = s.name.toLowerCase();
+            if (s._nameLower.includes(q)) return true;
+          }
+          if (s.genre) {
+            if (s._genreLower === undefined) s._genreLower = s.genre.toLowerCase();
+            if (s._genreLower.includes(q)) return true;
+          }
+          if (s.country) {
+            if (s._countryLower === undefined) s._countryLower = s.country.toLowerCase();
+            if (s._countryLower.includes(q)) return true;
+          }
           return false;
         });
       }
@@ -4786,9 +4798,19 @@ function startMetadataPolling() {
         if (globeSearchText) {
           const q = globeSearchText.toLowerCase();
           stations = stations.filter(s => {
-            if (s.name && s.name.toLowerCase().includes(q)) return true;
-            if (s.genre && s.genre.toLowerCase().includes(q)) return true;
-            if (s.country && s.country.toLowerCase().includes(q)) return true;
+            // ⚡ Bolt: Lazily cache lowercased fields to prevent GC thrashing during search
+            if (s.name) {
+              if (s._nameLower === undefined) s._nameLower = s.name.toLowerCase();
+              if (s._nameLower.includes(q)) return true;
+            }
+            if (s.genre) {
+              if (s._genreLower === undefined) s._genreLower = s.genre.toLowerCase();
+              if (s._genreLower.includes(q)) return true;
+            }
+            if (s.country) {
+              if (s._countryLower === undefined) s._countryLower = s.country.toLowerCase();
+              if (s._countryLower.includes(q)) return true;
+            }
             return false;
           });
         }
@@ -4879,8 +4901,8 @@ function startMetadataPolling() {
           });
 
           // Favourite toggle
-          const favBtn = row.querySelector('.gpi-fav');
-          favBtn.addEventListener('click', e => {
+          const _favBtn = row.querySelector('.gpi-fav');
+          _favBtn.addEventListener('click', e => {
             e.stopPropagation();
             toggleFavorite(st.id);
             renderPopup(); // re-render with updated sort
@@ -7841,15 +7863,18 @@ if (document.readyState === 'loading') {
         const isFav = window._isFavorite ? window._isFavorite(st.id) : false;
         if (!isFav) return false;
       } else if (genreLower) {
-        combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        if (st._combinedTags === undefined) st._combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        combinedTags = st._combinedTags;
         if (!combinedTags.includes(genreLower)) return false;
       }
       if (subgenreLower) {
-        if (!combinedTags) combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        if (st._combinedTags === undefined) st._combinedTags = ((st.genre || '') + (st.tags || '')).toLowerCase();
+        combinedTags = st._combinedTags;
         if (!combinedTags.includes(subgenreLower)) return false;
       }
       if (search) {
-        const nameMatch = st.name && st.name.toLowerCase().includes(search);
+        if (st._nameLower === undefined) st._nameLower = st.name ? st.name.toLowerCase() : '';
+        const nameMatch = st._nameLower.includes(search);
         if (!nameMatch) return false;
       }
       if (https  && !st.streamUrl?.startsWith('https')) return false;
