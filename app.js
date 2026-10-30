@@ -1499,14 +1499,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      // ⚡ Bolt: Cache repetitive math operations outside the filter loop to reduce CPU cycles
+      const R = 6371;
+      const PI_180 = Math.PI / 180;
+      const lat1Rad = userLocation.lat * PI_180;
+      const lon1Rad = userLocation.lon * PI_180;
+      const cosLat1 = Math.cos(lat1Rad);
+
       allStations.forEach(st => {
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          // ⚡ Bolt: Inline calculateDistance to eliminate function call overhead and use cached values
+          const lat2Rad = st.latitude * PI_180;
+          const lon2Rad = st.longitude * PI_180;
+          const dLat = lat2Rad - lat1Rad;
+          const dLon = lon2Rad - lon1Rad;
+
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    cosLat1 * Math.cos(lat2Rad) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          st.distance = R * c;
         } else {
           st.distance = null;
         }
