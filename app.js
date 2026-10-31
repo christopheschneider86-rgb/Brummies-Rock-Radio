@@ -1493,20 +1493,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.calculateDistance = calculateDistance;
 
+    // ⚡ Bolt: Hoist static trigonometry and math conversions outside the loop to optimize distance calculation for thousands of stations
     function calculateAllDistances() {
       if (!userLocation) {
         allStations.forEach(st => st.distance = null);
         return;
       }
       
+      const R = 6371;
+      const piOver180 = Math.PI / 180;
+      const lat1Rad = userLocation.lat * piOver180;
+      const lon1Rad = userLocation.lon * piOver180;
+      const cosLat1 = Math.cos(lat1Rad);
+
       allStations.forEach(st => {
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const lat2Rad = st.latitude * piOver180;
+          const dLatHalf = (lat2Rad - lat1Rad) / 2;
+          const dLonHalf = (st.longitude * piOver180 - lon1Rad) / 2;
+          const a = Math.sin(dLatHalf) * Math.sin(dLatHalf) +
+                    cosLat1 * Math.cos(lat2Rad) *
+                    Math.sin(dLonHalf) * Math.sin(dLonHalf);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          st.distance = R * c;
         } else {
           st.distance = null;
         }
