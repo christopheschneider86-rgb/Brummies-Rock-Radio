@@ -26,7 +26,7 @@
     <!-- ╔══ SKIN: welcome ══╗ -->
   <div class="skin skin-welcome" id="skin-welcome">
 <div id="welcomeScreen">
-    <a id="welcomeKofi" href="https://ko-fi.com/christopheschneider" target="_blank" rel="noopener" title="Support auf Ko-Fi">
+    <a id="welcomeKofi" href="https://ko-fi.com/christopheschneider" target="_blank" rel="noopener" title="Support auf Ko-Fi" aria-label="Support auf Ko-Fi">
       <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="Ko-Fi">
     </a>
     <div class="welcome-content">
@@ -122,7 +122,7 @@
             <button type="button" data-country="United Kingdom">🇬🇧 UK</button>
             <button type="button" data-country="The United States Of America">🇺🇸 US</button>
           </div>
-          <input id="countrySearch" type="text" placeholder="Land suchen…" autocomplete="off" aria-label="Land suchen">
+          <input id="countrySearch" type="text" placeholder="Land suchen…" autocomplete="off" title="Land suchen" aria-label="Land suchen">
           <div id="countryList" class="country-list"></div>
         </div>
       </div>
@@ -244,7 +244,7 @@
           <div class="eq-value" data-index="0">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="0" aria-label="Equalizer Bass (80 Hz)" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="0" title="Equalizer Bass (80 Hz)" aria-label="Equalizer Bass (80 Hz)" />
           </div>
           <div class="eq-freq">80 Hz</div>
         </div>
@@ -253,7 +253,7 @@
           <div class="eq-value" data-index="1">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="1" aria-label="Equalizer Low (400 Hz)" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="1" title="Equalizer Low (400 Hz)" aria-label="Equalizer Low (400 Hz)" />
           </div>
           <div class="eq-freq">400 Hz</div>
         </div>
@@ -262,7 +262,7 @@
           <div class="eq-value" data-index="2">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="2" aria-label="Equalizer Mid (1 kHz)" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="2" title="Equalizer Mid (1 kHz)" aria-label="Equalizer Mid (1 kHz)" />
           </div>
           <div class="eq-freq">1 kHz</div>
         </div>
@@ -271,7 +271,7 @@
           <div class="eq-value" data-index="3">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="3" aria-label="Equalizer High (3.5 kHz)" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="3" title="Equalizer High (3.5 kHz)" aria-label="Equalizer High (3.5 kHz)" />
           </div>
           <div class="eq-freq">3.5 kHz</div>
         </div>
@@ -280,7 +280,7 @@
           <div class="eq-value" data-index="4">0 dB</div>
           <div class="eq-slider-wrap">
             <div class="eq-zeroline"></div>
-            <input type="range" min="-12" max="12" value="0" step="1" data-index="4" aria-label="Equalizer Treble (10 kHz)" />
+            <input type="range" min="-12" max="12" value="0" step="1" data-index="4" title="Equalizer Treble (10 kHz)" aria-label="Equalizer Treble (10 kHz)" />
           </div>
           <div class="eq-freq">10 kHz</div>
         </div>
@@ -408,9 +408,9 @@
     <div id="gfsFilters" hidden>
       <!-- Row 1: genres + HTTPS -->
       <div class="gfs-filter-row">
-        <select id="gfsGenre" title="Hauptgenre"></select>
-        <select id="gfsSubgenre" title="Untergenre"></select>
-        <label class="gfs-https-label" title="Nur sichere Streams">
+        <select id="gfsGenre" title="Hauptgenre" aria-label="Hauptgenre"></select>
+        <select id="gfsSubgenre" title="Untergenre" aria-label="Untergenre"></select>
+        <label class="gfs-https-label" title="Nur sichere Streams" aria-label="Nur sichere Streams">
           <input type="checkbox" id="gfsHttps" checked>
           <i data-lucide="lock" style="width:12px;height:12px;flex-shrink:0;"></i>
         </label>
@@ -418,7 +418,7 @@
       <!-- Row 2: text search -->
       <div class="gfs-search-wrap">
         <i data-lucide="search" style="width:13px;height:13px;flex-shrink:0;opacity:0.6;"></i>
-        <input id="gfsSearch" type="text" placeholder="Sender suchen…" autocomplete="off" aria-label="Sender suchen">
+        <input id="gfsSearch" type="text" placeholder="Sender suchen…" autocomplete="off" title="Sender suchen" aria-label="Sender suchen">
       </div>
     </div>
 
@@ -434,7 +434,7 @@
       <!-- Brightness slider -->
       <div class="gbp-slider-row">
         <i data-lucide="moon" style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
-        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5" aria-label="Globus Helligkeit">
+        <input type="range" id="globeBrightnessSlider" min="30" max="190" value="100" step="5" title="Globus Helligkeit" aria-label="Globus Helligkeit">
         <i data-lucide="sun"  style="width:14px;height:14px;flex-shrink:0;opacity:0.7;"></i>
       </div>
     </div>
@@ -476,7 +476,7 @@
     </div>
     <div class="retro-search-wrap">
       <i data-lucide="search" class="retro-search-icon"></i>
-      <input id="retroSearchInput" class="retro-search-input" type="text" placeholder="Sender suchen…" autocomplete="off" aria-label="Sender suchen">
+      <input id="retroSearchInput" class="retro-search-input" type="text" placeholder="Sender suchen…" autocomplete="off" title="Sender suchen" aria-label="Sender suchen">
     </div>
   </div>
 
@@ -635,7 +635,7 @@
 
         <!-- Filter bar -->
         <div class="dj-filters-bar">
-          <select id="djGenreA" class="dj-sel" aria-label="Deck A Hauptgenre">
+          <select id="djGenreA" class="dj-sel" title="Deck A Hauptgenre" aria-label="Deck A Hauptgenre">
             <option value="">Alle Genres</option>
             <option value="favorites">⭐ Favoriten</option>
             <option value="rock">Rock</option>
@@ -645,8 +645,8 @@
             <option value="electronic">Electronic</option>
             <option value="jazz">Jazz</option>
           </select>
-          <select id="djSubgenreA" class="dj-sel" aria-label="Deck A Untergenre"><option value="">Alle</option></select>
-          <input id="djSearchA" class="dj-search-fld" type="text" placeholder="Suchen…" autocomplete="off" aria-label="Deck A Sender suchen">
+          <select id="djSubgenreA" class="dj-sel" title="Deck A Untergenre" aria-label="Deck A Untergenre"><option value="">Alle</option></select>
+          <input id="djSearchA" class="dj-search-fld" type="text" placeholder="Suchen…" autocomplete="off" title="Deck A Sender suchen" aria-label="Deck A Sender suchen">
         </div>
 
         <!-- Deck label + CSS Vinyl disc -->
@@ -700,9 +700,9 @@
 
         <!-- Sort buttons -->
         <div class="dj-sort-grp" id="djSortA">
-          <button aria-label="Nach Bewertungen sortieren" class="dj-sort-btn active" data-sort="votes">VOTES</button>
-          <button aria-label="Nach Bitrate sortieren" class="dj-sort-btn" data-sort="bitrate">BIT</button>
-          <button aria-label="Nach Entfernung sortieren" class="dj-sort-btn" data-sort="distance">GPS</button>
+          <button title="Nach Bewertungen sortieren" aria-label="Nach Bewertungen sortieren" class="dj-sort-btn active" data-sort="votes">VOTES</button>
+          <button title="Nach Bitrate sortieren" aria-label="Nach Bitrate sortieren" class="dj-sort-btn" data-sort="bitrate">BIT</button>
+          <button title="Nach Entfernung sortieren" aria-label="Nach Entfernung sortieren" class="dj-sort-btn" data-sort="distance">GPS</button>
           <button class="dj-fav-filter-btn" id="djFavFilterA" title="Nur Favoriten anzeigen" aria-label="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
         </div>
 
@@ -716,7 +716,7 @@
         <!-- Crossfader -->
         <div class="dj-xfade-section">
           <span class="dj-xfade-lbl">A</span>
-          <input type="range" id="djCrossfader" min="0" max="100" value="50" class="dj-crossfader" aria-label="Crossfader">
+          <input type="range" id="djCrossfader" min="0" max="100" value="50" class="dj-crossfader" title="Crossfader" aria-label="Crossfader">
           <span class="dj-xfade-lbl">B</span>
         </div>
 
@@ -730,7 +730,7 @@
         </div>
 
         <!-- Central HTTPS toggle -->
-        <label class="dj-https-center" title="Nur sichere Streams (HTTPS)">
+        <label class="dj-https-center" title="Nur sichere Streams (HTTPS)" aria-label="Nur sichere Streams (HTTPS)">
           <input type="checkbox" id="djHttpsCenter" checked>
           <span>HTTPS</span>
         </label>
@@ -745,7 +745,7 @@
 
         <!-- Filter bar -->
         <div class="dj-filters-bar">
-          <select id="djGenreB" class="dj-sel" aria-label="Deck B Hauptgenre">
+          <select id="djGenreB" class="dj-sel" title="Deck B Hauptgenre" aria-label="Deck B Hauptgenre">
             <option value="">Alle Genres</option>
             <option value="favorites">⭐ Favoriten</option>
             <option value="rock">Rock</option>
@@ -755,8 +755,8 @@
             <option value="electronic">Electronic</option>
             <option value="jazz">Jazz</option>
           </select>
-          <select id="djSubgenreB" class="dj-sel" aria-label="Deck B Untergenre"><option value="">Alle</option></select>
-          <input id="djSearchB" class="dj-search-fld" type="text" placeholder="Suchen…" autocomplete="off" aria-label="Deck B Sender suchen">
+          <select id="djSubgenreB" class="dj-sel" title="Deck B Untergenre" aria-label="Deck B Untergenre"><option value="">Alle</option></select>
+          <input id="djSearchB" class="dj-search-fld" type="text" placeholder="Suchen…" autocomplete="off" title="Deck B Sender suchen" aria-label="Deck B Sender suchen">
         </div>
 
         <!-- Deck label + CSS Vinyl disc -->
@@ -780,7 +780,7 @@
         <!-- BPM + Tempo -->
         <div class="dj-bpm-row">
           <div class="dj-bpm-display" id="djBpmB">--- BPM</div>
-          <input type="range" id="djTempoB" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" aria-label="Deck B Tempo">
+          <input type="range" id="djTempoB" min="-8" max="8" value="0" step="0.1" class="dj-tempo-fader" title="Deck B Tempo" aria-label="Deck B Tempo">
           <span class="dj-tempo-val" id="djTempoValB">0%</span>
         </div>
 
@@ -810,9 +810,9 @@
 
         <!-- Sort buttons -->
         <div class="dj-sort-grp" id="djSortB">
-          <button aria-label="Nach Bewertungen sortieren" class="dj-sort-btn active" data-sort="votes">VOTES</button>
-          <button aria-label="Nach Bitrate sortieren" class="dj-sort-btn" data-sort="bitrate">BIT</button>
-          <button aria-label="Nach Entfernung sortieren" class="dj-sort-btn" data-sort="distance">GPS</button>
+          <button title="Nach Bewertungen sortieren" aria-label="Nach Bewertungen sortieren" class="dj-sort-btn active" data-sort="votes">VOTES</button>
+          <button title="Nach Bitrate sortieren" aria-label="Nach Bitrate sortieren" class="dj-sort-btn" data-sort="bitrate">BIT</button>
+          <button title="Nach Entfernung sortieren" aria-label="Nach Entfernung sortieren" class="dj-sort-btn" data-sort="distance">GPS</button>
           <button class="dj-fav-filter-btn" id="djFavFilterB" title="Nur Favoriten anzeigen" aria-label="Nur Favoriten anzeigen"><i data-lucide="star" style="width:12px;height:12px;"></i></button>
         </div>
 
@@ -916,7 +916,7 @@
         </div>
         <div class="settings-section-content">
           <div style="display:flex; flex-direction:column; gap:4px; padding:6px 0;">
-            <select id="stationLimitSelect" aria-label="Maximal angezeigte Sender" style="width:100%; height:36px; padding:6px 12px; font-size:13px; border-radius:6px; background:var(--color-bg-tertiary); color:var(--color-text-primary); border:1px solid var(--color-border); outline:none;">
+            <select id="stationLimitSelect" title="Maximal angezeigte Sender" aria-label="Maximal angezeigte Sender" style="width:100%; height:36px; padding:6px 12px; font-size:13px; border-radius:6px; background:var(--color-bg-tertiary); color:var(--color-text-primary); border:1px solid var(--color-border); outline:none;">
               <option value="50">50</option>
               <option value="150">150</option>
               <option value="300" selected>300 (Standard)</option>
@@ -964,7 +964,7 @@
         </div>
         <div class="settings-section-content">
           <div class="settings-option">
-            <select id="languageSelect" aria-label="Sprache auswählen">
+            <select id="languageSelect" title="Sprache auswählen" aria-label="Sprache auswählen">
               <option value="de">DE - Deutsch</option>
               <option value="en">EN - English</option>
               <option value="fr">FR - Français</option>
@@ -1035,12 +1035,12 @@
               <div id="prev-text"></div>
             </div>
             <div class="color-picker-grid">
-              <div class="color-picker-item"><label for="cp-bg-primary">Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-primary" value="#0b0b0f"><input type="text" id="ct-bg-primary" aria-label="Hex-Wert für Hintergrund" value="#0B0B0F" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-bg-secondary">Karten / Panels</label><div class="color-picker-row"><input type="color" id="cp-bg-secondary" value="#111827"><input type="text" id="ct-bg-secondary" aria-label="Hex-Wert für Karten / Panels" value="#111827" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-accent">Akzentfarbe</label><div class="color-picker-row"><input type="color" id="cp-accent" value="#ef4444"><input type="text" id="ct-accent" aria-label="Hex-Wert für Akzentfarbe" value="#EF4444" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-bg-tertiary">Elemente / Border</label><div class="color-picker-row"><input type="color" id="cp-bg-tertiary" value="#1f2937"><input type="text" id="ct-bg-tertiary" aria-label="Hex-Wert für Elemente / Border" value="#1F2937" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-text">Textfarbe</label><div class="color-picker-row"><input type="color" id="cp-text" value="#f5f5f5"><input type="text" id="ct-text" aria-label="Hex-Wert für Textfarbe" value="#F5F5F5" maxlength="7"></div></div>
-              <div class="color-picker-item"><label for="cp-bg-input">Input-Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-input" value="#020617"><input type="text" id="ct-bg-input" aria-label="Hex-Wert für Input-Hintergrund" value="#020617" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-primary">Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-primary" value="#0b0b0f"><input type="text" id="ct-bg-primary" title="Hex-Wert für Hintergrund" aria-label="Hex-Wert für Hintergrund" value="#0B0B0F" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-secondary">Karten / Panels</label><div class="color-picker-row"><input type="color" id="cp-bg-secondary" value="#111827"><input type="text" id="ct-bg-secondary" title="Hex-Wert für Karten / Panels" aria-label="Hex-Wert für Karten / Panels" value="#111827" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-accent">Akzentfarbe</label><div class="color-picker-row"><input type="color" id="cp-accent" value="#ef4444"><input type="text" id="ct-accent" title="Hex-Wert für Akzentfarbe" aria-label="Hex-Wert für Akzentfarbe" value="#EF4444" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-tertiary">Elemente / Border</label><div class="color-picker-row"><input type="color" id="cp-bg-tertiary" value="#1f2937"><input type="text" id="ct-bg-tertiary" title="Hex-Wert für Elemente / Border" aria-label="Hex-Wert für Elemente / Border" value="#1F2937" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-text">Textfarbe</label><div class="color-picker-row"><input type="color" id="cp-text" value="#f5f5f5"><input type="text" id="ct-text" title="Hex-Wert für Textfarbe" aria-label="Hex-Wert für Textfarbe" value="#F5F5F5" maxlength="7"></div></div>
+              <div class="color-picker-item"><label for="cp-bg-input">Input-Hintergrund</label><div class="color-picker-row"><input type="color" id="cp-bg-input" value="#020617"><input type="text" id="ct-bg-input" title="Hex-Wert für Input-Hintergrund" aria-label="Hex-Wert für Input-Hintergrund" value="#020617" maxlength="7"></div></div>
             </div>
             <div class="custom-theme-actions">
               <button id="applyCustomTheme"><i data-lucide="check"></i> Anwenden</button>
