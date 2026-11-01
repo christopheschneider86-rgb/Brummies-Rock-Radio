@@ -28,3 +28,7 @@
 ## 2025-03-05 - Avoid String Concatenations inside Array Filters
 **Learning:** Performing multiple string concatenations (e.g. `(st.genre || '') + (st.tags || '')`) and converting them to lowercase (`.toLowerCase()`) inside an `.filter()` loop that runs repeatedly on keystrokes on large arrays (up to 1000 items) creates high memory pressure, Garbage Collection thrashing and visible input lag.
 **Action:** When filtering large arrays iteratively (e.g. `filterDeckStations`), hoist invariant `.toLowerCase()` calculations (like search keywords) outside the loop. Cache complex string combinations like concatenated tags in a local variable inside the loop conditionally, so they are only computed once per item when needed, preventing redundant string allocations.
+
+## 2025-03-05 - Avoid repetitive DOM string retrieval and allocation in filter loops
+**Learning:** During UI filtering (e.g. typing in a search bar to filter a list of elements), repeatedly reading `element.textContent`, performing `.toLowerCase()`, and evaluating string searches inside a high-frequency `input` event listener causes continuous string allocation, DOM read bottlenecks and layout thrashing, resulting in UI lag.
+**Action:** Extract the lowercase text into a pre-cached dataset property (`element.dataset.search`) when the element is created. In the input event filter function, compare the query directly against the pre-computed `dataset.search`, eliminating `.textContent` reads and `.toLowerCase()` string allocations in the hot path.
