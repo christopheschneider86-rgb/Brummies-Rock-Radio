@@ -1973,7 +1973,8 @@ function startMetadataPolling() {
     copyNowPlayingBtn.addEventListener("click", () => {
       if (currentMetadata) {
         const query = encodeURIComponent(currentMetadata);
-        window.open(`https://www.google.com/search?q=${query}`, '_blank');
+        // Security enhancement: add noopener,noreferrer to prevent reverse tabnabbing
+        window.open(`https://www.google.com/search?q=${query}`, '_blank', 'noopener,noreferrer');
       }
     });
 
