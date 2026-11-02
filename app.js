@@ -1499,14 +1499,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      // ⚡ Bolt: Hoist mathematical invariants (radians conversion & user location cosine)
+      // outside the loop, and inline the Haversine formula to eliminate function call overhead
+      // over thousands of stations.
+      const PI_180 = Math.PI / 180;
+      const userLatRad = userLocation.lat * PI_180;
+      const userLonRad = userLocation.lon * PI_180;
+      const cosUserLat = Math.cos(userLatRad);
+      const R = 6371;
+
       allStations.forEach(st => {
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const latRad = st.latitude * PI_180;
+          const lonRad = st.longitude * PI_180;
+          const dLat = latRad - userLatRad;
+          const dLon = lonRad - userLonRad;
+
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    cosUserLat * Math.cos(latRad) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+
+          st.distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         } else {
           st.distance = null;
         }
