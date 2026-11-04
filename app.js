@@ -1499,14 +1499,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      // ⚡ Bolt: Hoist user location mathematical conversions outside the loop and inline Haversine formula
+      // to reduce repetitive function call overhead and CPU usage over large arrays.
+      const PI_180 = Math.PI / 180;
+      const uLatRad = userLocation.lat * PI_180;
+      const uLonRad = userLocation.lon * PI_180;
+      const cosULat = Math.cos(uLatRad);
+
       allStations.forEach(st => {
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const latRad = st.latitude * PI_180;
+          const lonRad = st.longitude * PI_180;
+          const dLat = latRad - uLatRad;
+          const dLon = lonRad - uLonRad;
+
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    cosULat * Math.cos(latRad) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          st.distance = 6371 * c;
         } else {
           st.distance = null;
         }
