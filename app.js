@@ -2209,21 +2209,17 @@ function startMetadataPolling() {
         if (audioContext && audioContext.state === 'running' && isIOS) {
           // Suspend AudioContext – releases iOS audio session lock so audio
           // continues in background without the web audio graph interfering
-          audioContext.suspend().then(() => {
-            console.log('AudioContext suspended for iOS background');
-          }).catch(() => {});
+          audioContext.suspend().catch(() => {});
         }
       } else {
         // Page coming to foreground
         if (audioContext && audioContext.state === 'suspended') {
           audioContext.resume().then(() => {
-            console.log('AudioContext resumed');
             if (!visualizerActive && analyser) startVisualizer();
           }).catch(() => {});
         }
         // If stream dropped while hidden, reconnect
         if (currentStation && audioEl.paused && coverEl.classList.contains('playing')) {
-          console.log('Stream paused while hidden – resuming');
           audioEl.play().catch(() => attemptReconnect());
         }
         if (currentStation && !audioEl.paused) requestWakeLock();
