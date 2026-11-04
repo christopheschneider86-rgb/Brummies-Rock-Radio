@@ -1545,8 +1545,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         url += params.join("&");
         
-        console.log("Search URL:", url);
-        
         const response = await fetch(url);
         if (!response.ok) throw new Error("API Fehler");
         
