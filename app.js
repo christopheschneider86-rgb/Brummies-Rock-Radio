@@ -583,7 +583,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return translated;
         }
       } catch (err) {
-        console.warn('Translation failed for:', text, err);
       }
       return text; // Fallback to original
     }
