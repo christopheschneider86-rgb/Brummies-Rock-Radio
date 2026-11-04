@@ -2365,7 +2365,6 @@ function startMetadataPolling() {
         initAudioContext();
       } else {
         // No CORS – stream is already playing without Web Audio graph
-        console.log('Stream has no CORS – EQ/Visualizer disabled for this station');
         showEQWarning(true);
       }
     }
