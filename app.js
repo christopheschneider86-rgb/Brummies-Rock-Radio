@@ -2260,7 +2260,6 @@ function startMetadataPolling() {
     function initAudioContext() {
       if (audioContextReady) return;
       if (isExternalAudio()) {
-        console.log('External audio – skipping AudioContext');
         return;
       }
 
