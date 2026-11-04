@@ -2177,19 +2177,14 @@ function startMetadataPolling() {
       navigator.mediaDevices.addEventListener('devicechange', async () => {
         const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
         const outputs = devices.filter(d => d.kind === 'audiooutput');
-        const prevBT = isBluetoothAudio;
         isBluetoothAudio = outputs.some(d => /bluetooth|airpods|wireless|carplay|car/i.test(d.label));
         isCarPlay = isCarPlayUA || isCarPlayScreen || outputs.some(d => /carplay/i.test(d.label));
-        if (prevBT !== isBluetoothAudio) {
-          console.log('Audio device changed – BT:', isBluetoothAudio, 'CarPlay:', isCarPlay);
-        }
       });
     }
 
     const isExternalAudio = () => isCarPlay || isBluetoothAudio;
 
     if (isCarPlay) {
-      console.log('CarPlay detected – AudioContext disabled');
       const eqSec = document.getElementById('eq');
       if (eqSec) eqSec.style.display = 'none';
     }
