@@ -64,7 +64,6 @@ const ModeManager = (() => {
       document.body.classList.add(`skin-${name}`);
       // Re-init Lucide icons for newly visible skin content
       if (window.lucide) { try { lucide.createIcons(); } catch(e) {} }
-      console.log(`[ModeManager] → ${name}`);
     },
 
     /** Register mount/unmount lifecycle hooks for a mode. */
