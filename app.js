@@ -932,7 +932,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLang = browserLang.startsWith('de') ? 'de' : 'en';
       }
       
-      console.log('Auto-detected language:', currentLang, 'based on location:', mode);
       return currentLang;
     }
     
