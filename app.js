@@ -1499,14 +1499,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      // ⚡ Bolt: Hoist invariant mathematical conversions outside the loop and inline the calculation
+      // to eliminate function call overhead and redundant math operations during iteration.
+      const R = 6371;
+      const lat1 = userLocation.lat;
+      const lon1 = userLocation.lon;
+      const lat1Rad = lat1 * Math.PI / 180;
+      const cosLat1 = Math.cos(lat1Rad);
+
       allStations.forEach(st => {
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const lat2 = st.latitude;
+          const lon2 = st.longitude;
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    cosLat1 * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          st.distance = R * c;
         } else {
           st.distance = null;
         }
