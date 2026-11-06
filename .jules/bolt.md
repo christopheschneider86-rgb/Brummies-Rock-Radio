@@ -28,3 +28,7 @@
 ## 2025-03-05 - Avoid String Concatenations inside Array Filters
 **Learning:** Performing multiple string concatenations (e.g. `(st.genre || '') + (st.tags || '')`) and converting them to lowercase (`.toLowerCase()`) inside an `.filter()` loop that runs repeatedly on keystrokes on large arrays (up to 1000 items) creates high memory pressure, Garbage Collection thrashing and visible input lag.
 **Action:** When filtering large arrays iteratively (e.g. `filterDeckStations`), hoist invariant `.toLowerCase()` calculations (like search keywords) outside the loop. Cache complex string combinations like concatenated tags in a local variable inside the loop conditionally, so they are only computed once per item when needed, preventing redundant string allocations.
+
+## 2026-11-06 - Inlining math invariant in loop
+**Learning:** Performing multiple mathematical invariant conversions (like degree to radian and trigonometric constants) inside a loop (like `calculateAllDistances`) that runs repeatedly on arrays (up to 1000 items) creates high memory pressure, and visible lag.
+**Action:** When performing repeated calculations across large datasets (e.g., calculating geographic distances over an array of stations), hoist invariant mathematical conversions (like converting a static user location to radians) and static trigonometric values outside the loop. Inline small helper functions to eliminate function call overhead and maximize CPU efficiency.
