@@ -1499,14 +1499,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      // ⚡ Bolt: Hoist math invariants outside the loop and inline calculation to prevent redundant trigonometric calls and function call overhead
+      const R = 6371;
+      const lat1Rad = userLocation.lat * Math.PI / 180;
+      const cosLat1 = Math.cos(lat1Rad);
+
       allStations.forEach(st => {
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const lat2Rad = st.latitude * Math.PI / 180;
+          const dLat = lat2Rad - lat1Rad;
+          const dLon = (st.longitude - userLocation.lon) * Math.PI / 180;
+
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    cosLat1 * Math.cos(lat2Rad) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          st.distance = R * c;
         } else {
           st.distance = null;
         }
