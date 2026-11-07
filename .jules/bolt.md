@@ -28,3 +28,7 @@
 ## 2025-03-05 - Avoid String Concatenations inside Array Filters
 **Learning:** Performing multiple string concatenations (e.g. `(st.genre || '') + (st.tags || '')`) and converting them to lowercase (`.toLowerCase()`) inside an `.filter()` loop that runs repeatedly on keystrokes on large arrays (up to 1000 items) creates high memory pressure, Garbage Collection thrashing and visible input lag.
 **Action:** When filtering large arrays iteratively (e.g. `filterDeckStations`), hoist invariant `.toLowerCase()` calculations (like search keywords) outside the loop. Cache complex string combinations like concatenated tags in a local variable inside the loop conditionally, so they are only computed once per item when needed, preventing redundant string allocations.
+
+## 2025-03-05 - Avoid function call overhead in high-frequency array loops
+**Learning:** Calling functions (e.g. `calculateDistance`) repeatedly inside large loops across an array of objects (like `allStations`) can cause noticeable performance overhead due to call stack resolution and parameter passing.
+**Action:** When performing repeated calculations across large datasets, prefer hoisting invariants outside the loop, inline math functions (like Haversine) directly inside the loop and replace `Array.prototype.forEach` with a standard `for` loop to eliminate overhead.
