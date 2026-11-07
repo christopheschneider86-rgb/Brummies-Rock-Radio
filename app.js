@@ -1493,24 +1493,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.calculateDistance = calculateDistance;
 
+    // ⚡ Bolt: Hoist mathematical invariants outside loop and inline haversine formula
     function calculateAllDistances() {
       if (!userLocation) {
-        allStations.forEach(st => st.distance = null);
+        for (let i = 0; i < allStations.length; i++) {
+          allStations[i].distance = null;
+        }
         return;
       }
       
-      allStations.forEach(st => {
+      const R = 6371;
+      const toRad = Math.PI / 180;
+      const lat1Rad = userLocation.lat * toRad;
+      const lon1Rad = userLocation.lon * toRad;
+      const cosLat1 = Math.cos(lat1Rad);
+
+      for (let i = 0; i < allStations.length; i++) {
+        const st = allStations[i];
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const lat2Rad = st.latitude * toRad;
+          const lon2Rad = st.longitude * toRad;
+
+          const dLat = lat2Rad - lat1Rad;
+          const dLon = lon2Rad - lon1Rad;
+
+          const sinHalfLat = Math.sin(dLat / 2);
+          const sinHalfLon = Math.sin(dLon / 2);
+
+          const a = sinHalfLat * sinHalfLat +
+                    cosLat1 * Math.cos(lat2Rad) *
+                    sinHalfLon * sinHalfLon;
+
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          st.distance = R * c;
         } else {
           st.distance = null;
         }
-      });
+      }
     }
 
     // --- RADIO BROWSER API ---
