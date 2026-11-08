@@ -15,3 +15,6 @@
 ## 2026-10-21 - Icon Tooltips and Shortcut Discovery
 **Learning:** Abstract icon-only buttons (like those for sorting or playback) often have `aria-label`s for screen readers but omit `title` attributes, leaving visual users without context. Furthermore, existing keyboard shortcuts remain hidden unless users explicitly find the settings panel. Surfacing these shortcuts in tooltips significantly improves UX.
 **Action:** When adding or auditing icon-only buttons, always ensure a `title` attribute is present alongside the `aria-label`. If a button has an associated keyboard shortcut, append it to the tooltip (e.g., `title="Abspielen / Pausieren (Leertaste)"`) to boost discoverability.
+## 2025-02-12 - [Accessible Input labels]
+**Learning:** For custom-styled form controls inside a generic `<label>` element that only contains an icon (no readable text), applying an explicit `aria-label` to the internal `<input>` or `<select>` element is necessary to ensure screen readers announce its purpose properly, since there's no visible text to use.
+**Action:** When creating icon-only input controls, check if the parent label has readable text. If not, add an explicit `aria-label` to the input element itself.
