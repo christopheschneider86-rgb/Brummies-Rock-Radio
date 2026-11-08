@@ -1,0 +1,5 @@
+1. **Add `aria-label` to select elements in Globe view**: The `<select id="gfsGenre">` and `<select id="gfsSubgenre">` do not have `aria-label` attributes. I will add `aria-label="Hauptgenre"` and `aria-label="Untergenre"` respectively, matching their `title` attributes.
+2. **Add `aria-label` to HTTPS checkbox in Globe view**: The `<label class="gfs-https-label" title="Nur sichere Streams">` has an inner `<input type="checkbox" id="gfsHttps">` but the input is missing an `aria-label` or `for` on the parent label (or implicitly labelling it is fine but an explicit label is better for custom styled inputs). I will add `aria-label="Nur sichere Streams"` to the checkbox.
+3. **Verify keyboard navigation**: Ensure that adding these aria labels improves accessibility without breaking UI styling.
+4. **Complete pre-commit steps to ensure proper testing, verification, review, and reflection are done.**
+5. **Create a PR**: Format the title as `🎨 Palette: [UX improvement]`. Add a description with What, Why, Before/After, and Accessibility sections. Update `.Jules/palette.md` if there are critical learnings.
