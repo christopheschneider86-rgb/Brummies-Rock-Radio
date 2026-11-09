@@ -1494,23 +1494,42 @@ document.addEventListener('DOMContentLoaded', () => {
     window.calculateDistance = calculateDistance;
 
     function calculateAllDistances() {
+      // ⚡ Bolt: Use a standard for loop to eliminate callback overhead
       if (!userLocation) {
-        allStations.forEach(st => st.distance = null);
+        for (let i = 0; i < allStations.length; i++) {
+          allStations[i].distance = null;
+        }
         return;
       }
       
-      allStations.forEach(st => {
+      // ⚡ Bolt: Hoist invariant math (radians/cos) outside the loop for performance
+      const lat1Rad = userLocation.lat * Math.PI / 180;
+      const lon1Rad = userLocation.lon * Math.PI / 180;
+      const cosLat1 = Math.cos(lat1Rad);
+      const R = 6371;
+      const piOver180 = Math.PI / 180;
+
+      // ⚡ Bolt: Inline calculateDistance to avoid function call overhead in large arrays
+      for (let i = 0; i < allStations.length; i++) {
+        const st = allStations[i];
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const lat2Rad = st.latitude * piOver180;
+          const lon2Rad = st.longitude * piOver180;
+          const dLat2 = (lat2Rad - lat1Rad) / 2;
+          const dLon2 = (lon2Rad - lon1Rad) / 2;
+
+          const sinDLat2 = Math.sin(dLat2);
+          const sinDLon2 = Math.sin(dLon2);
+
+          const a = sinDLat2 * sinDLat2 +
+                    cosLat1 * Math.cos(lat2Rad) *
+                    sinDLon2 * sinDLon2;
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          st.distance = R * c;
         } else {
           st.distance = null;
         }
-      });
+      }
     }
 
     // --- RADIO BROWSER API ---
