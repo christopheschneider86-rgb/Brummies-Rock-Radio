@@ -1495,22 +1495,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function calculateAllDistances() {
       if (!userLocation) {
-        allStations.forEach(st => st.distance = null);
+        for (let i = 0; i < allStations.length; i++) {
+          allStations[i].distance = null;
+        }
         return;
       }
       
-      allStations.forEach(st => {
+      // ⚡ Bolt: Hoist invariant math conversions and replace forEach with for loop to eliminate function call overhead
+      const R = 6371;
+      const mathPi180 = Math.PI / 180;
+      const lat1 = userLocation.lat;
+      const lon1 = userLocation.lon;
+      const cosLat1 = Math.cos(lat1 * mathPi180);
+
+      for (let i = 0; i < allStations.length; i++) {
+        const st = allStations[i];
         if (st.latitude && st.longitude) {
-          st.distance = calculateDistance(
-            userLocation.lat, 
-            userLocation.lon, 
-            st.latitude, 
-            st.longitude
-          );
+          const lat2 = st.latitude;
+          const lon2 = st.longitude;
+          const dLat = (lat2 - lat1) * mathPi180;
+          const dLon = (lon2 - lon1) * mathPi180;
+
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    cosLat1 * Math.cos(lat2 * mathPi180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          st.distance = R * c;
         } else {
           st.distance = null;
         }
-      });
+      }
     }
 
     // --- RADIO BROWSER API ---
