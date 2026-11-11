@@ -1519,7 +1519,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const subgenre = subgenreSelect.value;
       const search = searchInput.value.trim();
       
-      stationsListEl.innerHTML = '<div class="loading">🔍 Suche Sender...</div>';
+      const searchBtn = document.getElementById("searchBtn");
+      const originalSearchBtnHtml = searchBtn ? searchBtn.innerHTML : null;
+      if (searchBtn) {
+        searchBtn.disabled = true;
+        searchBtn.innerHTML = `<i data-lucide="loader" class="lucide-loader"></i> Suchen...`;
+        if (window.lucide) lucide.createIcons({ root: searchBtn });
+      }
+
+      stationsListEl.innerHTML = '<div class="loading"><i data-lucide="loader" class="lucide-loader"></i> Suche Sender...</div>';
+      if (window.lucide) lucide.createIcons({ root: stationsListEl });
       
       try {
         let url = "https://de1.api.radio-browser.info/json/stations/search?";
@@ -1597,7 +1606,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
       } catch (error) {
         console.error("Fehler:", error);
-        stationsListEl.innerHTML = '<div class="loading">❌ Fehler</div>';
+        stationsListEl.innerHTML = '<div class="loading"><i data-lucide="alert-circle"></i> Fehler</div>';
+        if (window.lucide) lucide.createIcons({ root: stationsListEl });
+      } finally {
+        if (searchBtn && originalSearchBtnHtml) {
+          searchBtn.disabled = false;
+          searchBtn.innerHTML = originalSearchBtnHtml;
+          if (window.lucide) lucide.createIcons({ root: searchBtn });
+        }
       }
     }
 
