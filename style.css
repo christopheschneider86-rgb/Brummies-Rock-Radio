@@ -1201,6 +1201,18 @@ small {
   text-align: center;
   padding: 30px;
   opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lucide-loader {
+  animation: spinner 1s linear infinite;
+}
+
+@keyframes spinner {
+  to { transform: rotate(360deg); }
 }
 
 .status-bar {
